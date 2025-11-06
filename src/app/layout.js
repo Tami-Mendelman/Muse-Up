@@ -1,5 +1,5 @@
+// app/layout.tsx
 import "./globals.css";
-import Navbar from "./components/Navbar/Navbar"; // או "@/app/components/Navbar/Navbar"
 
 export const metadata = {
   title: "MuseUp",
@@ -10,7 +10,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <Navbar />
         <main className="pb-14 sm:pb-0">{children}</main>
       </body>
     </html>
