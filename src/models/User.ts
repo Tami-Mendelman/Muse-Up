@@ -1,4 +1,3 @@
-// src/models/User.ts
 import { Schema, model, models, Model } from "mongoose";
 
 export interface IUser {
