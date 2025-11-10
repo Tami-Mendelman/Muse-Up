@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "jsx": "react",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "target": "esnext"
   }
 }
