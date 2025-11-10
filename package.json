@@ -11,8 +11,11 @@
   "dependencies": {
     "cloudinary": "^2.8.0",
     "dotenv": "^16.6.1",
+<<<<<<< HEAD
     "firebase": "^12.5.0",
     "lucide-react": "^0.553.0",
+=======
+>>>>>>> 482226da094e9a2956b928600cf210a0739c432e
     "mogoose": "^0.0.1-security",
     "mongodb": "^6.9.0",
     "mongoose": "^8.19.3",
