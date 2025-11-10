@@ -1,0 +1,42 @@
+.header {
+  grid-area: header;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.logo {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: #2f76ff;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.search {
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 12px;
+  width: 280px;
+}
+
+.btn {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+}
