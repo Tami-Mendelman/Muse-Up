@@ -16,19 +16,16 @@ export async function POST(req: NextRequest) {
       public_id: `item_${Date.now()}`,
     });
 
-    const optimizeUrl = cloudinary.url(uploadResult.public_id, {
+    const finalUrl = cloudinary.url(uploadResult.public_id, {
       fetch_format: "auto",
       quality: "auto",
-    });
-
-    const autoCropUrl = cloudinary.url(uploadResult.public_id, {
       crop: "auto",
       gravity: "auto",
       width: 500,
       height: 500,
     });
 
-    return NextResponse.json({ uploadResult, optimizeUrl, autoCropUrl });
+    return NextResponse.json({ imageUrl: finalUrl });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
