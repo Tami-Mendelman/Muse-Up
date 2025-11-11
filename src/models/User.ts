@@ -35,7 +35,6 @@ const UserSchema = new Schema<IUser>(
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
 
-
 const UserModel =
   (models.User as Model<IUser>) || model<IUser>("User", UserSchema);
 

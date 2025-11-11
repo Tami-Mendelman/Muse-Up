@@ -1,0 +1,151 @@
+import { dbConnect } from "../lib/mongoose";
+import User from "../models/User";
+import Post from "../models/Post";
+import styles from "./HomePage.module.css";
+
+type UserCard = {
+  _id: string;
+  id?: number;
+  username: string;
+  name?: string;
+  profil_url?: string;
+  followers_count?: number;
+  likes_received?: number;
+};
+
+type PostCard = {
+  _id: string;
+  user_id: number;
+  image_url?: string;
+};
+
+async function getHomeData(): Promise<{
+  users: UserCard[];
+  artworkByUserId: Map<number, string>;
+}> {
+  await dbConnect();
+
+  const users = (await User.find()
+    .sort({ followers_count: -1 })
+    .limit(6)
+    .lean()) as unknown as UserCard[];
+  const userIds = users
+    .map((u) => u.id)
+    .filter((id): id is number => id !== undefined);
+
+  const posts = (await Post.find({ user_id: { $in: userIds } })
+    .sort({ created_at: -1 })
+    .lean()) as unknown as PostCard[];
+
+  const artworkByUserId = new Map<number, string>();
+  for (const post of posts) {
+    if (!artworkByUserId.has(post.user_id) && post.image_url) {
+      artworkByUserId.set(post.user_id, post.image_url);
+    }
+  }
+
+  return { users, artworkByUserId };
+}
+
+export default async function HomePage() {
+  const { users, artworkByUserId } = await getHomeData();
+
+  return (
+    <main className={styles.root}>
+      <section className={styles.left}>
+        <header className={styles.header}>
+          <div className={styles.logoArea}>
+            <img
+              src="/images/museup_logo.png"
+              alt="MuseUp Logo"
+              style={{
+                width: "70px",
+                height: "70px",
+                borderRadius: "8px",
+                objectFit: "cover",
+              }}
+            />
+          </div>
+          <nav className={styles.nav}>
+            <button className={styles.navBtn}>Sign Up</button>
+            <button className={styles.navBtn}>Login</button>
+            <button className={styles.navBtn}>About</button>
+          </nav>
+        </header>
+
+        <div className={styles.centerTitle}>
+          <h2>A social network for artists</h2>
+          <p>and art lovers</p>
+        </div>
+
+        <section className={styles.grid}>
+          {users.map((u) => {
+            const followers = Number(u.followers_count ?? 0).toLocaleString();
+            const likes = Number(u.likes_received ?? 0).toLocaleString();
+
+            const userNumericId = u.id ?? -1;
+            const artworkSrc =
+              artworkByUserId.get(userNumericId) || u.profil_url || "";
+            const avatarSrc = u.profil_url || "";
+
+            return (
+              <article key={u._id} className={styles.card}>
+                <div className={styles.artPreview}>
+                  {artworkSrc && (
+                    <img
+                      src={artworkSrc}
+                      alt={`${u.name || u.username} artwork`}
+                      className={styles.artImage}
+                    />
+                  )}
+                </div>
+                <div className={styles.artistCircle}>
+                  {avatarSrc && (
+                    <img
+                      src={avatarSrc}
+                      alt={`${u.username} avatar`}
+                      className={styles.avatar}
+                    />
+                  )}
+                </div>
+
+                <div className={styles.artistName}>{u.name || u.username}</div>
+                <div className={styles.medium}>digital</div>
+
+                <div className={styles.statsLine}>
+                  {followers} followers | {likes} likes
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      </section>
+      <aside className={styles.right}>
+        <div>
+          <h1 className={styles.heroTitle}>
+            Join the
+            <br />
+            MuseUp
+            <br />
+            community
+          </h1>
+
+          <ul className={styles.heroList}>
+            <li>Share your creations</li>
+            <li>Get inspired</li>
+            <li>Connect with other artists</li>
+          </ul>
+
+          <button className={styles.ctaBtn}>Get Started +</button>
+        </div>
+
+        <div className={styles.illustrationBox}>
+          <img
+            src="/images/eb57c0b0-9262-4fa0-a466-df17288cae0b.png"
+            alt="Artist illustration"
+          />
+        </div>
+      </aside>
+    </main>
+  );
+}
