@@ -5,14 +5,12 @@ import Image from "next/image";
 import styles from "./About.module.css";
 
 export default function AboutPage() {
-  // Parallax עדין לאיור
   const illoRef = useRef<HTMLImageElement | null>(null);
   useEffect(() => {
     const el = illoRef.current;
     if (!el) return;
 
     const onScroll = () => {
-      // הזזה קטנה ביחס לגלילה (עד ~12px)
       const y = Math.min(12, window.scrollY / 20);
       el.style.transform = `translateY(${y}px)`;
     };
@@ -24,7 +22,6 @@ export default function AboutPage() {
   return (
     <div className={styles.panel}>
       <div className={styles.layout}>
-        {/* צד שמאל */}
         <section className={styles.left}>
           <header className={`${styles.hero} ${styles.reveal}`} style={{ ["--d" as any]: "0ms" }}>
             <h1>who we are</h1>
