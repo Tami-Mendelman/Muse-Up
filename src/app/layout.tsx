@@ -1,4 +1,3 @@
-
 "use client";
 
 import "./globals.css";
@@ -34,8 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               paddingRight: 88,
             }}
           >
-            <Sidebar active="home" />
-            <AppHeader />
+            <Sidebar  />    
             <main style={{ gridArea: "main", padding: 16 }}>{children}</main>
             <Footer />
           </div>
@@ -51,25 +49,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
         )}
-
-        {/* Sidebar קבוע, ינהל גם ריווח תוכן דרך CSS variable */}
-        <Sidebar />
-
-        {/* התוכן הראשי – מקבל padding-right מה־:root שמוגדר ב-Sidebar */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateRows: "1fr auto",
-            gridTemplateAreas: `"main" "footer"`,
-            minHeight: "100vh",
-            paddingRight: "var(--sidebar-space, 24px)",
-          }}
-        >
-          <main style={{ gridArea: "main", padding: 16 }}>{children}</main>
-          <Footer />
-        </div>
       </body>
     </html>
   );
 }
-
