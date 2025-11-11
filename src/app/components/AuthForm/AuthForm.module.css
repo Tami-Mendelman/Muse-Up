@@ -1,0 +1,205 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    padding: 32px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+.box {
+    position: relative;
+    width: 420px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 36px 36px 28px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    border: 2px solid #e5e7eb;
+    box-sizing: border-box;
+}
+
+.logo {
+    position: absolute;
+    top: 18px;
+    right: 30px;
+    width: 69px;
+    height: auto;
+    object-fit: contain;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 2px 0 8px;
+}
+
+.subtitle {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 18px;
+    line-height: 1.5;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input {
+    width: 100%;
+    padding: 12px 44px 12px 44px;
+    border-radius: 8px;
+    border: 1px solid #e6e9ee;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    outline: none;
+    transition: box-shadow .12s, border-color .12s;
+    box-sizing: border-box;
+}
+
+.input:focus {
+    border-color: #cbd5e1;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06);
+}
+
+.input::placeholder {
+    color: #9ca3af;
+}
+
+.inputIconLeft {
+    position: absolute;
+    left: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.iconButton {
+    position: absolute;
+    right: 10px;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.iconButton:focus {
+    outline: 2px solid rgba(37, 99, 235, 0.18);
+    border-radius: 6px;
+}
+
+.checkboxRow {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    color: #374151;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.checkbox {
+    width: 16px;
+    height: 16px;
+}
+
+.primaryBtn {
+    margin-top: 8px;
+    width: 100%;
+    height: 48px;
+    border-radius: 8px;
+    border: none;
+    background-color: #3f3f46;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 14px;
+    color: #9ca3af;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e6e9ee;
+}
+
+.googleBtn {
+    width: 100%;
+    height: 46px;
+    border-radius: 8px;
+    border: 1px solid #e6e9ee;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.googleIcon {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+}
+
+.terms {
+    margin-top: 14px;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.textLink {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.switch {
+    margin-top: 12px;
+    color: #475569;
+    font-size: 13px;
+}
+
+.error {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #dc2626;
+}
+
+.primaryBtn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
