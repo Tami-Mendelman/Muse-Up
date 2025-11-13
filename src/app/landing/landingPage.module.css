@@ -1,0 +1,297 @@
+:root{
+  --sidebar-w: 90px;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #475569;
+  --line: #e5e7eb;
+  --brand: #1d4ed8;
+  --brand-weak: #eff6ff;
+  --shadow: 0 6px 18px rgba(15,23,42,.06);
+}
+
+.page{
+  background: var(--surface);
+  min-height: 100dvh;
+  padding-left: var(--sidebar-w);
+}
+
+.container{
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 24px 64px;
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+
+.mainGrid{
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1.05fr);
+  gap: 24px;
+  align-items: flex-start;
+}
+
+
+.leftCol{
+  display: flex;
+  flex-direction: column;
+}
+
+
+.hero{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+
+.title{
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+
+.subtitle{
+  color: var(--muted);
+  font-size: 15px;
+  margin-bottom: 14px;
+}
+
+.actions{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.primaryBtn{
+  background: var(--brand);
+  color: #fff;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 10px rgba(29,78,216,.2);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.primaryBtn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(29,78,216,.25);
+  background: #2563eb;
+}
+
+.linkBtn{
+  text-decoration: none;
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+
+.bottomLeft{
+  display: grid;
+  grid-template-columns: 1.6fr 1.4fr;
+  gap: 24px;
+}
+
+
+.card{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.cardTitle{
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+
+.trendingGrid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.artCard{}
+
+.artThumb{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.placeholder{
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f1f5f9, #ffffff);
+}
+
+.artMeta{
+  margin-top: 6px;
+}
+
+.artTitle{
+  font-weight: 600;
+}
+
+.artLikes{
+  color: var(--muted);
+  font-size: 12px;
+}
+
+
+.artistList{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.artistRow{
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  border-radius: 10px;
+}
+
+.artistRow:hover{
+  background: #f8fafc;
+}
+
+.avatarWrap{
+  width: 44px;
+  height: 44px;
+}
+
+.avatar{
+  border-radius: 50%;
+  border: 1px solid var(--line);
+}
+
+.artistName{
+  font-weight: 600;
+}
+
+.artistType{
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.followBtn{
+  appearance: none;
+  border: 1px solid #93c5fd;
+  background: var(--brand-weak);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.moreLink{
+  display: inline-block;
+  margin-top: 8px;
+  text-decoration: none;
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+
+.rightCol{
+  display: flex;
+  flex-direction: column;
+}
+
+
+.heroImageCard{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.heroImg{
+  width: 100%;
+  max-height: 420px;
+  border-radius: 12px;
+  object-fit: cover;
+  object-position: center;
+}
+
+
+.challengeCard{
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.challengeContent{
+  text-align: left;
+}
+
+.challengeTitle{
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.challengeText{
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+
+.challengeVisual{
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, #f8fafc, #ffffff);
+}
+
+
+@media (max-width: 1280px){
+  .title{ font-size: 30px; }
+  .hero{ padding: 24px 24px; }
+  .trendingGrid{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1060px){
+  .mainGrid{
+    grid-template-columns: 1fr;
+  }
+
+  .bottomLeft{
+    grid-template-columns: 1fr;
+  }
+}

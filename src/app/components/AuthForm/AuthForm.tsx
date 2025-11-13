@@ -16,30 +16,32 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [passwordError, setPasswordError] = useState<string>("");
+    const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
 
-    const validatePassword = (value: string): string => {
-        if (!value) return "";
+    const validatePassword = (value: string): string[] => {
+        const errors: string[] = [];
+
+        if (!value) return [];
 
         if (value.length < 6) {
-            return "Password must be at least 6 characters.";
+            errors.push("Password must be at least 6 characters.");
         }
         if (!/[A-Za-z]/.test(value)) {
-            return "Password must contain at least one letter.";
+            errors.push("Password must contain at least one letter.");
         }
         if (!/[0-9]/.test(value)) {
-            return "Password must contain at least one number.";
+            errors.push("Password must contain at least one number.");
         }
-        return "";
+        return errors;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         const error = validatePassword(password);
-        setPasswordError(error);
-        if (error) return;
-
+        setPasswordErrors(error);
+        if (error.length > 0) return;
+        
         try {
             if (mode === "login") {
                 await signInWithEmailAndPassword(auth, email, password);
@@ -56,7 +58,12 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
     const handleGoogle = async () => {
         try {
-            await signInWithPopup(auth, provider);
+            await signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    let profil_URL = user.photoURL;
+                    console.log(profil_URL);
+                });
             alert("login successfully with Google!");
         } catch (err: any) {
             const msg = getAuthErrorMessage(err, mode);
@@ -70,7 +77,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 className={`${styles.box} ${mode === "register" ? styles.boxRegister : ""
                     }`}
             >
-                <img src="/media/logo.png" alt="Logo" className={styles.logo} />
+                <img src="../" alt="Logo" className={styles.logo} />
 
                 <h2 className={styles.title}>
                     {mode === "login" ? "Sign in" : "Create Your Account"}
@@ -107,7 +114,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         Password
                         <div className={styles.inputWrapper}>
                             <span className={styles.inputIconLeft}>
-                                <Lock size={18} color="#D97706" />
+                                <Lock size={18} color="#000000ff" />
                             </span>
 
                             <input
@@ -117,7 +124,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     setPassword(value);
-                                    setPasswordError(validatePassword(value));
+                                    setPasswordErrors(validatePassword(value));
                                 }}
                                 className={styles.input}
                                 required
@@ -129,15 +136,17 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                                 className={styles.iconButton}
                                 aria-label={showPassword ? "Hide password" : "Show password"}
                             >
-                                {showPassword ? (
-                                    <EyeOff size={18} color="#6B7280" />
-                                ) : (
-                                    <Eye size={18} color="#6B7280" />
-                                )}
+                                {showPassword ? <EyeOff size={18} color="#6B7280" /> : <Eye size={18} color="#6B7280" />}
                             </button>
                         </div>
 
-                        {passwordError && <p className={styles.error}>{passwordError}</p>}
+                        {passwordErrors.length > 0 && (
+                            <div className={styles.error}>
+                                {passwordErrors.map((err, idx) => (
+                                    <p key={idx}>{err}</p>
+                                ))}
+                            </div>
+                        )}
                     </label>
 
                     {mode === "register" && (
@@ -150,8 +159,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     <button
                         type="submit"
                         className={styles.primaryBtn}
-                        disabled={!!passwordError || !email || !password}
-                    >
+                        disabled={passwordErrors.length > 0 || !email || !password}                    >
                         {mode === "login" ? "Log in" : "Create Account"}
                     </button>
                 </form>
