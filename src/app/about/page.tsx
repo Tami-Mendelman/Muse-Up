@@ -68,7 +68,7 @@ export default function AboutPage() {
               </li>
               <li className={styles.reveal} style={{ ["--d" as any]: "calc(var(--rev-gap) * 6)" }}>
                 <Image
-                  src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1762782136/IMG-20250408-WA0040_c9syss.jpg"
+                  src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1762865435/AR_0860_fz6yrv.jpg"
                   alt="Tzipi"
                   width={72}
                   height={72}
@@ -92,10 +92,8 @@ export default function AboutPage() {
           </section>
         </section>
 
-        {/* קו אנכי */}
         <div className={styles.divider} aria-hidden />
 
-        {/* צד ימין */}
         <aside className={styles.right}>
           <button className={`${styles.cta} ${styles.reveal}`} style={{ ["--d" as any]: "0ms" }}>
             Sign Up

@@ -9,7 +9,7 @@ const PostSchema = new Schema(
 
     image_url: { type: String, required: true },
 
-    user_id: { type: Number, required: true },
+    user_id: { type: String, required: true },
 
     category: { type: String },
     status: { type: String, default: "published" },

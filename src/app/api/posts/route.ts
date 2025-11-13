@@ -1,7 +1,11 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
 import Post from "../../../models/Post";
+import mongoose from "mongoose";
 
+/** GET /api/posts – מחזיר את כל הפוסטים */
 export async function GET() {
   try {
     await dbConnect();
@@ -21,19 +25,43 @@ export async function GET() {
   }
 }
 
+/** POST /api/posts – יצירת פוסט חדש */
 export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    const body = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
 
-    // לפי הטייפים שראינו ב-Post:
-    // { title, image_url, user_id, body?, category? }
-    const { title, image_url, user_id, body: text, category } = body;
+    const {
+      title,
+      image_url,
+      user_id,
+      body: text,
+      category,
+      tags,
+      visibility,
+    } = body;
 
+    // ולידציה בסיסית
     if (!title || !image_url || !user_id) {
       return NextResponse.json(
         { error: "title, image_url and user_id are required" },
+        { status: 400 }
+      );
+    }
+
+    // בודקים שה־user_id בפורמט ObjectId תקין
+    if (!mongoose.isValidObjectId(user_id)) {
+      return NextResponse.json(
+        { error: "Invalid user_id (must be a Mongo ObjectId)" },
         { status: 400 }
       );
     }
@@ -44,6 +72,8 @@ export async function POST(req: Request) {
       user_id,
       body: text,
       category,
+      ...(Array.isArray(tags) ? { tags } : {}),
+      ...(visibility ? { visibility } : {}),
       status: "active",
       likes_count: 0,
       comments_count: 0,

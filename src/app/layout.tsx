@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 export default function RootLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
+  // בעמוד הראשי אין sidebar/footer
   const hideChrome = pathname === "/";
 
   return (
@@ -23,18 +24,25 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
         }}
       >
+        {/* *************** SIDEBAR קבוע בצד *************** */}
+        {!hideChrome && (
+          <Sidebar />
+        )}
+
+        {/* *************** מבנה עמוד *************** */}
         {!hideChrome ? (
           <div
             style={{
               display: "grid",
-              gridTemplateRows: "64px 1fr auto",
-              gridTemplateAreas: `"header" "main" "footer"`,
+              gridTemplateRows: "1fr auto", // תוכן ואז פוטר
               minHeight: "100vh",
-              paddingRight: 88,
+              paddingRight: 88, // מקום ל־sidebar
             }}
           >
-            <Sidebar  />    
-            <main style={{ gridArea: "main", padding: 16 }}>{children}</main>
+            {/* תוכן */}
+            <main style={{ padding: 16 }}>{children}</main>
+
+            {/* פוטר בתחתית */}
             <Footer />
           </div>
         ) : (

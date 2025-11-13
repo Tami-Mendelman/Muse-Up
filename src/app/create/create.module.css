@@ -1,0 +1,212 @@
+.panel{
+  max-width: 1000px;
+  margin: 24px auto;
+  background:#fff;
+  border:1px solid #e6e8ef;
+  border-radius:12px;
+  padding:20px;
+}
+/* כרטיס נקי */
+.card{
+  display:grid;
+  grid-template-columns: 1fr 360px;
+  gap:16px;
+  border:1px solid #e6e8ef;
+  border-radius:12px;
+  padding:12px;
+  background:#fff;
+}
+.cardLeft{ padding:8px; }
+.cardText{
+  height:180px;
+  border:1px dashed #d1d5db;
+  border-radius:8px;
+  padding:10px;
+  white-space:pre-wrap;
+  line-height:1.5;
+  color:#111827;
+  overflow:auto;
+  background:#fafafa;
+  font-size:15px;
+}
+.chips{
+  list-style:none; margin:10px 0 0; padding:0;
+  display:flex; flex-wrap:wrap; gap:8px;
+}
+.chip{
+  padding:6px 10px; border-radius:999px;
+  background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe;
+  font-size:13px;
+}
+.cardRight{
+  border-radius:12px; overflow:hidden; background:#111;
+  display:grid; place-items:center; height:300px;
+}
+.cardImage{ width:100%; height:100%; object-fit:cover; }
+.cardEmpty{ color:#9ca3af; }
+
+.tagsHint{ color:#6b7280; font-size:12px; margin-top:6px; }
+
+
+.title{
+  font-size:28px;
+  font-weight:800;
+  margin:0 0 12px;
+  padding-bottom:10px;
+  border-bottom:1px solid #e6e8ef;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap:24px;
+  align-items:start;
+}
+
+.left{}
+.h2{ font-size:26px; margin:8px 0 12px; font-weight:800; }
+
+.previewBox{}
+.previewPlaceholder{
+  height:260px;
+  border:2px solid #0f172a;
+  border-radius:8px;
+  background:#dff4ff;
+  display:grid; place-items:center;
+  color:#0f172a; font-size:24px; text-align:center; padding:16px;
+}
+.help{ margin:8px 0 0; color:#6b7280; font-size:13px; }
+
+.right{}
+
+.uploadBox{
+  border:1px dashed #c8cfdd;
+  background:#f8fbff;
+  border-radius:10px;
+  padding:18px;
+  text-align:center;
+  margin-bottom:14px;
+}
+.uploadLink{
+  all:unset; cursor:pointer; color:#2563eb; font-weight:700;
+}
+.uploadHint{ margin:6px 0 0; color:#6b7280; font-size:14px; }
+
+.label{
+  display:block; font-weight:700; margin:14px 0 8px;
+}
+.input{
+  width:100%;
+  box-sizing:border-box;
+  padding:10px 12px;
+  border:1px solid #d7dbe6;
+  border-radius:10px;
+  font:inherit;
+  background:#fff;
+}
+
+.radioGroup{
+  border:0; padding:0; margin:12px 0;
+  display:grid; gap:8px;
+}
+.radio{ display:flex; gap:8px; align-items:center; color:#111827; }
+
+.actions{
+  display:flex; gap:10px; margin-top:12px;
+}
+.btnSecondary{
+  padding:10px 16px; border:1px solid #d7dbe6; border-radius:10px;
+  background:#eef4ff; cursor:pointer;
+}
+.btnPrimary{
+  padding:10px 16px; border:0; border-radius:10px;
+  background:#2f76ff; color:#fff; cursor:pointer; font-weight:700;
+}
+.btnPrimary:hover{ filter:brightness(1.05); }
+
+.footNote{
+  margin:12px 0 0; color:#6b7280; font-size:14px;
+}
+
+/* רספונסיביות */
+@media (max-width: 900px){
+  .layout{ grid-template-columns: 1fr; }
+}
+/* הוסיפי/עדכני בקובץ src/app/create/Create.module.css */
+
+.previewImage {
+  display: block;
+  width: 100%;
+  height: 260px;
+  object-fit: contain;
+  background: #f8fafc;
+  border: 1px solid #e6e8ef;
+  border-radius: 8px;
+}
+
+.error {
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.success {
+  color: #065f46;
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.uploadBox.hover {
+  background: #eef6ff;
+  border-color: #93c5fd;
+}
+/* כרטיס התצוגה החיה */
+.card{
+  display:grid;
+  grid-template-columns: 1fr 340px;
+  gap:16px;
+  border:1px solid #e6e8ef;
+  border-radius:12px;
+  padding:12px;
+  background:#fff;
+}
+.cardLeft{ padding:8px; }
+.cardText{
+  height:180px;
+  border:1px dashed #d1d5db;
+  border-radius:8px;
+  padding:10px;
+  white-space:pre-wrap;
+  line-height:1.5;
+  color:#111827;
+  overflow:auto;
+  background:#fafafa;
+  font-size:15px;
+}
+.cardActions{ display:flex; gap:12px; align-items:center; margin-top:12px; }
+.cardIco{ font-size:20px; }
+.cardMeta{ margin-top:10px; color:#4b5563; display:flex; gap:10px; align-items:center; }
+.sep{ color:#9ca3af; }
+.badge{ width:18px; height:18px; background:#fbbf24; border-radius:50%; display:inline-block; }
+
+.cardCommentBtn{
+  margin-top:12px; width:100%; height:44px; border-radius:10px;
+  border:1px solid #d1d5db; background:#fff; cursor:text;
+}
+.cardRight{
+  border-radius:12px; overflow:hidden; background:#111;
+  display:grid; place-items:center; height:300px;
+}
+.cardImage{ width:100%; height:100%; object-fit:cover; }
+.cardEmpty{ color:#9ca3af; }
+
+.uploadBox.hover { background:#eef6ff; border-color:#93c5fd; }
+
