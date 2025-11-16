@@ -110,18 +110,20 @@ export default function Sidebar() {
             />
           </button>
 
-          <button
-            className={`${styles.btn} ${
-              activeKey === "profile" ? styles.active : ""
-            }`}
-            aria-label="Profile"
-          >
-            <FiUser
-              className={`${styles.icon} ${
-                activeKey === "profile" ? styles.iconActive : ""
-              }`}
-            />
-          </button>
+        <button
+  onClick={() => router.push("/following")}
+  className={`${styles.btn} ${
+    activeKey === "profile" ? styles.active : ""
+  }`}
+  aria-label="Following"
+>
+  <FiUser
+    className={`${styles.icon} ${
+      activeKey === "profile" ? styles.iconActive : ""
+    }`}
+  />
+</button>
+
 
           <button
             className={`${styles.btn} ${
