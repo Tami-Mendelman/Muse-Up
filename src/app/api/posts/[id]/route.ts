@@ -1,22 +1,25 @@
 export const runtime = "nodejs";
 
+import type { NextRequest } from "next/server";
 import { dbConnect } from "../../../../lib/mongoose";
 import Post from "../../../../models/Post";
-import type { NextRequest } from "next/server";
 
 type ParamsCtx = {
   params: Promise<{ id: string }>;
 };
 
-
 export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   try {
     const { id } = await ctx.params;
+    const numericId = Number(id);
+
+    if (Number.isNaN(numericId)) {
+      return Response.json({ message: "Invalid id" }, { status: 400 });
+    }
 
     await dbConnect();
 
-    const post = await (Post as any).findById(id).lean();
-
+    const post = await (Post as any).findOne({ id: numericId }).lean();
 
     if (!post) {
       return Response.json({ message: "Post not found" }, { status: 404 });
@@ -24,68 +27,52 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
     return Response.json(post, { status: 200 });
   } catch (err: any) {
-    if (err?.name === "CastError") {
-      return Response.json({ message: "Invalid post id" }, { status: 400 });
-    }
+    console.error("GET /api/posts/[id] error:", err);
     return Response.json(
-      { message: err?.message ?? "Server error" },
+      { message: "Failed to fetch post", details: err.message },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(req: NextRequest, ctx: ParamsCtx) {
+/**
+ * PATCH – עדכון likes_count
+ * body: { delta: number }  // למשל 1 ללייק, -1 לאנלייק
+ */
+export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
     const { id } = await ctx.params;
+    const numericId = Number(id);
+
+    if (Number.isNaN(numericId)) {
+      return Response.json({ message: "Invalid id" }, { status: 400 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const rawDelta = body?.delta;
+    const delta =
+      typeof rawDelta === "number" && !Number.isNaN(rawDelta) ? rawDelta : 1;
 
     await dbConnect();
 
-    const updates = await req.json();
-
-
-const updated = await (Post as any).findByIdAndUpdate(
-  id,
-  { $set: updates },
-  { new: true }
-).lean();
-
-
+    const updated = await (Post as any)
+      .findOneAndUpdate(
+        { id: numericId },
+        { $inc: { likes_count: delta } },
+        { new: true }
+      )
+      .lean();
 
     if (!updated) {
       return Response.json({ message: "Post not found" }, { status: 404 });
     }
 
-    return Response.json(updated, { status: 200 });
+    // לא נחזור עם כל הפוסט – רק הערך החדש
+    return Response.json({ likes_count: updated.likes_count }, { status: 200 });
   } catch (err: any) {
-    if (err?.name === "CastError") {
-      return Response.json({ message: "Invalid post id" }, { status: 400 });
-    }
+    console.error("PATCH /api/posts/[id] error:", err);
     return Response.json(
-      { message: err?.message ?? "Server error" },
-      { status: 500 }
-    );
-  }
-}
-export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
-  try {
-    const { id } = await ctx.params;
-
-    await dbConnect();
-
-    const deleted = await (Post as any).findByIdAndDelete(id);
-
-
-    if (!deleted) {
-      return Response.json({ message: "Post not found" }, { status: 404 });
-    }
-
-    return Response.json({ message: "Post deleted successfully" }, { status: 200 });
-  } catch (err: any) {
-    if (err?.name === "CastError") {
-      return Response.json({ message: "Invalid post id" }, { status: 400 });
-    }
-    return Response.json(
-      { message: err?.message ?? "Server error" },
+      { message: "Failed to update likes", details: err.message },
       { status: 500 }
     );
   }

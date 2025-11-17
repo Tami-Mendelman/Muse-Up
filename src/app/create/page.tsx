@@ -5,7 +5,6 @@ import styles from "./create.module.css";
 
 type Visibility = "public" | "private";
 
-/** תצוגה מקדימה נקייה: טקסט + תגים + תמונה */
 function PreviewCard({
   caption,
   image,
@@ -148,7 +147,6 @@ export default function CreatePage() {
       <h1 className={styles.title}>Create new post</h1>
 
       <form className={styles.layout} onSubmit={onSubmit}>
-        {/* תצוגה מקדימה נקייה */}
         <section className={styles.left}>
           <h2 className={styles.h2}>Artwork preview</h2>
           <PreviewCard caption={caption} image={preview} tags={tags} />

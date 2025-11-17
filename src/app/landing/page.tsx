@@ -3,27 +3,46 @@ import Link from "next/link";
 import { dbConnect } from "../.././lib/mongoose";
 import UserModel from "../.././models/User";
 import PostModel from "../.././models/Post";
+import TrendingSection from "../components/TrendingSection";
 import styles from "./landingPage.module.css";
 
 export default async function LandingPage() {
   await dbConnect();
 
+  // 🎨 Artists
   const artists = await UserModel.find(
     {},
-    { username: 1, name: 1, artType: 1, avatarUrl: 1 }
+    { _id: 0, username: 1, name: 1, artType: 1, avatarUrl: 1 }
   )
     .sort({ followers_count: -1 })
     .limit(5)
     .lean();
 
-  const trending = await (PostModel as any)
+  // 🔥 Trending posts – שמים לב שהוספנו body
+  const trendingRaw = await (PostModel as any)
     .find(
       {},
-      { title: 1, image_url: 1, likes_count: 1 }
+      {
+        _id: 0,
+        id: 1,
+        title: 1,
+        image_url: 1,
+        likes_count: 1,
+        body: 1,          // 👈 חדש – התוכן של הפוסט מהיצירה
+      }
     )
     .sort({ likes_count: -1 })
     .limit(6)
     .lean();
+
+  // מעבירים את האובייקטים כמו שהם (כולל body)
+  const trending = trendingRaw.map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    image_url: p.image_url,
+    likes_count: p.likes_count,
+    body: p.body,        // 👈 חדש – כדי שיגיע עד המודאל
+  }));
 
   return (
     <main className={styles.page}>
@@ -47,46 +66,21 @@ export default async function LandingPage() {
                 </Link>
               </div>
             </section>
+
             <section className={styles.bottomLeft}>
-              <div className={styles.card}>
-                <h2 className={styles.cardTitle}>Trending this week</h2>
-                <div className={styles.trendingGrid}>
-                  {trending.map((p: any) => (
-                    <div key={p._id} className={styles.artCard}>
-                      <div className={styles.artThumb}>
-                        {p.image_url ? (
-                          <Image
-                            src={p.image_url}
-                            alt={p.title ?? "artwork"}
-                            fill
-                            sizes="260px"
-                            style={{ objectFit: "cover" }}
-                          />
-                        ) : (
-                          <div className={styles.placeholder} />
-                        )}
-                      </div>
-                      <div className={styles.artMeta}>
-                        <div className={styles.artTitle}>
-                          {p.title ?? "Unknown"}
-                        </div>
-                        <div className={styles.artLikes}>
-                          {p.likes_count ?? 0} likes
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <TrendingSection trending={trending} />
 
               <div className={styles.card}>
                 <h2 className={styles.cardTitle}>Artists to follow</h2>
                 <ul className={styles.artistList}>
                   {artists.map((a: any) => (
-                    <li key={a._id} className={styles.artistRow}>
+                    <li key={a.username} className={styles.artistRow}>
                       <div className={styles.avatarWrap}>
                         <Image
-                          src={a?.avatarUrl || "/images/default-avatar.png"}
+                          src={
+                            a?.avatarUrl ||
+                            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png"
+                          }
                           alt={a?.username}
                           width={40}
                           height={40}
