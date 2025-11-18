@@ -1,0 +1,181 @@
+
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 24px;
+  color: #0f172a;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px 20px 18px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.avatarWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.avatarImage {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.35);
+}
+
+.avatarInitial {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, #4f46e5, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f9fafb;
+  font-size: 2rem;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.35);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header {
+  text-align: center;
+}
+
+.username {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.fullName {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.role {
+  font-weight: 500;
+}
+
+.roleOnly {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.bio {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.4;
+  text-align: center;
+  min-height: 40px;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.statValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.followButton {
+  margin-top: 10px;
+  width: 100%;
+  border-radius: 999px;
+  border: 0;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #f9fafb;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+.followButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(37, 99, 235, 0.42);
+}
+
+.followButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+}
+
+.followButton:disabled {
+  cursor: default;
+  opacity: 0.8;
+  box-shadow: none;
+}
+
+
+.following {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+}
+
+.following:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.emptyState {
+  margin-top: 16px;
+  font-size: 0.95rem;
+  color: #64748b;
+}

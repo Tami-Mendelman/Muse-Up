@@ -1,15 +1,36 @@
-import { Schema, model, models } from "mongoose";
+import mongoose, { Schema, model, models } from "mongoose";
 
-const followSchema = new Schema(
+export type FollowDocument = {
+  following_user_id: string;
+  followed_user_id: string;
+};
+
+const FollowSchema = new Schema<FollowDocument>(
   {
-    following_user_id: { type: Number, required: true }, // מי עוקב
-    followed_user_id: { type: Number, required: true },  // אחרי מי הוא עוקב
+    following_user_id: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    followed_user_id: {
+      type: String,
+      required: true,
+      index: true,
+    },
+  
   },
   {
-    collection: "follows", 
-    timestamps: false,
+    collection: "follows",
   }
 );
 
-const Follow = models.Follow || model("Follow", followSchema);
+FollowSchema.index(
+  { following_user_id: 1, followed_user_id: 1 },
+  { unique: true }
+);
+
+const Follow =
+  (models.Follow as mongoose.Model<FollowDocument>) ||
+  model<FollowDocument>("Follow", FollowSchema);
+
 export default Follow;

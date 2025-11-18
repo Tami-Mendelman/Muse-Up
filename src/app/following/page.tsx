@@ -22,14 +22,13 @@ export default function FollowingPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
-  // פעם אחת – נשלוף מי מחובר עכשיו מתוך localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const stored = localStorage.getItem("userId");
+    const stored = localStorage.getItem("firebase_uid");
     if (!stored) {
       setCurrentUserId(null);
-      setLoading(false); // אין משתמש מחובר
+      setLoading(false); 
       return;
     }
 
@@ -43,7 +42,7 @@ export default function FollowingPage() {
     setCurrentUserId(num);
   }, []);
 
-  //  כשיש currentUserId – נביא את מי שהוא עוקב אחריהם
+
   useEffect(() => {
     if (currentUserId == null) return;
 
@@ -69,7 +68,7 @@ export default function FollowingPage() {
   }, [currentUserId]);
 
   const handleUnfollow = async (followedUserId: number) => {
-    // עדכון מיידי במסך
+
     setUsers((prev) => prev.filter((u) => u.id !== followedUserId));
 
     try {
