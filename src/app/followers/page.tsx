@@ -18,13 +18,10 @@ export default function FollowersPage() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  // לקרוא את ה-userId מה-localStorage כמו שהוא (מחרוזת, לא Number)
 useEffect(() => {
   if (typeof window === "undefined") return;
 
-  // החדש – מהפיירבייס
   const firebaseUid = window.localStorage.getItem("firebase_uid");
-  // הישן – אם היה פעם userId מספרי
   const legacyId = window.localStorage.getItem("userId");
 
   const idToUse = firebaseUid ?? legacyId;
@@ -36,8 +33,6 @@ useEffect(() => {
   }
 }, []);
 
-
-  // להביא את מי שעוקבים אחרי
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -57,7 +52,6 @@ useEffect(() => {
     fetchFollowers();
   }, [currentUserId]);
 
-  // להביא את מי שאני עוקבת אחריהם (כדי לדעת אם זה Follow Back או Unfollow)
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -78,7 +72,6 @@ useEffect(() => {
     fetchFollowing();
   }, [currentUserId]);
 
-  // Follow / Unfollow
   const toggleFollow = async (targetId: string) => {
     if (!currentUserId) return;
 
@@ -93,8 +86,8 @@ useEffect(() => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: currentUserId,   // המשתמש המחובר
-          followerId: targetId,    // זה שעליו לוחצים
+          userId: currentUserId,   
+          followerId: targetId,   
         }),
       });
 
@@ -104,7 +97,6 @@ useEffect(() => {
         return;
       }
 
-      // לרענן את הרשימה של מי שאני עוקבת אחריהם
       const followRes = await fetch(
         `/api/following-users?userId=${currentUserId}`
       );
@@ -163,11 +155,11 @@ useEffect(() => {
   src={
     user.profil_url && user.profil_url.trim() !== ""
       ? user.profil_url
-      : "/media/default-avatar.png"
+      : "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763545782/45d4e069425e26a062a08f62116db827_ajjxke.jpg"
   }
   alt={user.username || "user avatar"}
-  width={40}
-  height={40}
+  width={72}
+  height={72}
 />
                 </div>
 
