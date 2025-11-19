@@ -9,58 +9,64 @@ import styles from "./landingPage.module.css";
 export default async function LandingPage() {
   await dbConnect();
 
-  // 🎨 Artists
   const artists = await UserModel.find(
     {},
-    { _id: 0, username: 1, name: 1, artType: 1, avatarUrl: 1 }
+    { _id: 0, username: 1, name: 1, artType: 1, avatar_url: 1 }
   )
     .sort({ followers_count: -1 })
     .limit(5)
     .lean();
 
-  // 🔥 Trending posts – שמים לב שהוספנו body
-  const trendingRaw = await (PostModel as any)
-    .find(
-      {},
-      {
-        _id: 0,
-        id: 1,
-        title: 1,
-        image_url: 1,
-        likes_count: 1,
-        body: 1,          // 👈 חדש – התוכן של הפוסט מהיצירה
-      }
-    )
+  const baseSelect = {
+    _id: 0,
+    id: 1,
+    title: 1,
+    image_url: 1,
+    likes_count: 1,
+    body: 1,
+    created_at: 1,
+  };
+
+  const popular = await (PostModel as any)
+    .find({}, baseSelect)
     .sort({ likes_count: -1 })
-    .limit(6)
+    .limit(3)
     .lean();
 
-  // מעבירים את האובייקטים כמו שהם (כולל body)
+  const latest = await (PostModel as any)
+    .find({}, baseSelect)
+    .sort({ created_at: -1 })
+    .limit(3)
+    .lean();
+
+  const trendingRaw = [...popular, ...latest].filter(
+    (p, index, arr) => index === arr.findIndex((x) => x.id === p.id)
+  );
+
   const trending = trendingRaw.map((p: any) => ({
     id: p.id,
-    title: p.title,
+    title: p.title ?? "Untitled",
     image_url: p.image_url,
-    likes_count: p.likes_count,
-    body: p.body,        // 👈 חדש – כדי שיגיע עד המודאל
+    likes_count: p.likes_count ?? 0,
+    body: p.body ?? "",
   }));
 
   return (
     <main className={styles.page}>
       <div className={styles.container}>
         <div className={styles.mainGrid}>
+
+          {/* LEFT */}
           <div className={styles.leftCol}>
+
             <section className={styles.hero}>
-              <h1 className={styles.title}>
-                Welcome back to your creative world.
-              </h1>
+              <h1 className={styles.title}>Welcome back to your creative world.</h1>
               <p className={styles.subtitle}>
-                Share your art, discover fresh ideas, and connect with creators
-                like you.
+                Share your art, discover fresh ideas, and connect with creators like you.
               </p>
+
               <div className={styles.actions}>
-                <Link href="/create" className={styles.primaryBtn}>
-                  Share your art
-                </Link>
+                <Link href="/create" className={styles.primaryBtn}>Share your art</Link>
                 <Link href="/explore" className={styles.linkBtn}>
                   Explore artworks →
                 </Link>
@@ -72,13 +78,14 @@ export default async function LandingPage() {
 
               <div className={styles.card}>
                 <h2 className={styles.cardTitle}>Artists to follow</h2>
+
                 <ul className={styles.artistList}>
                   {artists.map((a: any) => (
                     <li key={a.username} className={styles.artistRow}>
                       <div className={styles.avatarWrap}>
                         <Image
                           src={
-                            a?.avatarUrl ||
+                            a?.avatar_url ||
                             "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png"
                           }
                           alt={a?.username}
@@ -87,6 +94,7 @@ export default async function LandingPage() {
                           className={styles.avatar}
                         />
                       </div>
+
                       <div className={styles.artistInfo}>
                         <div className={styles.artistName}>
                           {a?.name ?? a?.username}
@@ -95,10 +103,12 @@ export default async function LandingPage() {
                           {a?.artType ?? "Artist"}
                         </div>
                       </div>
+
                       <button className={styles.followBtn}>Follow</button>
                     </li>
                   ))}
                 </ul>
+
                 <Link href="/artists" className={styles.moreLink}>
                   See more artists →
                 </Link>
@@ -106,6 +116,7 @@ export default async function LandingPage() {
             </section>
           </div>
 
+          {/* RIGHT */}
           <div className={styles.rightCol}>
             <div className={styles.heroImageCard}>
               <Image

@@ -24,7 +24,9 @@ function PreviewCard({
         {tags.length > 0 && (
           <ul className={styles.chips}>
             {tags.map((t, i) => (
-              <li key={`${t}-${i}`} className={styles.chip}>#{t}</li>
+              <li key={`${t}-${i}`} className={styles.chip}>
+                #{t}
+              </li>
             ))}
           </ul>
         )}
@@ -46,7 +48,10 @@ export default function CreatePage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [caption, setCaption] = useState("");
+
+  const [title, setTitle] = useState("");       // ⭐ חדש – כותרת
+  const [caption, setCaption] = useState("");   // תיאור
+
   const [tagsInput, setTagsInput] = useState("");
   const [category, setCategory] = useState("Digital");
   const [visibility, setVisibility] = useState<Visibility>("public");
@@ -56,7 +61,7 @@ export default function CreatePage() {
 
   const tags = useMemo(() => {
     const base = tagsInput
-      .split(/[,\s]+/)             
+      .split(/[,\s]+/)
       .map((t) => t.replace(/^#/, "").trim())
       .filter(Boolean);
 
@@ -64,7 +69,9 @@ export default function CreatePage() {
     return unique.slice(0, 5);
   }, [tagsInput]);
 
-  function resetMessages() { setMsg(null); }
+  function resetMessages() {
+    setMsg(null);
+  }
 
   function validate(f: File): string | null {
     const ok = ["image/jpeg", "image/png", "image/webp"];
@@ -73,11 +80,17 @@ export default function CreatePage() {
     return null;
   }
 
-  function handlePick() { fileInputRef.current?.click(); }
+  function handlePick() {
+    fileInputRef.current?.click();
+  }
+
   function handleFile(f: File | null) {
     if (!f) return;
     const err = validate(f);
-    if (err) { setMsg({ type: "error", text: err }); return; }
+    if (err) {
+      setMsg({ type: "error", text: err });
+      return;
+    }
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setMsg(null);
@@ -103,22 +116,28 @@ export default function CreatePage() {
     e.preventDefault();
     resetMessages();
     try {
-      if (!file) { setMsg({ type: "error", text: "Please choose an artwork image." }); return; }
-      if (!caption.trim()) { setMsg({ type: "error", text: "Caption (title) is required." }); return; }
+      if (!file) {
+        setMsg({ type: "error", text: "Please choose an artwork image." });
+        return;
+      }
+      if (!title.trim()) {
+        setMsg({ type: "error", text: "Title is required." });
+        return;
+      }
+
       setLoading(true);
 
       const imageUrl = await uploadToServer(file);
       const user_id = "64b7e56b7b2f0a1234567890";
 
-
       const payload = {
-        title: caption.trim(),
+        title: title.trim(),          // ⭐ עכשיו כותרת אמיתית
         image_url: imageUrl,
         user_id,
-        body: caption.trim(),
+        body: caption.trim(),         // תיאור
         category,
-        tags,       
-        visibility, 
+        tags,
+        visibility,
       };
 
       const res = await fetch("/api/posts", {
@@ -133,8 +152,15 @@ export default function CreatePage() {
       }
 
       setMsg({ type: "success", text: "Artwork published successfully!" });
-      setFile(null); setPreview(null); setCaption("");
-      setTagsInput(""); setCategory("Digital"); setVisibility("public");
+
+      // איפוס טופס
+      setFile(null);
+      setPreview(null);
+      setTitle("");
+      setCaption("");
+      setTagsInput("");
+      setCategory("Digital");
+      setVisibility("public");
     } catch (err: any) {
       setMsg({ type: "error", text: err?.message || "Something went wrong." });
     } finally {
@@ -159,14 +185,19 @@ export default function CreatePage() {
             className={`${styles.uploadBox} ${dragOver ? styles.hover : ""}`}
             role="group"
             aria-label="Upload artwork"
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
           >
             <button type="button" className={styles.uploadLink} onClick={handlePick}>
               Upload artwork
             </button>
-            <p className={styles.uploadHint}>Drag & drop your file here or click to upload</p>
+            <p className={styles.uploadHint}>
+              Drag & drop your file here or click to upload
+            </p>
             <input
               type="file"
               accept="image/*"
@@ -175,6 +206,18 @@ export default function CreatePage() {
               onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
             />
           </div>
+
+          {/* ⭐ כותרת חדשה */}
+          <label className={styles.label}>
+            Title
+            <input
+              className={styles.input}
+              placeholder="Enter artwork title..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onFocus={resetMessages}
+            />
+          </label>
 
           <label className={styles.label}>
             Caption
@@ -239,15 +282,25 @@ export default function CreatePage() {
             </label>
           </fieldset>
 
-          {msg && <div className={msg.type === "error" ? styles.error : styles.success}>{msg.text}</div>}
+          {msg && (
+            <div className={msg.type === "error" ? styles.error : styles.success}>
+              {msg.text}
+            </div>
+          )}
 
           <div className={styles.actions}>
             <button
               type="button"
               className={styles.btnSecondary}
               onClick={() => {
-                setFile(null); setPreview(null); setCaption("");
-                setTagsInput(""); setCategory("Digital"); setVisibility("public"); setMsg(null);
+                setFile(null);
+                setPreview(null);
+                setTitle("");
+                setCaption("");
+                setTagsInput("");
+                setCategory("Digital");
+                setVisibility("public");
+                setMsg(null);
               }}
             >
               Cancel
