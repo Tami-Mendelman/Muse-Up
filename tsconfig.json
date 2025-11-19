@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    // "target": "ES2017",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
+    "allowImportingTsExtensions": true,
+    "target": "esnext",
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
