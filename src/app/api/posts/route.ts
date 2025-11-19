@@ -2,15 +2,14 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
-import Post from "../../../models/Post";
-import mongoose from "mongoose";
+import PostModel from "../../../models/Post";   // מודל הפוסטים
 
 /** GET /api/posts – מחזיר את כל הפוסטים */
 export async function GET() {
   try {
     await dbConnect();
 
-    const posts = await (Post as any)
+    const posts = await (PostModel as any)
       .find()
       .sort({ created_at: -1 })
       .lean();
@@ -30,15 +29,7 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    let body: any;
-    try {
-      body = await req.json();
-    } catch (e) {
-      return NextResponse.json(
-        { error: "Invalid JSON body" },
-        { status: 400 }
-      );
-    }
+    const body = await req.json();
 
     const {
       title,
@@ -46,11 +37,10 @@ export async function POST(req: Request) {
       user_id,
       body: text,
       category,
-      tags,
-      visibility,
+      tags = [],
+      visibility = "public",
     } = body;
 
-    // ולידציה בסיסית
     if (!title || !image_url || !user_id) {
       return NextResponse.json(
         { error: "title, image_url and user_id are required" },
@@ -58,22 +48,24 @@ export async function POST(req: Request) {
       );
     }
 
-    // בודקים שה־user_id בפורמט ObjectId תקין
-    if (!mongoose.isValidObjectId(user_id)) {
-      return NextResponse.json(
-        { error: "Invalid user_id (must be a Mongo ObjectId)" },
-        { status: 400 }
-      );
-    }
+    // יצירת ID מספרי עוקבי
+    const lastPost = await (PostModel as any)
+      .findOne()
+      .sort({ id: -1 })
+      .lean();
 
-    const newPost = await (Post as any).create({
+    const newId = lastPost?.id ? lastPost.id + 1 : 1;
+
+    // יצירת פוסט חדש ושמירתו
+    const newPost = await (PostModel as any).create({
+      id: newId,
       title,
       image_url,
       user_id,
       body: text,
       category,
-      ...(Array.isArray(tags) ? { tags } : {}),
-      ...(visibility ? { visibility } : {}),
+      tags,
+      visibility,
       status: "active",
       likes_count: 0,
       comments_count: 0,

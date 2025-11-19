@@ -3,6 +3,8 @@ export const runtime = "nodejs";
 import type { NextRequest } from "next/server";
 import { dbConnect } from "../../../../lib/mongoose";
 import Post from "../../../../models/Post";
+import User from "../../../../models/User";
+import mongoose from "mongoose";
 
 type ParamsCtx = {
   params: Promise<{ id: string }>;
@@ -19,13 +21,43 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
     await dbConnect();
 
+    // שליפת הפוסט לפי ה-id המספרי
     const post = await (Post as any).findOne({ id: numericId }).lean();
-
     if (!post) {
       return Response.json({ message: "Post not found" }, { status: 404 });
     }
 
-    return Response.json(post, { status: 200 });
+    // ------------------------------
+    // ⭐ שליפת המשתמש – רק אם user_id הוא ObjectId חוקי
+    // ------------------------------
+    let author = null;
+
+    if (
+      typeof post.user_id === "string" &&
+      mongoose.isValidObjectId(post.user_id)
+    ) {
+      const user = await (User as any)
+        .findById(post.user_id)
+        .lean()
+        .catch(() => null);
+
+      if (user) {
+        author = {
+          name: user.name,
+          avatar_url: user.avatar_url,
+          followers_count: user.followers_count,
+          username: user.username,
+        };
+      }
+    }
+
+    return Response.json(
+      {
+        ...post,
+        author, // או null אם אין יוצר
+      },
+      { status: 200 }
+    );
   } catch (err: any) {
     console.error("GET /api/posts/[id] error:", err);
     return Response.json(
@@ -35,10 +67,6 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   }
 }
 
-/**
- * PATCH – עדכון likes_count
- * body: { delta: number }  // למשל 1 ללייק, -1 לאנלייק
- */
 export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
     const { id } = await ctx.params;
@@ -67,7 +95,6 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
       return Response.json({ message: "Post not found" }, { status: 404 });
     }
 
-    // לא נחזור עם כל הפוסט – רק הערך החדש
     return Response.json({ likes_count: updated.likes_count }, { status: 200 });
   } catch (err: any) {
     console.error("PATCH /api/posts/[id] error:", err);
