@@ -10,6 +10,10 @@ type ParamsCtx = {
   params: Promise<{ id: string }>;
 };
 
+/** -----------------------------
+ *  GET /api/posts/[id]
+ *  שליפת פוסט + פרטי יוצר
+ * ----------------------------- */
 export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   try {
     const { id } = await ctx.params;
@@ -21,15 +25,13 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
     await dbConnect();
 
-    // שליפת הפוסט לפי ה-id המספרי
+    // שליפת הפוסט לפי id מספרי
     const post = await (Post as any).findOne({ id: numericId }).lean();
     if (!post) {
       return Response.json({ message: "Post not found" }, { status: 404 });
     }
 
-    // ------------------------------
-    // ⭐ שליפת המשתמש – רק אם user_id הוא ObjectId חוקי
-    // ------------------------------
+    // שליפת מידע על היוצר
     let author = null;
 
     if (
@@ -44,7 +46,7 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
       if (user) {
         author = {
           name: user.name,
-          avatar_url: user.avatar_url,
+          avatar_url: user.avatar_url ?? user.profil_url ?? null,
           followers_count: user.followers_count,
           username: user.username,
         };
@@ -54,7 +56,7 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
     return Response.json(
       {
         ...post,
-        author, // או null אם אין יוצר
+        author, // יכול להיות null אם אין יוצר
       },
       { status: 200 }
     );
@@ -66,7 +68,6 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
     );
   }
 }
-
 export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
     const { id } = await ctx.params;

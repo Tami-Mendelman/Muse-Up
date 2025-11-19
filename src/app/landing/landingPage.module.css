@@ -297,3 +297,25 @@
     grid-template-columns: 1fr;
   }
 }
+/* ⭐ Trending — Author ⭐ */
+.authorBoxTrending {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.authorAvatarTrending {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.authorNameTrending {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
