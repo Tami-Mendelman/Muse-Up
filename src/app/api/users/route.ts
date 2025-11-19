@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   await dbConnect();
   try {
     const data = await req.json();
-    const { firebase_uid, name, email, username, avatar_url, bio, location } = data;
+    const { firebase_uid, name, email, username, profil_url, bio, location } = data;
 
     if (!firebase_uid || !name || !email || !username) {
       return NextResponse.json(
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
     const user = await User.findOneAndUpdate(
       { firebase_uid },
-      { firebase_uid, name, email, username, avatar_url, bio, location },
+      { firebase_uid, name, email, username, profil_url, bio, location },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 

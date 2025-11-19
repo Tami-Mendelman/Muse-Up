@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "../../lib/firebase";
 import styles from "./onboarding.module.css";
+import AvatarCropper from "../components/CropImage/CropImage";
 
 type OnboardingProps = {
   name: string;
@@ -51,6 +52,7 @@ export default function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tempFile, setTempFile] = useState<File | null>(null);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -77,15 +79,17 @@ export default function OnboardingPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAvatarUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setTempFile(file);
+  };
 
+  const handleCropConfirm = async (croppedFile: File) => {
+    setTempFile(null);
     try {
       setAvatarUploading(true);
-      const url = await uploadToServer(file);
+      const url = await uploadToServer(croppedFile);
       setForm((prev) => ({ ...prev, avatar_url: url }));
     } catch (err) {
       console.error(err);
@@ -104,28 +108,21 @@ export default function OnboardingPage() {
       setError("No authenticated user");
       return;
     }
-
-    // ניקוי רווחים והכנה לוולידציה
     const trimmedName = form.name.trim();
     const trimmedUsername = form.username.trim();
     const trimmedLocation = form.location.trim();
     const trimmedBio = form.bio.trim();
-    const email = form.email || user.email || "";
 
-    // האם יש תמונה שמגיעה מגוגל?
+    const email = form.email || user.email || "";
     const googleAvatar = user.photoURL;
     const hasGoogleAvatar = !!googleAvatar;
     const hasUploadedAvatar = !!form.avatar_url;
 
-    // 1. בדיקה שכל השדות מלאים
     if (!trimmedName || !trimmedUsername || !trimmedLocation || !trimmedBio || !email) {
       setError("All fields are required");
       return;
     }
 
-    // 2. בדיקה שתמונה קיימת:
-    //    - אם יש תמונה מגוגל (user.photoURL) – זה מספיק
-    //    - אחרת חייב שתהיה תמונה שהמשתמש העלה (form.avatar_url)
     if (!hasGoogleAvatar && !hasUploadedAvatar) {
       setError("Profile picture is required");
       return;
@@ -133,7 +130,24 @@ export default function OnboardingPage() {
 
     setSubmitting(true);
 
+    let avatarToSave = googleAvatar;
+    if (form.avatar_url && form.avatar_url !== googleAvatar) {
+      avatarToSave = form.avatar_url;
+    }
+
     try {
+      console.log("Current avatar_url in form state:", form.avatar_url);
+      console.log("Submitting user data:");
+      console.log({
+        firebase_uid: user.uid,
+        name: trimmedName,
+        email: email,
+        username: trimmedUsername,
+        profil_url: avatarToSave,
+        bio: trimmedBio,
+        location: trimmedLocation,
+      });
+
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -142,7 +156,7 @@ export default function OnboardingPage() {
           name: trimmedName,
           email: email,
           username: trimmedUsername,
-          avatar_url: hasUploadedAvatar ? form.avatar_url : googleAvatar,
+          profil_url: avatarToSave,
           bio: trimmedBio,
           location: trimmedLocation,
         }),
@@ -192,14 +206,22 @@ export default function OnboardingPage() {
               </div>
 
               <div className={styles.avatarActions}>
-                <input
-                  id="avatar"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  className={styles.fileInput}
-                  disabled={avatarUploading}
-                />
+                {tempFile ? (
+                  <AvatarCropper
+                    imageFile={tempFile}
+                    onUpload={handleCropConfirm}
+                    onCancel={() => setTempFile(null)}
+                  />
+                ) : (
+                  <input
+                    id="avatar"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className={styles.fileInput}
+                    disabled={avatarUploading}
+                  />
+                )}
                 <p className={styles.helperText}>
                   אם התחברת דרך Google – זו התמונה משם. אפשר לעדכן לתמונה
                   אחרת.
