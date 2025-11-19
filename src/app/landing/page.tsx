@@ -11,7 +11,7 @@ export default async function LandingPage() {
 
   const artists = await UserModel.find(
     {},
-    { _id: 0, username: 1, name: 1, artType: 1, avatar_url: 1 }
+    { _id: 0, username: 1, name: 1, artType: 1, profil_url: 1 }
   )
     .sort({ followers_count: -1 })
     .limit(5)
@@ -66,16 +66,23 @@ export default async function LandingPage() {
               </p>
 
               <div className={styles.actions}>
-                <Link href="/create" className={styles.primaryBtn}>Share your art</Link>
+                <Link href="/create" className={styles.primaryBtn}>
+                  Share your art
+                </Link>
+
                 <Link href="/explore" className={styles.linkBtn}>
                   Explore artworks →
                 </Link>
               </div>
             </section>
 
+            {/* TRENDING + ARTISTS */}
             <section className={styles.bottomLeft}>
+
+              {/* Trending */}
               <TrendingSection trending={trending} />
 
+              {/* Artists */}
               <div className={styles.card}>
                 <h2 className={styles.cardTitle}>Artists to follow</h2>
 
@@ -85,7 +92,7 @@ export default async function LandingPage() {
                       <div className={styles.avatarWrap}>
                         <Image
                           src={
-                            a?.avatar_url ||
+                            a?.profil_url ||
                             "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png"
                           }
                           alt={a?.username}
@@ -109,11 +116,12 @@ export default async function LandingPage() {
                   ))}
                 </ul>
 
+                {/* FIXED LINK — no nested Link */}
                 <Link href="/users" className={styles.moreLink}>
-                <Link href="/artists" className={styles.moreLink}>
                   See more artists →
                 </Link>
               </div>
+
             </section>
           </div>
 
