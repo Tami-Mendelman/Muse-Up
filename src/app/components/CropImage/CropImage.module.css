@@ -1,0 +1,85 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 400px;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.title {
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.cropperContainer {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #ccc;
+  margin-bottom: 15px;
+}
+
+.sliderWrapper {
+  width: 80%;
+  margin-bottom: 15px;
+}
+
+.zoomSlider {
+  width: 100%;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+}
+
+.confirmBtn,
+.cancelBtn {
+  padding: 8px 20px;
+  border-radius: 24px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirmBtn {
+  background-color: #1a73e8; /* כחול כמו בגוגל */
+  color: #fff;
+}
+
+.confirmBtn:hover {
+  background-color: #1669c1;
+}
+
+.cancelBtn {
+  background-color: #e8eaed;
+  color: #202124;
+}
+
+.cancelBtn:hover {
+  background-color: #dadce0;
+}
