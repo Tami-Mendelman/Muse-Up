@@ -8,6 +8,7 @@ import {
 } from "react";
 import styles from "./profile.module.css";
 import { useRouter } from "next/navigation";
+import AvatarCropper from "../components/CropImage/CropImage"; 
 
 type User = {
   _id: string;
@@ -64,6 +65,7 @@ export default function ProfilePage() {
   const [loadingFollowing, setLoadingFollowing] = useState(false);
   const [posts, setPosts] = useState<PostCard[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
+
   const [editForm, setEditForm] = useState<EditFormState>({
     name: "",
     username: "",
@@ -71,13 +73,14 @@ export default function ProfilePage() {
     location: "",
     profil_url: "",
   });
+
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(null);
 
   const router = useRouter();
-
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -176,7 +179,6 @@ export default function ProfilePage() {
 
     loadFollowers();
   }, [activeTab, user]);
-
   useEffect(() => {
     if (activeTab !== "following") return;
     if (!user?.firebase_uid) return;
@@ -209,7 +211,6 @@ export default function ProfilePage() {
 
     loadFollowing();
   }, [activeTab, user]);
-
   async function uploadAvatar(file: File): Promise<string> {
     const fd = new FormData();
     fd.append("file", file);
@@ -244,12 +245,15 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setAvatarFileToCrop(file); 
+    setSaveError(null);
+    setSaveSuccess(false);
+  }
+  const handleCroppedAvatarUpload = async (croppedFile: File) => {
     try {
       setUploadingAvatar(true);
-      setSaveError(null);
-      setSaveSuccess(false);
+      const url = await uploadAvatar(croppedFile);
 
-      const url = await uploadAvatar(file);
       setEditForm((prev) => ({ ...prev, profil_url: url }));
 
       setUser((prev) =>
@@ -260,8 +264,9 @@ export default function ProfilePage() {
       setSaveError("Upload failed. Please try again.");
     } finally {
       setUploadingAvatar(false);
+      setAvatarFileToCrop(null); 
     }
-  }
+  };
 
   async function handleSaveProfile(e: FormEvent) {
     e.preventDefault();
@@ -384,6 +389,7 @@ export default function ProfilePage() {
         >
           My Posts
         </button>
+
         <button
           className={`${styles.tab} ${
             activeTab === "collections" ? styles.tabActive : ""
@@ -413,6 +419,13 @@ export default function ProfilePage() {
       <section className={styles.content}>
         {activeTab === "posts" && (
           <div className={styles.postsSection}>
+                  <button
+  className={styles.shareArtBtn}
+  onClick={() => router.push("/create")}
+>   
+  share your art
+   <span className={styles.sharePlus}>+</span>
+</button>
             {loadingPosts && <p>Loading posts…</p>}
 
             {!loadingPosts && posts.length === 0 && (
@@ -587,6 +600,7 @@ export default function ProfilePage() {
             </div>
           </form>
         )}
+
         {activeTab === "collections" && (
           <div className={styles.placeholder}>
             כאן נציג Collections לפי המוקטאפים שלך
@@ -683,6 +697,13 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
+      {avatarFileToCrop && (
+        <AvatarCropper
+          imageFile={avatarFileToCrop}
+          onUpload={handleCroppedAvatarUpload}
+          onCancel={() => setAvatarFileToCrop(null)}
+        />
+      )}
     </div>
   );
 }
