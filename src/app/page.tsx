@@ -64,7 +64,7 @@ export default async function HomePage() {
         <header className={styles.header}>
           <div className={styles.logoArea}>
             <img
-              src="/images/museup_logo.png"
+              src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763634918/image__1_-removebg-preview_tepfvv.png"
               alt="MuseUp Logo"
               style={{
                 width: "70px",
@@ -159,7 +159,7 @@ export default async function HomePage() {
 
         <div className={styles.illustrationBox}>
           <img
-            src="/images/eb57c0b0-9262-4fa0-a466-df17288cae0b.png"
+            src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763634876/eb57c0b0-9262-4fa0-a466-df17288cae0b_vcdv6o.png"
             alt="Artist illustration"
           />
         </div>
