@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation"; 
+import { usePathname, useRouter } from "next/navigation";
 import styles from "./Sidebar.module.css";
 import {
   FiHome,
@@ -14,25 +14,33 @@ import {
 
 import ArtistSearchDrawer from "../../../app/components/ArtistSearchDrawer/ArtistSearchDrawer";
 
+type UserResponse = {
+  profil_url?: string;
+};
+
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false); 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
   const ref = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
-  const router = useRouter(); 
+  const router = useRouter();
 
-  const activeKey: string =
+  const baseActiveKey: string =
     pathname?.startsWith("/messages")
       ? "messages"
-      : pathname?.startsWith("/profile")
+      : pathname?.startsWith("/following") || pathname?.startsWith("/profile")
       ? "profile"
       : pathname?.startsWith("/create")
       ? "create"
       : pathname?.startsWith("/search")
       ? "search"
-      : pathname?.startsWith("/about")
-      ? "about"
+      : pathname === "/landing" || pathname === "/"
+      ? "home"
       : "home";
+
+  const activeKey = drawerOpen ? "search" : baseActiveKey;
 
   useEffect(() => {
     document.documentElement.style.setProperty(
@@ -59,6 +67,31 @@ export default function Sidebar() {
     return () => document.removeEventListener("click", onDocClick);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const uid = localStorage.getItem("firebase_uid");
+    if (!uid) return;
+
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`/api/Users/${uid}`);
+        if (!res.ok) return;
+
+        const data: UserResponse = await res.json();
+        if (data.profil_url && data.profil_url.trim() !== "") {
+          setAvatarUrl(data.profil_url);
+        } else {
+          setAvatarUrl(null);
+        }
+      } catch (err) {
+        console.error("Failed to load avatar:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <>
       <aside
@@ -79,12 +112,23 @@ export default function Sidebar() {
           <span className={styles.dot} />
         </button>
 
-        <div className={styles.avatar} aria-hidden="true" />
-
+         {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt="Profile"
+            className={styles.avatar}
+            onClick={() => router.push("/profile")}
+          />
+        ) : (
+          <div
+            className={styles.avatar}
+            aria-hidden="true"
+            onClick={() => router.push("/profile")}
+          />
+        )}
         <nav className={styles.nav}>
-
           <button
-            onClick={() => router.push("/landing")}  
+            onClick={() => router.push("/landing")}
             className={`${styles.btn} ${
               activeKey === "home" ? styles.active : ""
             }`}
@@ -98,6 +142,7 @@ export default function Sidebar() {
           </button>
 
           <button
+            onClick={() => router.push("/messages")}
             className={`${styles.btn} ${
               activeKey === "messages" ? styles.active : ""
             }`}
@@ -110,22 +155,22 @@ export default function Sidebar() {
             />
           </button>
 
-        <button
-  onClick={() => router.push("/following")}
-  className={`${styles.btn} ${
-    activeKey === "profile" ? styles.active : ""
-  }`}
-  aria-label="Following"
->
-  <FiUser
-    className={`${styles.icon} ${
-      activeKey === "profile" ? styles.iconActive : ""
-    }`}
-  />
-</button>
-
+          <button
+            onClick={() => router.push("/following")}
+            className={`${styles.btn} ${
+              activeKey === "profile" ? styles.active : ""
+            }`}
+            aria-label="Following"
+          >
+            <FiUser
+              className={`${styles.icon} ${
+                activeKey === "profile" ? styles.iconActive : ""
+              }`}
+            />
+          </button>
 
           <button
+            onClick={() => router.push("/create")}
             className={`${styles.btn} ${
               activeKey === "create" ? styles.active : ""
             }`}
@@ -159,6 +204,7 @@ export default function Sidebar() {
           <FiHeart className={styles.icon} />
         </button>
       </aside>
+
       <ArtistSearchDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}

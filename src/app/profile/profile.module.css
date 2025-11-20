@@ -1,0 +1,450 @@
+.page {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 24px 40px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.avatarWrapper {
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+}
+
+.avatarFallback {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.metaItem {
+  color: #6b7280;
+}
+
+.metaItemButton {
+  border: none;
+  padding: 0;
+  background: none;
+  color: #111827;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.metaItemButton:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  color: #d1d5db;
+}
+
+.bio {
+  margin: 0;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.location {
+  margin: 0;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+
+
+.tabs {
+  margin-top: 24px;
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  font-size: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  background: #f9fafb;
+}
+
+.tabActive {
+  color: #111827;
+  border-bottom-color: #2563eb;
+  font-weight: 600;
+}
+
+
+
+.content {
+  margin-top: 24px;
+}
+
+.placeholder {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+
+
+.followersSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.followersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.followerCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.followerAvatarWrapper {
+  flex-shrink: 0;
+}
+
+.followerAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.followerAvatarFallback {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.followerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.followerName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.followerUsername {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+
+
+@media (max-width: 768px) {
+  .page {
+    margin-top: 24px;
+    padding: 0 16px 32px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .avatar,
+  .avatarFallback {
+    width: 96px;
+    height: 96px;
+  }
+}
+
+
+.postsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.postsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.postCard {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.postImageWrapper {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  background: #f3f4f6;
+}
+
+.postImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.postInfo {
+  padding: 8px 12px 12px;
+}
+
+.postTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editForm {
+  margin-top: 24px;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.editGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
+  gap: 24px;
+}
+
+@media (max-width: 800px) {
+  .editGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.editLeft,
+.editRight {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.editField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.editInput,
+.editTextarea {
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 8px 10px;
+  font-size: 14px;
+  outline: none;
+  background: #f9fafb;
+}
+
+.editInput:focus,
+.editTextarea:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+}
+
+.editTextarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+
+.editAvatarWrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.editAvatarFallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+}
+
+.editUploadBtn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+  font-weight: 500;
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+.editUploadBtn:hover {
+  background: #f3f4f6;
+}
+
+.editHint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+
+.editError {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.editSuccess {
+  color: #166534;
+  background: #dcfce7;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.editPrimaryBtn,
+.editSecondaryBtn {
+  min-width: 120px;
+  height: 38px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.editPrimaryBtn {
+  background: linear-gradient(135deg, #4f46e5, #ec4899);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.editPrimaryBtn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.editSecondaryBtn {
+  background: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.editSecondaryBtn:hover {
+  background: #f9fafb;
+}

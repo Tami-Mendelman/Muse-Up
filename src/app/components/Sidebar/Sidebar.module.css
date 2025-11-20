@@ -4,7 +4,6 @@
   --stagger-step: 0.15s; 
 }
 
-/* בסיס */
 .root {
   position: fixed;
   inset-block: 0;
@@ -21,18 +20,15 @@
   box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
-/* מצב סגור: פס צר + ידית */
 .closed {
   width: 24px;
 }
 
-/* מצב פתוח: 72px (כמו במוקאף) */
 .open {
-  width: 72px;
+  width: 120px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
-/* ידית לפתיחה/סגירה – תמיד נראית */
 .handle {
   all: unset;
   display: grid;
@@ -50,7 +46,6 @@
   background: #9aa3b2;
 }
 
-/* כשסגור – מסתירים את כל התוכן חוץ מהידית */
 .closed .avatar,
 .closed .nav,
 .closed .spacer,
@@ -60,7 +55,6 @@
   transform: translateX(8px);
 }
 
-/* כשפתוח – מציגים עם אנימציית סטאגר איטית יותר */
 .open .nav .btn,
 .open .avatar,
 .open .btn[aria-label="Favorites"] {
@@ -86,7 +80,6 @@
   animation-delay: calc(var(--stagger-step) * 6);
 }
 
-/* אפקט כניסה */
 @keyframes pop {
   from {
     opacity: 0;
@@ -99,13 +92,15 @@
 }
 
 .avatar {
-  width: 38px;
-  height: 38px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: #d9dcee;
   border: 2px solid #fff;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-  margin: 2px 0 6px;
+  margin: 8px 0 10px;
+  object-fit: cover;
+  overflow: hidden;
 }
 
 .nav {
@@ -118,8 +113,8 @@
 .btn {
   all: unset;
   width: 100%;
-  height: 44px;
-  border-radius: 12px;
+  height: 56px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -131,20 +126,20 @@
 }
 
 .icon {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   color: #1f2937;
 }
 
 .spacer {
-  flex: 1;
+  flex: 2;
 }
-/* מצב Active */
+
 .active { background: #eef3ff; }
 .iconActive { color: #2f76ff; }
 
-/* טולטיפים כשהסיידבר סגור */
-.root { position: fixed; } /* כבר קיים – נשאיר כדי שימקם יחסית */
+
+.root { position: fixed; } 
 .closed .btn { position: relative; }
 .closed .btn:hover::after {
   content: attr(data-title);
@@ -181,7 +176,6 @@
 }
 
 
-/* מובייל – מעט צר יותר */
 @media (max-width: 640px) {
   .open {
     width: 64px;

@@ -1,16 +1,25 @@
 export const runtime = "nodejs";
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
-import PostModel from "../../../models/Post";   // מודל הפוסטים
+import PostModel from "../../../models/Post";   
 
-/** GET /api/posts – מחזיר את כל הפוסטים */
-export async function GET() {
+
+export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    const filter: any = {};
+
+    if (userId) {
+      filter.user_id = userId;  
+    }
+
     const posts = await (PostModel as any)
-      .find()
+      .find(filter)
       .sort({ created_at: -1 })
       .lean();
 
@@ -24,8 +33,8 @@ export async function GET() {
   }
 }
 
-/** POST /api/posts – יצירת פוסט חדש */
-export async function POST(req: Request) {
+
+export async function POST(req: NextRequest) {
   try {
     await dbConnect();
 
@@ -33,12 +42,12 @@ export async function POST(req: Request) {
 
     const {
       title,
+      body: content,
       image_url,
       user_id,
-      body: text,
       category,
-      tags = [],
-      visibility = "public",
+      tags,
+      visibility,
     } = body;
 
     if (!title || !image_url || !user_id) {
@@ -48,24 +57,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // יצירת ID מספרי עוקבי
-    const lastPost = await (PostModel as any)
-      .findOne()
-      .sort({ id: -1 })
-      .lean();
-
-    const newId = lastPost?.id ? lastPost.id + 1 : 1;
-
-    // יצירת פוסט חדש ושמירתו
     const newPost = await (PostModel as any).create({
-      id: newId,
       title,
+      body: content ?? "",
       image_url,
       user_id,
-      body: text,
-      category,
-      tags,
-      visibility,
+      category: category ?? "",
+      tags: tags ?? [],
+      visibility: visibility ?? "public",
       status: "active",
       likes_count: 0,
       comments_count: 0,
