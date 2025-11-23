@@ -1,43 +1,30 @@
 "use client";
-
-import {
-  useEffect,
-  useState,
-  ChangeEvent,
-  FormEvent,
-} from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import styles from "./profile.module.css";
 import { useRouter } from "next/navigation";
-import AvatarCropper from "../components/CropImage/CropImage"; 
+import AvatarCropper from "../components/CropImage/CropImage";
 
-type User = {
-  _id: string;
-  firebase_uid: string;
-  username: string;
-  name?: string;
-  profil_url?: string;
-  bio?: string;
-  location?: string;
-  followers_count?: number;
-  following_count?: number;
-};
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-type SimpleUser = {
-  _id: string;
-  username: string;
-  name?: string;
-  profil_url?: string;
-};
+import { useFirebaseUid } from "../../hooks/useFirebaseUid";
+import {
+  useProfileEditForm,
+  type EditFormState,
+} from "../../hooks/useProfileEditForm";
 
-type PostCard = {
-  _id: string;
-  id?: number;
-  title: string;
-  image_url: string;
-  user_id: string;
-  likes_count?: number;
-  comments_count?: number;
-};
+import {
+  getUserByUid,
+  updateUserProfile,
+  type User,
+  type UpdateUserPayload,
+} from "../../services/userService";
+import { getUserPosts, type PostCard } from "../../services/postService";
+import {
+  getFollowersForUser,
+  getFollowingForUser,
+  type SimpleUser,
+} from "../../services/followService";
+import { uploadAvatar } from "../../services/uploadService";
 
 type TabKey =
   | "posts"
@@ -47,196 +34,92 @@ type TabKey =
   | "followers"
   | "following";
 
-type EditFormState = {
-  name: string;
-  username: string;
-  bio: string;
-  location: string;
-  profil_url: string;
-};
-
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const [activeTab, setActiveTab] = useState<TabKey>("posts");
-  const [followers, setFollowers] = useState<SimpleUser[]>([]);
-  const [following, setFollowing] = useState<SimpleUser[]>([]);
-  const [loadingUser, setLoadingUser] = useState(true);
-  const [loadingFollowers, setLoadingFollowers] = useState(false);
-  const [loadingFollowing, setLoadingFollowing] = useState(false);
-  const [posts, setPosts] = useState<PostCard[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(false);
-
-  const [editForm, setEditForm] = useState<EditFormState>({
-    name: "",
-    username: "",
-    bio: "",
-    location: "",
-    profil_url: "",
-  });
-
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(null);
+  const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(
+    null
+  );
 
-  const router = useRouter();
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const { uid, ready: uidReady } = useFirebaseUid();
 
-    const uid =
-      localStorage.getItem("firebase_uid") ||
-      localStorage.getItem("firebaseUid") ||
-      localStorage.getItem("userId");
+  const {
+    data: user,
+    isLoading: loadingUser,
+    error: userError,
+  } = useQuery<User>({
+    queryKey: ["user", uid],
+    queryFn: () => getUserByUid(uid as string),
+    enabled: uidReady && !!uid,
+  });
 
-    if (!uid) {
-      setLoadingUser(false);
-      return;
-    }
+  const { form: editForm, setForm: setEditForm } =
+    useProfileEditForm(user ?? null);
 
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(`/api/Users/${uid}`);
-        if (!res.ok) throw new Error("User not found");
-        const data = await res.json();
+  const {
+    data: posts = [],
+    isLoading: loadingPosts,
+    error: postsError,
+  } = useQuery<PostCard[]>({
+    queryKey: ["posts", user?._id],
+    queryFn: () => getUserPosts(user!._id),
+    enabled: !!user && activeTab === "posts",
+  });
 
-        setUser(data);
+  const {
+    data: followers = [],
+    isLoading: loadingFollowers,
+    error: followersError,
+  } = useQuery<SimpleUser[]>({
+    queryKey: ["followers", user?.firebase_uid],
+    queryFn: () => getFollowersForUser(user!.firebase_uid),
+    enabled: !!user && activeTab === "followers",
+  });
 
-        setEditForm({
-          name: data.name ?? "",
-          username: data.username ?? "",
-          bio: data.bio ?? "",
-          location: data.location ?? "",
-          profil_url: data.profil_url ?? "",
-        });
-      } catch (err) {
-        console.error("Failed to load user", err);
-      } finally {
-        setLoadingUser(false);
-      }
-    };
+  const {
+    data: following = [],
+    isLoading: loadingFollowing,
+    error: followingError,
+  } = useQuery<SimpleUser[]>({
+    queryKey: ["following", user?.firebase_uid],
+    queryFn: () => getFollowingForUser(user!.firebase_uid),
+    enabled: !!user && activeTab === "following",
+  });
 
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab !== "posts") return;
-    if (!user?._id) return;
-
-    const loadPosts = async () => {
-      setLoadingPosts(true);
-      try {
-        const res = await fetch(`/api/posts?userId=${user._id}`);
-        if (!res.ok) throw new Error("Posts error");
-
-        const data = await res.json();
-        const list: PostCard[] = Array.isArray(data)
-          ? data
-          : Array.isArray(data.posts)
-          ? data.posts
-          : [];
-
-        setPosts(list);
-      } catch (err) {
-        console.error("Failed to load posts", err);
-      } finally {
-        setLoadingPosts(false);
-      }
-    };
-
-    loadPosts();
-  }, [activeTab, user?._id]);
-
-  useEffect(() => {
-    if (activeTab !== "followers") return;
-    if (!user?.firebase_uid) return;
-
-    const loadFollowers = async () => {
-      setLoadingFollowers(true);
-      try {
-        const res = await fetch(
-          `/api/followers-users?userId=${encodeURIComponent(
-            user.firebase_uid
-          )}`
-        );
-
-        if (!res.ok) throw new Error("Followers error");
-        const data = await res.json();
-
-        const list: SimpleUser[] = Array.isArray(data)
-          ? data
-          : Array.isArray(data.users)
-          ? data.users
-          : [];
-
-        setFollowers(list);
-      } catch (err) {
-        console.error("Failed to load followers", err);
-      } finally {
-        setLoadingFollowers(false);
-      }
-    };
-
-    loadFollowers();
-  }, [activeTab, user]);
-  useEffect(() => {
-    if (activeTab !== "following") return;
-    if (!user?.firebase_uid) return;
-
-    const loadFollowing = async () => {
-      setLoadingFollowing(true);
-      try {
-        const res = await fetch(
-          `/api/following-users?userId=${encodeURIComponent(
-            user.firebase_uid
-          )}`
-        );
-
-        if (!res.ok) throw new Error("Following error");
-        const data = await res.json();
-
-        const list: SimpleUser[] = Array.isArray(data)
-          ? data
-          : Array.isArray(data.users)
-          ? data.users
-          : [];
-
-        setFollowing(list);
-      } catch (err) {
-        console.error("Failed to load following", err);
-      } finally {
-        setLoadingFollowing(false);
-      }
-    };
-
-    loadFollowing();
-  }, [activeTab, user]);
-  async function uploadAvatar(file: File): Promise<string> {
-    const fd = new FormData();
-    fd.append("file", file);
-
-    const res = await fetch("/api/uploads", {
-      method: "POST",
-      body: fd,
-    });
-
-    if (!res.ok) {
-      throw new Error(`Upload failed (${res.status})`);
-    }
-
-    const data = await res.json();
-    if (!data?.url) {
-      throw new Error("Upload response missing url");
-    }
-
-    return data.url as string;
+  if (!uidReady) {
+    return <div className={styles.page}>Loading profile…</div>;
   }
 
+  if (!uid) {
+    return (
+      <div className={styles.page}>
+        <p>No logged-in user. Please sign in.</p>
+      </div>
+    );
+  }
+
+  if (loadingUser) {
+    return <div className={styles.page}>Loading profile…</div>;
+  }
+
+  if (userError || !user) {
+    return (
+      <div className={styles.page}>
+        <p>Failed to load profile.</p>
+      </div>
+    );
+  }
   function handleEditChange(
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
+    setEditForm((prev: EditFormState) => ({ ...prev, [name]: value }));
   }
 
   async function handleAvatarInputChange(
@@ -245,73 +128,51 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setAvatarFileToCrop(file); 
+    setAvatarFileToCrop(file);
     setSaveError(null);
     setSaveSuccess(false);
   }
+
   const handleCroppedAvatarUpload = async (croppedFile: File) => {
     try {
       setUploadingAvatar(true);
       const url = await uploadAvatar(croppedFile);
 
-      setEditForm((prev) => ({ ...prev, profil_url: url }));
-
-      setUser((prev) =>
-        prev ? { ...prev, profil_url: url } : prev
+      setEditForm((prev: EditFormState) => ({
+        ...prev,
+        profil_url: url,
+      }));
+      queryClient.setQueryData<User>(["user", uid], (old) =>
+        old ? { ...old, profil_url: url } : old
       );
     } catch (err) {
       console.error("Failed to upload avatar", err);
       setSaveError("Upload failed. Please try again.");
     } finally {
       setUploadingAvatar(false);
-      setAvatarFileToCrop(null); 
+      setAvatarFileToCrop(null);
     }
   };
 
   async function handleSaveProfile(e: FormEvent) {
     e.preventDefault();
-    if (!user?.firebase_uid) return;
+    if (!user) return;
 
     setSavingProfile(true);
     setSaveError(null);
     setSaveSuccess(false);
 
     try {
-      const res = await fetch(`/api/Users/${user.firebase_uid}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: editForm.name.trim(),
-          username: editForm.username.trim(),
-          bio: editForm.bio.trim(),
-          location: editForm.location.trim(),
-          profil_url: editForm.profil_url,
-        }),
-      });
+      const payload: UpdateUserPayload = {
+        name: editForm.name.trim(),
+        username: editForm.username.trim(),
+        bio: editForm.bio.trim(),
+        location: editForm.location.trim(),
+        profil_url: editForm.profil_url,
+      };
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Failed to update profile:", text);
-        throw new Error("Failed to update profile");
-      }
-
-      const updated = await res.json();
-
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              name: updated.name,
-              username: updated.username,
-              bio: updated.bio,
-              location: updated.location,
-              profil_url: updated.profil_url,
-            }
-          : prev
-      );
-
+      const updated = await updateUserProfile(user.firebase_uid, payload);
+      queryClient.setQueryData<User>(["user", uid], updated);
       setSaveSuccess(true);
     } catch (err) {
       console.error(err);
@@ -320,19 +181,6 @@ export default function ProfilePage() {
       setSavingProfile(false);
     }
   }
-
-  if (loadingUser) {
-    return <div className={styles.page}>Loading profile…</div>;
-  }
-
-  if (!user) {
-    return (
-      <div className={styles.page}>
-        <p>Profile not found.</p>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -357,7 +205,7 @@ export default function ProfilePage() {
             <button
               type="button"
               className={styles.metaItemButton}
-              onClick={() => router.push("/followers")}
+              onClick={() => setActiveTab("followers")}
             >
               {(user.followers_count ?? 0).toLocaleString()} followers
             </button>
@@ -367,7 +215,7 @@ export default function ProfilePage() {
             <button
               type="button"
               className={styles.metaItemButton}
-              onClick={() => router.push("/following")}
+              onClick={() => setActiveTab("following")}
             >
               {(user.following_count ?? 0).toLocaleString()} following
             </button>
@@ -398,6 +246,7 @@ export default function ProfilePage() {
         >
           Collections
         </button>
+
         <button
           className={`${styles.tab} ${
             activeTab === "challenge" ? styles.tabActive : ""
@@ -406,6 +255,7 @@ export default function ProfilePage() {
         >
           Challenge
         </button>
+
         <button
           className={`${styles.tab} ${
             activeTab === "edit" ? styles.tabActive : ""
@@ -419,20 +269,22 @@ export default function ProfilePage() {
       <section className={styles.content}>
         {activeTab === "posts" && (
           <div className={styles.postsSection}>
-                  <button
-  className={styles.shareArtBtn}
-  onClick={() => router.push("/create")}
->   
-  share your art
-   <span className={styles.sharePlus}>+</span>
-</button>
-            {loadingPosts && <p>Loading posts…</p>}
+            <button
+              className={styles.shareArtBtn}
+              onClick={() => router.push("/create")}
+            >
+              share your art
+              <span className={styles.sharePlus}>+</span>
+            </button>
 
-            {!loadingPosts && posts.length === 0 && (
+            {loadingPosts && <p>Loading posts…</p>}
+            {postsError && <p>Failed to load posts.</p>}
+
+            {!loadingPosts && !postsError && posts.length === 0 && (
               <p className={styles.placeholder}>No posts yet.</p>
             )}
 
-            {!loadingPosts && posts.length > 0 && (
+            {!loadingPosts && !postsError && posts.length > 0 && (
               <div className={styles.postsGrid}>
                 {posts.map((post) => (
                   <div key={post._id} className={styles.postCard}>
@@ -618,10 +470,11 @@ export default function ProfilePage() {
             <h2 className={styles.sectionTitle}>Followers</h2>
 
             {loadingFollowers && <p>Loading followers…</p>}
+            {followersError && <p>Failed to load followers.</p>}
 
-            {!loadingFollowers && followers.length === 0 && (
-              <p>No followers yet.</p>
-            )}
+            {!loadingFollowers &&
+              !followersError &&
+              followers.length === 0 && <p>No followers yet.</p>}
 
             <div className={styles.followersGrid}>
               {followers.map((f) => (
@@ -660,10 +513,13 @@ export default function ProfilePage() {
             <h2 className={styles.sectionTitle}>Following</h2>
 
             {loadingFollowing && <p>Loading following…</p>}
+            {followingError && <p>Failed to load following.</p>}
 
-            {!loadingFollowing && following.length === 0 && (
-              <p>Not following anyone yet.</p>
-            )}
+            {!loadingFollowing &&
+              !followingError &&
+              following.length === 0 && (
+                <p>Not following anyone yet.</p>
+              )}
 
             <div className={styles.followersGrid}>
               {following.map((u) => (
@@ -697,6 +553,7 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
+
       {avatarFileToCrop && (
         <AvatarCropper
           imageFile={avatarFileToCrop}
