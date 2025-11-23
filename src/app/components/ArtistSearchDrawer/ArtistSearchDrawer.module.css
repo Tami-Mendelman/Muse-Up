@@ -4,7 +4,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  right: var(--sidebar-space, 88px);
+ right: calc(var(--sidebar-space, 88px) + 20px); /* היה רק 88px */
   display: flex;
   justify-content: flex-end;
   background: rgba(15, 23, 42, 0.18);
@@ -66,7 +66,7 @@
 }
 
 .searchBar input {
-  width: 100%;
+  width: 96%;
   border-radius: 999px;
   border: 1px solid #d1d5db;
   padding: 9px 14px;

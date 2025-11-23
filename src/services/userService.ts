@@ -26,6 +26,7 @@ export async function getUserByUid(uid: string): Promise<User> {
   return res.json();
 }
 
+
 export async function updateUserProfile(
   firebaseUid: string,
   payload: UpdateUserPayload
@@ -46,3 +47,13 @@ export async function updateUserProfile(
 
   return res.json();
 }
+export async function getAllUsers() {
+  const res = await fetch("/api/Users");
+
+  if (!res.ok) {
+    throw new Error("Failed to load users");
+  }
+
+  return res.json();
+}
+

@@ -10,9 +10,7 @@ export function useFirebaseUid() {
     if (typeof window === "undefined") return;
 
     const value =
-      localStorage.getItem("firebase_uid") ||
-      localStorage.getItem("firebaseUid") ||
-      localStorage.getItem("userId");
+      localStorage.getItem("firebase_uid") || sessionStorage.getItem("firebase_uid");
 
     setUid(value);
     setReady(true);

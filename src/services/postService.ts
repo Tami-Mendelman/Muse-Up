@@ -24,3 +24,17 @@ export async function getUserPosts(userMongoId: string): Promise<PostCard[]> {
 
   return list;
 }
+export async function getPostById(postId: number) {
+  const res = await fetch(`/api/posts/${postId}`);
+  if (!res.ok) throw new Error("Failed to load post");
+  return res.json();
+}
+
+export async function updatePostLikes(postId: number, delta: number) {
+  const res = await fetch(`/api/posts/${postId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ delta }),
+  });
+  if (!res.ok) throw new Error("Failed to update likes");
+}
