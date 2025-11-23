@@ -11,6 +11,9 @@ import {
   toggleFollowUser,
   type SimpleUser,
 } from "../../services/followService";
+type FollowingUser = SimpleUser & {
+  firebase_uid?: string;
+};
 
 export default function FollowingPage() {
   const queryClient = useQueryClient();
@@ -20,22 +23,26 @@ export default function FollowingPage() {
     data: followingUsers = [],
     isLoading,
     error,
-  } = useQuery<SimpleUser[]>({
+  } = useQuery<FollowingUser[]>({
     queryKey: ["following-users", currentUserId],
     queryFn: () => getFollowingForUser(currentUserId as string),
     enabled: uidReady && !!currentUserId,
   });
 
   const unfollowMutation = useMutation({
-    mutationFn: async (targetId: string) => {
+    mutationFn: async (targetUser: FollowingUser) => {
       if (!currentUserId) throw new Error("No current user");
-      await toggleFollowUser(currentUserId, targetId, true);
+      await toggleFollowUser(
+        currentUserId,
+        targetUser.firebase_uid,
+        true 
+      );
     },
 
-    onSuccess: (_data, targetId) => {
-      queryClient.setQueryData<SimpleUser[]>(
+    onSuccess: (_data, targetUser) => {
+      queryClient.setQueryData<FollowingUser[]>(
         ["following-users", currentUserId],
-        (old = []) => old.filter((u) => u._id !== targetId)
+        (old = []) => old.filter((u) => u._id !== targetUser._id)
       );
     },
   });
@@ -82,7 +89,7 @@ export default function FollowingPage() {
                   src={
                     user.profil_url?.trim()
                       ? user.profil_url
-                      : "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763545782/45d4e069425e26a062a08f62116db827_ajjxke.jpg"
+                      : "https://res.cloudinary.com/dhxxlwa6n.../upload/v1763545782/45d4e069425e26a062a08f62116db827_ajjxke.jpg"
                   }
                   alt={user.username || "user avatar"}
                   width={72}
@@ -102,7 +109,7 @@ export default function FollowingPage() {
                 <button
                   className={`${styles.button} ${styles.buttonFollowing}`}
                   disabled={unfollowMutation.isPending}
-                  onClick={() => unfollowMutation.mutate(user._id)}
+                  onClick={() => unfollowMutation.mutate(user)}
                 >
                   {unfollowMutation.isPending ? "Saving..." : "Unfollow"}
                 </button>

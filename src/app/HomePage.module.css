@@ -44,22 +44,50 @@
 
 .nav {
   display: flex;
-  gap: 16px;
+  gap: 12px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
 }
 
+/* כפתור מודרני, בלי קו תחתון ובלי מסגרת כחולה */
 .navBtn {
-  padding: 8px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 22px;
   border-radius: 999px;
-  border: 1px solid #0c5df4;
-  background-color: #c8e7ff;
-  color: #12315b;
+  border: none;
+  background: #ffffff;
+
   font-size: 14px;
+  font-weight: 500;
+  color: #12315b;
+  text-decoration: none;           /* מוריד את הקו התחתון */
+
+  box-shadow: 0 6px 18px rgba(12, 93, 244, 0.12);
   cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .navBtn:hover {
-  background-color: #b4ddff;
+  background-color: #e3f0ff;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(12, 93, 244, 0.18);
 }
+
+.navBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(12, 93, 244, 0.25);
+}
+
 
 .centerTitle {
   text-align: center;

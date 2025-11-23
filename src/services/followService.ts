@@ -4,6 +4,7 @@ export type SimpleUser = {
   name?: string;
   profil_url?: string;
    bio?: string; 
+   firebase_uid?: string;
 };
 
 export type FollowDoc = {
