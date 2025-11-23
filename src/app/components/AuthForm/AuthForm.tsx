@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // חשוב!! לא "next/router"
+import { useRouter } from "next/navigation";
 import { auth, provider } from "../../../lib/firebase";
 import {
     signInWithEmailAndPassword,
@@ -76,20 +76,51 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
         try {
             if (mode === "login") {
-                await signInWithEmailAndPassword(auth, email, password);
+                const firebaseUser = await signInWithEmailAndPassword(auth, email, password);
+                const res = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
+                const mongoUser = await res.json();
+
+                if (!mongoUser) {
+                    if (firebaseUser) {
+                        alert("You have to complete your sign up.");
+                    } else {
+                        alert("No account found with this email. Please sign up first.");
+                        return;
+                    }
+                }
+
                 router.push("/landing");
                 alert("Login successfully!");
             } else {
                 if (mode === "register") {
-                    const methods = await fetchSignInMethodsForEmail(auth, email);
-                    if (methods.length > 0) {
-                        alert("This email is already registered. Please log in instead.");
+                    const res = await fetch(`/api/users?email=${encodeURIComponent(email.trim())}`);
+                    console.log("Fetch existing user response status:", res.status);
+                    const userData = await res.json();
+                    console.log("Existing user data:", userData);
+                    if (userData) {
+                        const firebaseUser = auth.currentUser;
+                        console.log("Current Firebase user:", firebaseUser);
+                        if (!userData.firebase_uid) {
+                            await fetch("/api/users", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ ...userData, firebase_uid: firebaseUser.uid }),
+                            });
+                        }
+                        router.push("/landing");
                         return;
                     }
+
+                    const methods = await fetchSignInMethodsForEmail(auth, email);
+                    if (methods.length > 0) {
+                        alert("This email is already registered in Firebase. Please log in instead.");
+                        return;
+                    }
+
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    router.push("/onboarding");
+                    alert("register successfully!");
                 }
-                await createUserWithEmailAndPassword(auth, email, password);
-                router.push("/onboarding");
-                alert("register successfully!");
             }
         } catch (err: any) {
             const msg = getAuthErrorMessage(err, mode);
@@ -113,24 +144,25 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
             const userExists = await checkUserInDB(email);
             console.log("User exists in DB:", userExists);
 
-            if (mode === "login" && !userExists) {
-                alert("No account found with this email. Please sign up first.");
-                await signOut(auth);
-                return;
-            }
-
-            if (mode === "register" && userExists) {
-                alert("Account already exists. Please log in instead.");
-                await signOut(auth);
+            if (mode === "login") {
+                if (!userExists) {
+                    alert("No account found with this email. Please sign up first.");
+                    await signOut(auth);
+                    return;
+                }
+                router.push("/landing");
                 return;
             }
 
             if (mode === "register") {
+                if (userExists) {
+                    alert("Account already exists. Please log in instead.");
+                    await signOut(auth);
+                    return;
+                }
                 router.push("/onboarding");
-            } else {
-                router.push("/landing");
+                return;
             }
-
         } catch (err: any) {
             console.error("Google authentication failed:", err);
             alert("Google authentication failed. Try again.");
