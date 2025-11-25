@@ -4,9 +4,7 @@ import { dbConnect } from "../../lib/mongoose";
 import UserModel from "../../models/User";
 import PostModel from "../../models/Post";
 import TrendingSection from "../components/TrendingSection";
-import ArtistsToFollowClient, {
-  SimpleArtist,
-} from "./ArtistsToFollowClient";
+import ArtistsToFollowClient, { SimpleArtist } from "./ArtistsToFollowClient";
 import styles from "./landingPage.module.css";
 
 export default async function LandingPage() {
@@ -37,16 +35,16 @@ export default async function LandingPage() {
     avatar_url: a.avatar_url,
   }));
 
- const baseSelect = {
-  _id: 0,
-  id: 1,
-  title: 1,
-  image_url: 1,
-  likes_count: 1,
-  body: 1,
-  created_at: 1,
-  user_id: 1,   // ⭐ חובה!!!
-};
+  const baseSelect = {
+    _id: 0,
+    id: 1,
+    title: 1,
+    image_url: 1,
+    likes_count: 1,
+    body: 1,
+    created_at: 1,
+    user_id: 1,
+  };
 
   const popular = await (PostModel as any)
     .find({}, baseSelect)
@@ -60,40 +58,42 @@ export default async function LandingPage() {
     .limit(2)
     .lean();
 
-const trendingRaw = [...popular, ...latest].filter(
-  (p, index, arr) => index === arr.findIndex((x) => x.id === p.id)
-);
+  const trendingRaw = [...popular, ...latest].filter(
+    (p, index, arr) => index === arr.findIndex((x) => x.id === p.id)
+  );
 
-const trendingWithAuthors = await Promise.all(
-  trendingRaw.map(async (post: any) => {
-    let author = null;
+  const trendingWithAuthors = await Promise.all(
+    trendingRaw.map(async (post: any) => {
+      let author = null;
 
-    if (post.user_id && ("" + post.user_id).length >= 10) {
-      const user = await UserModel.findById(post.user_id)
-        .lean()
-        .catch(() => null);
+      if (post.user_id && ("" + post.user_id).length >= 10) {
+        const user = await UserModel.findById(post.user_id)
+          .lean()
+          .catch(() => null);
 
-      if (user) {
-        author = {
-          name: user.name || "Unknown",
-          avatar_url:
-            user.avatar_url ||
-            user.profil_url ||
-            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
-        };
+        if (user) {
+          author = {
+            name: user.name || "Unknown",
+            avatar_url:
+              user.avatar_url ||
+              user.profil_url ||
+              "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+          };
+        }
       }
-    }
-    return {
-      ...post,
-      author: author || {
-        name: "Unknown",
-        avatar_url:
-          "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
-      },
-    };
-  })
-);
-const trending = trendingWithAuthors;
+      return {
+        ...post,
+        author: author || {
+          name: "Unknown",
+          avatar_url:
+            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+        },
+      };
+    })
+  );
+
+  const trending = trendingWithAuthors;
+
   return (
     <main className={styles.page}>
       <div className={styles.container}>
@@ -118,20 +118,30 @@ const trending = trendingWithAuthors;
               </div>
             </section>
 
-            <section className={styles.bottomLeft}>
-              <TrendingSection trending={trending} />
+       <section className={styles.bottomLeft}>
+  <div className={styles.card}>
+    <h2 className={styles.cardTitle}>Trending this week</h2>
 
-              <div className={styles.card}>
-                <h2 className={styles.cardTitle}>Artists to follow</h2>
+    <TrendingSection trending={trending} />
 
-                <ArtistsToFollowClient artists={artists} />
+    <Link href="/posts" className={styles.moreLink}>
+      See more posts →
+    </Link>
+  </div>
 
-                <Link href="/users" className={styles.moreLink}>
-                  See more artists →
-                </Link>
-              </div>
-            </section>
+  <div className={styles.card}>
+    <h2 className={styles.cardTitle}>Artists to follow</h2>
+
+    <ArtistsToFollowClient artists={artists} />
+
+    <Link href="/users" className={styles.moreLink}>
+      See more artists →
+    </Link>
+  </div>
+</section>
+
           </div>
+
           <div className={styles.rightCol}>
             <div className={styles.heroImageCard}>
               <Image

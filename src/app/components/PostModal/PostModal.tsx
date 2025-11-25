@@ -5,14 +5,14 @@ import styles from "./PostModal.module.css";
 
 type Comment = {
   id: number;
-  post_id: number;
+  post_id: string;
   user_id: string;
   body: string;
 };
 
 type Props = {
   onClose: () => void;
-  postId: number;
+  postId: string;
 };
 
 const EMOJIS = ["😊", "😂", "😍", "🥰", "😎", "🤯", "😢", "🙏", "❤️", "🔥", "👍", "👏"];
@@ -49,7 +49,6 @@ export default function PostModal({ onClose, postId }: Props) {
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     return () => {
       document.body.style.overflow = prev;
     };
@@ -67,7 +66,6 @@ export default function PostModal({ onClose, postId }: Props) {
       const res = await fetch(`/api/posts/${postId}`);
       if (!res.ok) return;
       const data = await res.json();
-
       setPost(data);
       setLikes(data.likes_count ?? 0);
     } finally {
@@ -85,7 +83,6 @@ export default function PostModal({ onClose, postId }: Props) {
     try {
       const res = await fetch(`/api/comments?postId=${postId}`);
       if (!res.ok) return;
-
       const data = await res.json();
       setComments(Array.isArray(data) ? data : []);
     } finally {
@@ -97,16 +94,13 @@ export default function PostModal({ onClose, postId }: Props) {
     loadComments();
   }, [loadComments]);
 
-  // Restore Like state
+  // Restore Like & Save state
   useEffect(() => {
-    const arr = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    setLiked(arr.includes(postId));
-  }, [postId]);
+    const likedArr: string[] = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+    setLiked(likedArr.includes(postId));
 
-  // Restore Saved state
-  useEffect(() => {
-    const arr = JSON.parse(localStorage.getItem("savedPosts") || "[]");
-    setSaved(arr.includes(postId));
+    const savedArr: string[] = JSON.parse(localStorage.getItem("savedPosts") || "[]");
+    setSaved(savedArr.includes(postId));
   }, [postId]);
 
   // Scroll comments
@@ -124,7 +118,6 @@ export default function PostModal({ onClose, postId }: Props) {
         setShowEmojiPicker(false);
       }
     }
-
     if (showEmojiPicker) document.addEventListener("mousedown", closePicker);
     return () => document.removeEventListener("mousedown", closePicker);
   }, [showEmojiPicker]);
@@ -135,12 +128,10 @@ export default function PostModal({ onClose, postId }: Props) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-
     if (!commentText.trim() || sending) return;
 
     try {
       setSending(true);
-
       const res = await fetch("/api/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -150,10 +141,8 @@ export default function PostModal({ onClose, postId }: Props) {
           body: commentText,
         }),
       });
-
       if (!res.ok) return;
       const created = await res.json();
-
       setComments((prev) => [...prev, created]);
       setCommentText("");
     } finally {
@@ -163,29 +152,22 @@ export default function PostModal({ onClose, postId }: Props) {
 
   async function handleLike() {
     if (liking) return;
-
     const newLiked = !liked;
     const delta = newLiked ? 1 : -1;
-
     setLiked(newLiked);
     setLikes((prev) => prev + delta);
 
     try {
       setLiking(true);
-
       const res = await fetch(`/api/posts/${postId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ delta }),
       });
-
       if (!res.ok) throw new Error();
 
-      const arr = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-      const updated = newLiked
-        ? [...arr, postId]
-        : arr.filter((x: number) => x !== postId);
-
+      const arr: string[] = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+      const updated = newLiked ? [...arr, postId] : arr.filter((x) => x !== postId);
       localStorage.setItem("likedPosts", JSON.stringify(updated));
     } catch {
       setLiked(!newLiked);
@@ -199,11 +181,8 @@ export default function PostModal({ onClose, postId }: Props) {
     const newSaved = !saved;
     setSaved(newSaved);
 
-    const arr = JSON.parse(localStorage.getItem("savedPosts") || "[]");
-    const updated = newSaved
-      ? [...arr, postId]
-      : arr.filter((x: number) => x !== postId);
-
+    const arr: string[] = JSON.parse(localStorage.getItem("savedPosts") || "[]");
+    const updated = newSaved ? [...arr, postId] : arr.filter((x) => x !== postId);
     localStorage.setItem("savedPosts", JSON.stringify(updated));
   }
 
