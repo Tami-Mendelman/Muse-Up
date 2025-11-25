@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import styles from "./profile.module.css";
 import PostModal from "../components/PostModal/PostModal";
-
-/* -------------------------------------------------------
-   TYPES
-------------------------------------------------------- */
+import { useRouter } from "next/navigation";
+import AvatarCropper from "../components/CropImage/CropImage"; 
 
 type User = {
   _id: string;
@@ -60,9 +58,29 @@ export default function ProfilePage() {
 
   const [loadingUser, setLoadingUser] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(false);
-  const [loadingSaved, setLoadingSaved] = useState(false);
 
+  const [loadingSaved, setLoadingSaved] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+
+
+  const [editForm, setEditForm] = useState<EditFormState>({
+    name: "",
+    username: "",
+    bio: "",
+    location: "",
+    profil_url: "",
+  });
+
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(null);
+
+  const router = useRouter();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
 
   /* -------------------------------------------------------
      1. LOAD USER
@@ -126,12 +144,19 @@ export default function ProfilePage() {
   useEffect(() => {
     if (activeTab !== "saved") return;
 
+
     const savedIds = JSON.parse(localStorage.getItem("savedPosts") || "[]");
 
     if (savedIds.length === 0) {
       setSavedPosts([]);
       return;
     }
+    loadFollowers();
+  }, [activeTab, user]);
+  useEffect(() => {
+    if (activeTab !== "following") return;
+    if (!user?.firebase_uid) return;
+
 
     async function loadSaved() {
       setLoadingSaved(true);
@@ -154,6 +179,23 @@ export default function ProfilePage() {
       } finally {
         setLoadingSaved(false);
       }
+
+    };
+
+    loadFollowing();
+  }, [activeTab, user]);
+  async function uploadAvatar(file: File): Promise<string> {
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const res = await fetch("/api/uploads", {
+      method: "POST",
+      body: fd,
+    });
+
+    if (!res.ok) {
+      throw new Error(`Upload failed (${res.status})`);
+
     }
 
     loadSaved();
@@ -168,16 +210,38 @@ export default function ProfilePage() {
 
     if (!user?.firebase_uid) return;
 
+    setAvatarFileToCrop(file); 
+    setSaveError(null);
+    setSaveSuccess(false);
+  }
+  const handleCroppedAvatarUpload = async (croppedFile: File) => {
     try {
+
       const res = await fetch(
         `/api/followers-users?userId=${user.firebase_uid}`
+
+      setUploadingAvatar(true);
+      const url = await uploadAvatar(croppedFile);
+
+      setEditForm((prev) => ({ ...prev, profil_url: url }));
+
+      setUser((prev) =>
+        prev ? { ...prev, profil_url: url } : prev
       );
       const data = await res.json();
       setFollowers(Array.isArray(data) ? data : []);
     } catch (err) {
+
       console.error("Followers error:", err);
+
+      console.error("Failed to upload avatar", err);
+      setSaveError("Upload failed. Please try again.");
+    } finally {
+      setUploadingAvatar(false);
+      setAvatarFileToCrop(null); 
+
     }
-  }
+  };
 
   async function openFollowing() {
     setActiveTab("following");
@@ -318,8 +382,17 @@ export default function ProfilePage() {
         {/* POSTS */}
         {activeTab === "posts" && (
           <div className={styles.postsSection}>
+
             {loadingPosts && <p>Loading…</p>}
 
+                  <button
+  className={styles.shareArtBtn}
+  onClick={() => router.push("/create")}
+>   
+  share your art
+   <span className={styles.sharePlus}>+</span>
+</button>
+            {loadingPosts && <p>Loading posts…</p>}
             {!loadingPosts && posts.length === 0 && <p>No posts yet.</p>}
 
             {!loadingPosts && posts.length > 0 && (
@@ -377,7 +450,9 @@ export default function ProfilePage() {
           </div>
         )}
 
+
         {/* COLLECTIONS */}
+
         {activeTab === "collections" && (
           <p className={styles.placeholder}>Collections coming soon…</p>
         )}
@@ -450,6 +525,13 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
+      {avatarFileToCrop && (
+        <AvatarCropper
+          imageFile={avatarFileToCrop}
+          onUpload={handleCroppedAvatarUpload}
+          onCancel={() => setAvatarFileToCrop(null)}
+        />
+      )}
     </div>
   );
 }
