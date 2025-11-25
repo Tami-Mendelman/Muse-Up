@@ -3,7 +3,6 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import styles from "./profile.module.css";
 import { useRouter } from "next/navigation";
 import AvatarCropper from "../components/CropImage/CropImage";
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useFirebaseUid } from "../../hooks/useFirebaseUid";
@@ -25,9 +24,11 @@ import {
   type SimpleUser,
 } from "../../services/followService";
 import { uploadAvatar } from "../../services/uploadService";
+import { getSavedPosts } from "../../services/savedPostService"; // ✅ חדש
 
 type TabKey =
   | "posts"
+  | "saved"
   | "collections"
   | "challenge"
   | "edit"
@@ -43,12 +44,11 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(
-    null
-  );
+  const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(null);
 
   const { uid, ready: uidReady } = useFirebaseUid();
 
+  // ----- USER -----
   const {
     data: user,
     isLoading: loadingUser,
@@ -62,6 +62,7 @@ export default function ProfilePage() {
   const { form: editForm, setForm: setEditForm } =
     useProfileEditForm(user ?? null);
 
+  // ----- POSTS -----
   const {
     data: posts = [],
     isLoading: loadingPosts,
@@ -72,6 +73,18 @@ export default function ProfilePage() {
     enabled: !!user && activeTab === "posts",
   });
 
+  // ----- SAVED -----
+  const {
+    data: savedPosts = [],
+    isLoading: loadingSaved,
+    error: savedError,
+  } = useQuery<PostCard[]>({
+    queryKey: ["savedPosts"],
+    queryFn: getSavedPosts,
+    enabled: activeTab === "saved",
+  });
+
+  // ----- FOLLOWERS -----
   const {
     data: followers = [],
     isLoading: loadingFollowers,
@@ -82,6 +95,7 @@ export default function ProfilePage() {
     enabled: !!user && activeTab === "followers",
   });
 
+  // ----- FOLLOWING -----
   const {
     data: following = [],
     isLoading: loadingFollowing,
@@ -92,29 +106,22 @@ export default function ProfilePage() {
     enabled: !!user && activeTab === "following",
   });
 
-  if (!uidReady) {
-    return <div className={styles.page}>Loading profile…</div>;
-  }
-
-  if (!uid) {
+  if (!uidReady) return <div className={styles.page}>Loading profile…</div>;
+  if (!uid)
     return (
       <div className={styles.page}>
         <p>No logged-in user. Please sign in.</p>
       </div>
     );
-  }
-
-  if (loadingUser) {
-    return <div className={styles.page}>Loading profile…</div>;
-  }
-
-  if (userError || !user) {
+  if (loadingUser) return <div className={styles.page}>Loading profile…</div>;
+  if (userError || !user)
     return (
       <div className={styles.page}>
         <p>Failed to load profile.</p>
       </div>
     );
-  }
+
+  // ----- HANDLERS -----
   function handleEditChange(
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
@@ -122,12 +129,9 @@ export default function ProfilePage() {
     setEditForm((prev: EditFormState) => ({ ...prev, [name]: value }));
   }
 
-  async function handleAvatarInputChange(
-    e: ChangeEvent<HTMLInputElement>
-  ) {
+  async function handleAvatarInputChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setAvatarFileToCrop(file);
     setSaveError(null);
     setSaveSuccess(false);
@@ -137,11 +141,7 @@ export default function ProfilePage() {
     try {
       setUploadingAvatar(true);
       const url = await uploadAvatar(croppedFile);
-
-      setEditForm((prev: EditFormState) => ({
-        ...prev,
-        profil_url: url,
-      }));
+      setEditForm((prev: EditFormState) => ({ ...prev, profil_url: url }));
       queryClient.setQueryData<User>(["user", uid], (old) =>
         old ? { ...old, profil_url: url } : old
       );
@@ -157,7 +157,6 @@ export default function ProfilePage() {
   async function handleSaveProfile(e: FormEvent) {
     e.preventDefault();
     if (!user) return;
-
     setSavingProfile(true);
     setSaveError(null);
     setSaveSuccess(false);
@@ -181,8 +180,11 @@ export default function ProfilePage() {
       setSavingProfile(false);
     }
   }
+
+  // ----- RENDER -----
   return (
     <div className={styles.page}>
+      {/* HEADER */}
       <header className={styles.header}>
         <div className={styles.avatarWrapper}>
           {user.profil_url ? (
@@ -200,7 +202,6 @@ export default function ProfilePage() {
 
         <div className={styles.headerText}>
           <h1 className={styles.name}>{user.name ?? user.username}</h1>
-
           <div className={styles.metaRow}>
             <button
               type="button"
@@ -209,9 +210,7 @@ export default function ProfilePage() {
             >
               {(user.followers_count ?? 0).toLocaleString()} followers
             </button>
-
             <span className={styles.divider}>|</span>
-
             <button
               type="button"
               className={styles.metaItemButton}
@@ -220,7 +219,6 @@ export default function ProfilePage() {
               {(user.following_count ?? 0).toLocaleString()} following
             </button>
           </div>
-
           {user.bio && <p className={styles.bio}>{user.bio}</p>}
           {user.location && (
             <p className={styles.location}>{user.location}</p>
@@ -228,45 +226,30 @@ export default function ProfilePage() {
         </div>
       </header>
 
+      {/* NAVIGATION */}
       <nav className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${
-            activeTab === "posts" ? styles.tabActive : ""
-          }`}
-          onClick={() => setActiveTab("posts")}
-        >
-          My Posts
-        </button>
-
-        <button
-          className={`${styles.tab} ${
-            activeTab === "collections" ? styles.tabActive : ""
-          }`}
-          onClick={() => setActiveTab("collections")}
-        >
-          Collections
-        </button>
-
-        <button
-          className={`${styles.tab} ${
-            activeTab === "challenge" ? styles.tabActive : ""
-          }`}
-          onClick={() => setActiveTab("challenge")}
-        >
-          Challenge
-        </button>
-
-        <button
-          className={`${styles.tab} ${
-            activeTab === "edit" ? styles.tabActive : ""
-          }`}
-          onClick={() => setActiveTab("edit")}
-        >
-          Edit
-        </button>
+        {[
+          ["posts", "My Posts"],
+          ["saved", "Saved"],
+          ["collections", "Collections"],
+          ["challenge", "Challenge"],
+          ["edit", "Edit"],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            className={`${styles.tab} ${
+              activeTab === key ? styles.tabActive : ""
+            }`}
+            onClick={() => setActiveTab(key as TabKey)}
+          >
+            {label}
+          </button>
+        ))}
       </nav>
 
+      {/* CONTENT */}
       <section className={styles.content}>
+        {/* POSTS */}
         {activeTab === "posts" && (
           <div className={styles.postsSection}>
             <button
@@ -279,24 +262,20 @@ export default function ProfilePage() {
 
             {loadingPosts && <p>Loading posts…</p>}
             {postsError && <p>Failed to load posts.</p>}
-
-            {!loadingPosts && !postsError && posts.length === 0 && (
+            {!loadingPosts && posts.length === 0 && (
               <p className={styles.placeholder}>No posts yet.</p>
             )}
-
-            {!loadingPosts && !postsError && posts.length > 0 && (
+            {!loadingPosts && posts.length > 0 && (
               <div className={styles.postsGrid}>
-                {posts.map((post) => (
-                  <div key={post._id} className={styles.postCard}>
-                    <div className={styles.postImageWrapper}>
-                      <img
-                        src={post.image_url}
-                        alt={post.title}
-                        className={styles.postImage}
-                      />
-                    </div>
+                {posts.map((p) => (
+                  <div key={p._id} className={styles.postCard}>
+                    <img
+                      src={p.image_url}
+                      alt={p.title}
+                      className={styles.postImage}
+                    />
                     <div className={styles.postInfo}>
-                      <h3 className={styles.postTitle}>{post.title}</h3>
+                      <h3 className={styles.postTitle}>{p.title}</h3>
                     </div>
                   </div>
                 ))}
@@ -305,72 +284,79 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* SAVED */}
+        {activeTab === "saved" && (
+          <div className={styles.postsSection}>
+            {loadingSaved && <p>Loading saved posts…</p>}
+            {savedError && <p>Failed to load saved posts.</p>}
+            {!loadingSaved && savedPosts.length === 0 && (
+              <p className={styles.placeholder}>No saved posts yet.</p>
+            )}
+            {!loadingSaved && savedPosts.length > 0 && (
+              <div className={styles.postsGrid}>
+                {savedPosts.map((p) => (
+                  <div key={p._id} className={styles.postCard}>
+                    <img
+                      src={p.image_url}
+                      alt={p.title}
+                      className={styles.postImage}
+                    />
+                    <div className={styles.postInfo}>
+                      <h3 className={styles.postTitle}>{p.title}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* EDIT */}
         {activeTab === "edit" && (
-          <form
-            className={styles.editForm}
-            onSubmit={handleSaveProfile}
-          >
+          <form className={styles.editForm} onSubmit={handleSaveProfile}>
             <div className={styles.editGrid}>
               <div className={styles.editLeft}>
                 <div className={styles.editField}>
-                  <label className={styles.editLabel} htmlFor="name">
-                    Name
-                  </label>
+                  <label className={styles.editLabel}>Name</label>
                   <input
-                    id="name"
                     name="name"
-                    className={styles.editInput}
                     value={editForm.name}
                     onChange={handleEditChange}
+                    className={styles.editInput}
                     placeholder="Your full name"
                   />
                 </div>
 
                 <div className={styles.editField}>
-                  <label
-                    className={styles.editLabel}
-                    htmlFor="username"
-                  >
-                    Username
-                  </label>
+                  <label className={styles.editLabel}>Username</label>
                   <input
-                    id="username"
                     name="username"
-                    className={styles.editInput}
                     value={editForm.username}
                     onChange={handleEditChange}
+                    className={styles.editInput}
                     placeholder="Unique username"
                   />
                 </div>
 
                 <div className={styles.editField}>
-                  <label className={styles.editLabel} htmlFor="bio">
-                    Bio
-                  </label>
+                  <label className={styles.editLabel}>Bio</label>
                   <textarea
-                    id="bio"
                     name="bio"
-                    className={styles.editTextarea}
                     value={editForm.bio}
                     onChange={handleEditChange}
-                    placeholder="Tell people about your art, story, style…"
+                    className={styles.editTextarea}
+                    placeholder="Tell people about your art..."
                     rows={4}
                   />
                 </div>
 
                 <div className={styles.editField}>
-                  <label
-                    className={styles.editLabel}
-                    htmlFor="location"
-                  >
-                    Location
-                  </label>
+                  <label className={styles.editLabel}>Location</label>
                   <input
-                    id="location"
                     name="location"
-                    className={styles.editInput}
                     value={editForm.location}
                     onChange={handleEditChange}
+                    className={styles.editInput}
                     placeholder="City, Country"
                   />
                 </div>
@@ -378,7 +364,6 @@ export default function ProfilePage() {
 
               <div className={styles.editRight}>
                 <p className={styles.editLabel}>Profile picture</p>
-
                 <div className={styles.editAvatarWrapper}>
                   {editForm.profil_url ? (
                     <img
@@ -413,13 +398,9 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {saveError && (
-              <p className={styles.editError}>{saveError}</p>
-            )}
+            {saveError && <p className={styles.editError}>{saveError}</p>}
             {saveSuccess && (
-              <p className={styles.editSuccess}>
-                Profile updated successfully.
-              </p>
+              <p className={styles.editSuccess}>Profile updated successfully.</p>
             )}
 
             <div className={styles.editActions}>
@@ -441,7 +422,6 @@ export default function ProfilePage() {
               >
                 Reset
               </button>
-
               <button
                 type="submit"
                 className={styles.editPrimaryBtn}
@@ -453,54 +433,26 @@ export default function ProfilePage() {
           </form>
         )}
 
-        {activeTab === "collections" && (
-          <div className={styles.placeholder}>
-            כאן נציג Collections לפי המוקטאפים שלך
-          </div>
-        )}
-
-        {activeTab === "challenge" && (
-          <div className={styles.placeholder}>
-            כאן נציג אתגר / סטטוס Challenge
-          </div>
-        )}
-
+        {/* FOLLOWERS */}
         {activeTab === "followers" && (
           <div className={styles.followersSection}>
             <h2 className={styles.sectionTitle}>Followers</h2>
-
             {loadingFollowers && <p>Loading followers…</p>}
             {followersError && <p>Failed to load followers.</p>}
-
-            {!loadingFollowers &&
-              !followersError &&
-              followers.length === 0 && <p>No followers yet.</p>}
-
+            {!loadingFollowers && followers.length === 0 && <p>No followers yet.</p>}
             <div className={styles.followersGrid}>
               {followers.map((f) => (
                 <div key={f._id} className={styles.followerCard}>
-                  <div className={styles.followerAvatarWrapper}>
-                    {f.profil_url ? (
-                      <img
-                        src={f.profil_url}
-                        alt={f.name ?? f.username}
-                        className={styles.followerAvatar}
-                      />
-                    ) : (
-                      <div className={styles.followerAvatarFallback}>
-                        {f.username?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.followerInfo}>
+                  <img
+                    src={f.profil_url || ""}
+                    alt={f.name ?? f.username}
+                    className={styles.followerAvatar}
+                  />
+                  <div>
                     <div className={styles.followerName}>
                       {f.name ?? f.username}
                     </div>
-                    {f.username && (
-                      <div className={styles.followerUsername}>
-                        @{f.username}
-                      </div>
-                    )}
+                    <div className={styles.followerUsername}>@{f.username}</div>
                   </div>
                 </div>
               ))}
@@ -508,44 +460,28 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* FOLLOWING */}
         {activeTab === "following" && (
           <div className={styles.followersSection}>
             <h2 className={styles.sectionTitle}>Following</h2>
-
             {loadingFollowing && <p>Loading following…</p>}
             {followingError && <p>Failed to load following.</p>}
-
-            {!loadingFollowing &&
-              !followingError &&
-              following.length === 0 && (
-                <p>Not following anyone yet.</p>
-              )}
-
+            {!loadingFollowing && following.length === 0 && (
+              <p>Not following anyone yet.</p>
+            )}
             <div className={styles.followersGrid}>
-              {following.map((u) => (
-                <div key={u._id} className={styles.followerCard}>
-                  <div className={styles.followerAvatarWrapper}>
-                    {u.profil_url ? (
-                      <img
-                        src={u.profil_url}
-                        alt={u.name ?? u.username}
-                        className={styles.followerAvatar}
-                      />
-                    ) : (
-                      <div className={styles.followerAvatarFallback}>
-                        {u.username?.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.followerInfo}>
+              {following.map((f) => (
+                <div key={f._id} className={styles.followerCard}>
+                  <img
+                    src={f.profil_url || ""}
+                    alt={f.name ?? f.username}
+                    className={styles.followerAvatar}
+                  />
+                  <div>
                     <div className={styles.followerName}>
-                      {u.name ?? u.username}
+                      {f.name ?? f.username}
                     </div>
-                    {u.username && (
-                      <div className={styles.followerUsername}>
-                        @{u.username}
-                      </div>
-                    )}
+                    <div className={styles.followerUsername}>@{f.username}</div>
                   </div>
                 </div>
               ))}

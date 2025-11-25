@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import styles from "./Sidebar.module.css";
 import {
   FiHome,
@@ -13,20 +14,16 @@ import {
 } from "react-icons/fi";
 
 import ArtistSearchDrawer from "../../../app/components/ArtistSearchDrawer/ArtistSearchDrawer";
-
-type UserResponse = {
-  profil_url?: string;
-};
+import { useSidebarController } from "../../../hooks/useSidebarController";
+import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
+import { getUserByUid, type User } from "../../../services/userService";
 
 export default function Sidebar() {
-  const [open, setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  const ref = useRef<HTMLDivElement | null>(null);
+  const { open, setOpen, ref } = useSidebarController();
   const pathname = usePathname();
   const router = useRouter();
-
   const baseActiveKey: string =
     pathname?.startsWith("/messages")
       ? "messages"
@@ -42,56 +39,18 @@ export default function Sidebar() {
 
   const activeKey = drawerOpen ? "search" : baseActiveKey;
 
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--sidebar-space",
-      open ? "88px" : "24px"
-    );
-  }, [open]);
+  const { uid, ready: uidReady } = useFirebaseUid();
 
-  useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      if (!ref.current) return;
-      const target = e.target as HTMLElement | null;
+  const { data: user } = useQuery<User>({
+    queryKey: ["user", uid],
+    queryFn: () => getUserByUid(uid as string),
+    enabled: uidReady && !!uid,
+  });
 
-      if (target?.closest("[data-sidebar-ignore-click='true']")) {
-        return;
-      }
-
-      if (!ref.current.contains(target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("click", onDocClick);
-    return () => document.removeEventListener("click", onDocClick);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const uid = localStorage.getItem("firebase_uid");
-    if (!uid) return;
-
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(`/api/Users/${uid}`);
-        if (!res.ok) return;
-
-        const data: UserResponse = await res.json();
-        if (data.profil_url && data.profil_url.trim() !== "") {
-          setAvatarUrl(data.profil_url);
-        } else {
-          setAvatarUrl(null);
-        }
-      } catch (err) {
-        console.error("Failed to load avatar:", err);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
+  const avatarUrl =
+    user?.profil_url && user.profil_url.trim() !== ""
+      ? user.profil_url
+      : null;
   return (
     <>
       <aside
@@ -112,7 +71,7 @@ export default function Sidebar() {
           <span className={styles.dot} />
         </button>
 
-         {avatarUrl ? (
+        {avatarUrl ? (
           <img
             src={avatarUrl}
             alt="Profile"
@@ -126,6 +85,7 @@ export default function Sidebar() {
             onClick={() => router.push("/profile")}
           />
         )}
+
         <nav className={styles.nav}>
           <button
             onClick={() => router.push("/landing")}

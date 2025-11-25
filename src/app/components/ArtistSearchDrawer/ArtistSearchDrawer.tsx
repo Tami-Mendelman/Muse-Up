@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import styles from "./ArtistSearchDrawer.module.css";
+import { getAllUsers } from "../../../services/userService";
 
 type ArtistUser = {
   _id: string;
@@ -27,35 +29,21 @@ export default function ArtistSearchDrawer({
   onClose,
   onSelectArtist,
 }: Props) {
-  const [artists, setArtists] = useState<ArtistUser[]>([]);
-  const [loading, setLoading] = useState(false);
-
   const [q, setQ] = useState("");
   const [searchMode, setSearchMode] = useState<
     "name" | "country" | "specialty"
   >("name");
-
-  useEffect(() => {
-    if (!isOpen) return;
-    loadAllUsers();
-  }, [isOpen]);
-
-  async function loadAllUsers() {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/Users");
-      if (!res.ok) {
-        console.error("Failed to fetch users", await res.text());
-        return;
-      }
-      const data: ArtistUser[] = await res.json();
-      setArtists(data);
-    } catch (err) {
-      console.error("Error loading users", err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const {
+    data: artists = [],
+    isLoading: loading,
+  } = useQuery<ArtistUser[]>({
+    queryKey: ["artists", "all"],
+    queryFn: async () => {
+      const data = await getAllUsers();
+      return data as ArtistUser[];
+    },
+    enabled: isOpen,
+  });
 
   const filteredArtists = useMemo(() => {
     const qLower = q.toLowerCase();
@@ -93,11 +81,17 @@ export default function ArtistSearchDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className={styles.overlay}
-      data-sidebar-ignore-click="true">
+    <div
+      className={styles.overlay}
+      data-sidebar-ignore-click="true"
+    >
       <aside className={styles.drawer}>
         <header className={styles.header}>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
+          <button
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="Close"
+          >
             ✕
           </button>
           <div className={styles.headerText}>
@@ -141,7 +135,9 @@ export default function ArtistSearchDrawer({
           <button
             type="button"
             className={`${styles.filterBtn} ${
-              searchMode === "specialty" ? styles.filterBtnActive : ""
+              searchMode === "specialty"
+                ? styles.filterBtnActive
+                : ""
             }`}
             onClick={() => setSearchMode("specialty")}
           >
@@ -157,7 +153,9 @@ export default function ArtistSearchDrawer({
         </div>
 
         <div className={styles.list}>
-          {loading && <div className={styles.loading}>Loading artists…</div>}
+          {loading && (
+            <div className={styles.loading}>Loading artists…</div>
+          )}
 
           {!loading &&
             filteredArtists.map((artist) => (
@@ -165,11 +163,15 @@ export default function ArtistSearchDrawer({
                 key={artist._id}
                 type="button"
                 className={styles.item}
-                onClick={() => onSelectArtist && onSelectArtist(artist)}
+                onClick={() =>
+                  onSelectArtist && onSelectArtist(artist)
+                }
               >
                 <div className={styles.avatar}>
                   <img
-                    src={artist.avatar_url || "/default-avatar.png"}
+                    src={
+                      artist.avatar_url || "/default-avatar.png"
+                    }
                     alt={artist.username}
                   />
                 </div>
@@ -185,7 +187,9 @@ export default function ArtistSearchDrawer({
                       : "Artist"}
                   </div>
                   {artist.location && (
-                    <div className={styles.location}>{artist.location}</div>
+                    <div className={styles.location}>
+                      {artist.location}
+                    </div>
                   )}
                 </div>
               </button>

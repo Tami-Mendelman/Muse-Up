@@ -5,11 +5,11 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import Footer from "./components/Footer/Footer";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import ReactQueryProvider from "./ReactQueryProvider";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  // בעמוד הראשי אין sidebar/footer
   const hideChrome = pathname === "/";
 
   return (
@@ -24,6 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
         }}
       >
+             <ReactQueryProvider>
         {/* *************** SIDEBAR קבוע בצד *************** */}
         {!hideChrome && (
           <Sidebar />
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
         )}
+        </ReactQueryProvider>
       </body>
     </html>
   );

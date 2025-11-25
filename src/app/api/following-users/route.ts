@@ -33,10 +33,11 @@ export async function GET(req: NextRequest) {
     }
 
     const users = await User.find({
-      firebase_uid: { $in: followedIds },
-    })
-      .select("_id name username profil_url bio")
-      .lean();
+  firebase_uid: { $in: followedIds },
+})
+  .select("_id firebase_uid name username profil_url bio") 
+  .lean();
+  
 
     return NextResponse.json(users);
   } catch (err) {
