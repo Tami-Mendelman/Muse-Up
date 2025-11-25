@@ -2,8 +2,9 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
-import PostModel from "../../../models/Post";   
-
+import PostModel from "../../../models/Post";
+import User from "../../../models/User";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,9 +14,8 @@ export async function GET(req: NextRequest) {
     const userId = searchParams.get("userId");
 
     const filter: any = {};
-
     if (userId) {
-      filter.user_id = userId;  
+      filter.user_id = userId;
     }
 
     const posts = await (PostModel as any)
@@ -23,7 +23,28 @@ export async function GET(req: NextRequest) {
       .sort({ created_at: -1 })
       .lean();
 
-    return NextResponse.json(posts, { status: 200 });
+    const populatedPosts = await Promise.all(
+      posts.map(async (post: any) => {
+        let author = null;
+
+        if (post.user_id && mongoose.isValidObjectId(post.user_id)) {
+          const user = await User.findById(post.user_id).lean().catch(() => null);
+
+          if (user) {
+            author = {
+              name: user.name,
+              avatar_url: user.avatar_url ?? user.profil_url ?? null,
+              followers_count: user.followers_count,
+              username: user.username,
+            };
+          }
+        }
+
+        return { ...post, author };
+      })
+    );
+
+    return NextResponse.json(populatedPosts, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching posts:", error);
     return NextResponse.json(
@@ -32,7 +53,6 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
 
 export async function POST(req: NextRequest) {
   try {
