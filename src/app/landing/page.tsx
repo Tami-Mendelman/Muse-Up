@@ -37,15 +37,16 @@ export default async function LandingPage() {
     avatar_url: a.avatar_url,
   }));
 
-  const baseSelect = {
-    _id: 0,
-    id: 1,
-    title: 1,
-    image_url: 1,
-    likes_count: 1,
-    body: 1,
-    created_at: 1,
-  };
+ const baseSelect = {
+  _id: 0,
+  id: 1,
+  title: 1,
+  image_url: 1,
+  likes_count: 1,
+  body: 1,
+  created_at: 1,
+  user_id: 1,   // ⭐ חובה!!!
+};
 
   const popular = await (PostModel as any)
     .find({}, baseSelect)
@@ -59,18 +60,40 @@ export default async function LandingPage() {
     .limit(2)
     .lean();
 
-  const trendingRaw = [...popular, ...latest].filter(
-    (p, index, arr) => index === arr.findIndex((x) => x.id === p.id)
-  );
+const trendingRaw = [...popular, ...latest].filter(
+  (p, index, arr) => index === arr.findIndex((x) => x.id === p.id)
+);
 
-  const trending = trendingRaw.map((p: any) => ({
-    id: p.id,
-    title: p.title ?? "Untitled",
-    image_url: p.image_url,
-    likes_count: p.likes_count ?? 0,
-    body: p.body ?? "",
-  }));
+const trendingWithAuthors = await Promise.all(
+  trendingRaw.map(async (post: any) => {
+    let author = null;
 
+    if (post.user_id && ("" + post.user_id).length >= 10) {
+      const user = await UserModel.findById(post.user_id)
+        .lean()
+        .catch(() => null);
+
+      if (user) {
+        author = {
+          name: user.name || "Unknown",
+          avatar_url:
+            user.avatar_url ||
+            user.profil_url ||
+            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+        };
+      }
+    }
+    return {
+      ...post,
+      author: author || {
+        name: "Unknown",
+        avatar_url:
+          "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+      },
+    };
+  })
+);
+const trending = trendingWithAuthors;
   return (
     <main className={styles.page}>
       <div className={styles.container}>
