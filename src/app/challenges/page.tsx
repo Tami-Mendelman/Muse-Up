@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import styles from "./challenges.module.css";
 import { getChallenges } from "../../services/challengesService";
@@ -8,7 +7,6 @@ import {
   joinChallenge,
   leaveChallenge,
 } from "../../services/challengeSubmissionsService";
-
 export type Challenge = {
   _id: string;
   id: number;
@@ -19,9 +17,7 @@ export type Challenge = {
   start_date?: string;
   end_date?: string;
 };
-
 type TabKey = "active" | "endingSoon" | "ended";
-
 export default function ChallengesPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +47,6 @@ export default function ChallengesPage() {
             ? localStorage.getItem("firebase_uid")
             : null;
         if (!uid) return;
-
         const submissions = await getUserJoinedChallenges(uid);
         const ids = submissions
           .map((s: any) => s.challenge_id)
@@ -63,7 +58,6 @@ export default function ChallengesPage() {
     }
     loadJoined();
   }, []);
-
   const filtered = filterByTabAndSearch(challenges, tab, search);
   async function handleToggleJoin(challengeId: number) {
     try {
@@ -75,11 +69,8 @@ export default function ChallengesPage() {
         alert("You must be logged in.");
         return;
       }
-
       setJoinLoadingId(challengeId);
-
       const isJoined = joinedIds.includes(challengeId);
-
       if (isJoined) {
         await leaveChallenge(challengeId, uid);
         setJoinedIds((prev) => prev.filter((id) => id !== challengeId));
@@ -96,7 +87,6 @@ export default function ChallengesPage() {
       setJoinLoadingId(null);
     }
   }
-
   return (
     <div className={styles.page}>
       <div className={styles.headerRow}>
@@ -174,25 +164,24 @@ function ChallengeCard({ challenge, isJoined, loading, onToggle }: CardProps) {
       ? `Starts: ${formatDate(start)} • Ends: ${formatDate(end)}`
       : "";
 
-  return (
-    <article className={styles.card}>
-      {challenge.picture_url && (
-        <div className={styles.imageWrapper}>
-          <img
-            src={challenge.picture_url}
-            alt={challenge.title}
-            className={styles.image}
-          />
-        </div>
+ return (
+  <article className={styles.card}>
+    {challenge.picture_url && (
+      <div className={styles.imageWrapper}>
+        <img
+          src={challenge.picture_url}
+          alt={challenge.title}
+          className={styles.image}
+        />
+      </div>
+    )}
+    <div className={styles.cardContent}>
+      <h2 className={styles.cardTitle}>{challenge.title}</h2>
+      {dateText && <p className={styles.cardDates}>{dateText}</p>}
+      {challenge.description && (
+        <p className={styles.cardDescription}>{challenge.description}</p>
       )}
-
-      <div className={styles.cardContent}>
-        <h2 className={styles.cardTitle}>{challenge.title}</h2>
-        {dateText && <p className={styles.cardDates}>{dateText}</p>}
-        {challenge.description && (
-          <p className={styles.cardDescription}>{challenge.description}</p>
-        )}
-
+      {challenge.status !== "ended" && (
         <button
           className={`${styles.joinButton} ${
             isJoined ? styles.joinButtonJoined : ""
@@ -206,9 +195,10 @@ function ChallengeCard({ challenge, isJoined, loading, onToggle }: CardProps) {
             ? "Leave Challenge"
             : "Join Now"}
         </button>
-      </div>
-    </article>
-  );
+      )}
+    </div>
+  </article>
+);
 }
 function filterByTabAndSearch(
   challenges: Challenge[],
@@ -227,9 +217,7 @@ function filterByTabAndSearch(
     const end = c.end_date ? new Date(c.end_date) : undefined;
     return { ...c, _start: start, _end: end } as any;
   });
-
   const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
   if (tab === "active") {
     return withDates.filter((c) => {
       if (!c._start || !c._end) return false;
@@ -245,17 +233,14 @@ function filterByTabAndSearch(
       return isActive && diff <= WEEK_MS && diff >= 0;
     });
   }
-
   if (tab === "ended") {
     return withDates.filter((c) => {
       if (!c._end) return false;
       return c._end < now;
     });
   }
-
   return withDates;
 }
-
 function formatDate(d: Date) {
   return d.toLocaleDateString("en-GB", {
     day: "numeric",

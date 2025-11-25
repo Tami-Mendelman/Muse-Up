@@ -1,18 +1,9 @@
-/* -------------------------------------------------------
-   PAGE LAYOUT
-------------------------------------------------------- */
-
 .page {
   max-width: 1100px;
   margin: 40px auto;
   padding: 0 24px 40px;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-
-/* -------------------------------------------------------
-   HEADER
-------------------------------------------------------- */
-
 .header {
   display: flex;
   align-items: center;
@@ -95,11 +86,6 @@
   font-size: 13px;
   color: #9ca3af;
 }
-
-/* -------------------------------------------------------
-   TABS
-------------------------------------------------------- */
-
 .tabs {
   margin-top: 24px;
   display: flex;
@@ -127,11 +113,6 @@
   border-bottom-color: #2563eb;
   font-weight: 600;
 }
-
-/* -------------------------------------------------------
-   CONTENT AREA
-------------------------------------------------------- */
-
 .content {
   margin-top: 24px;
 }
@@ -140,10 +121,6 @@
   font-size: 14px;
   color: #6b7280;
 }
-
-/* -------------------------------------------------------
-   POSTS GRID (Posts + Saved)
-------------------------------------------------------- */
 
 .postsSection {
   display: flex;
@@ -196,11 +173,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* -------------------------------------------------------
-   FOLLOWERS & FOLLOWING LISTS
-------------------------------------------------------- */
-
 .followersSection {
   display: flex;
   flex-direction: column;
@@ -268,11 +240,6 @@
   font-size: 12px;
   color: #9ca3af;
 }
-
-/* -------------------------------------------------------
-   EDIT PROFILE
-------------------------------------------------------- */
-
 .editForm {
   margin-top: 24px;
   padding: 20px;
@@ -387,9 +354,6 @@
   font-size: 12px;
   color: #6b7280;
 }
-
-/* Save/Error messages */
-
 .editError {
   color: #b91c1c;
   background: #fee2e2;
@@ -441,11 +405,6 @@
 .editSecondaryBtn:hover {
   background: #f3f4f6;
 }
-
-/* -------------------------------------------------------
-   RESPONSIVE
-------------------------------------------------------- */
-
 @media (max-width: 768px) {
   .page {
     margin-top: 24px;
@@ -515,4 +474,67 @@
   font-size: 20px;
   font-weight: 700;
   line-height: 1;
+}
+.challengesGrid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.challengeCard {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 20px 24px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.challengeTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.challengeStatus {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 18px;
+}
+
+.challengeLeaveBtn {
+  align-self: flex-start;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
+}
+
+.challengeLeaveBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+  box-shadow: 0 4px 10px rgba(148, 163, 184, 0.35);
+  transform: translateY(-1px);
+}
+
+.challengeLeaveBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+}
+.challengeImage {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  margin-bottom: 12px;
 }
