@@ -1,15 +1,19 @@
 "use client";
-
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, MouseEvent } from "react";
 import styles from "./profile.module.css";
 import { useRouter } from "next/navigation";
 import AvatarCropper from "../components/CropImage/CropImage";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+
+import { Pencil, Trash2 } from "lucide-react";
+import PostModal from "../components/PostModal/PostModal";
+
 import { useFirebaseUid } from "../../hooks/useFirebaseUid";
 import {
   useProfileEditForm,
   type EditFormState,
 } from "../../hooks/useProfileEditForm";
+
 import {
   getUserByUid,
   updateUserProfile,
@@ -28,7 +32,6 @@ import { getChallenges } from "../../services/challengesService";
 import {
   getUserJoinedChallenges,
   leaveChallenge,
-  submitChallengeImage,
 } from "../../services/challengeSubmissionsService";
 
 type TabKey =
@@ -50,6 +53,7 @@ type Challenge = {
   start_date?: string;
   end_date?: string;
 };
+
 type ChallengeSubmission = {
   _id: string;
   challenge_id: number;
@@ -57,7 +61,6 @@ type ChallengeSubmission = {
   status?: string;
   image_url?: string | null;
 };
-
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -69,7 +72,12 @@ export default function ProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(null);
-  const [uploadingChallengeId, setUploadingChallengeId] = useState<number | null>(null);
+  const [uploadingChallengeId, setUploadingChallengeId] = useState<
+    number | null
+  >(null);
+
+const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+
 
   const { uid, ready: uidReady } = useFirebaseUid();
 
@@ -136,21 +144,6 @@ export default function ProfilePage() {
     },
   });
 
-  const uploadChallengeMutation = useMutation({
-    mutationFn: ({
-      challengeId,
-      file,
-    }: {
-      challengeId: number;
-      file: File;
-    }) => submitChallengeImage(challengeId, user!.firebase_uid, file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["joinedChallenges", user?.firebase_uid],
-      });
-    },
-  });
-
   const joinedChallengesWithDetails =
     joinedSubmissions && challenges
       ? joinedSubmissions
@@ -199,6 +192,34 @@ export default function ProfilePage() {
       </div>
     );
 
+  async function handleSaveProfile(e: FormEvent) {
+    e.preventDefault();
+    if (!user) return;
+
+    setSavingProfile(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    try {
+      const payload: UpdateUserPayload = {
+        name: editForm.name.trim(),
+        username: editForm.username.trim(),
+        bio: editForm.bio.trim(),
+        location: editForm.location.trim(),
+        profil_url: editForm.profil_url,
+      };
+
+      const updated = await updateUserProfile(user.firebase_uid, payload);
+      queryClient.setQueryData<User>(["user", uid], updated);
+      setSaveSuccess(true);
+    } catch (err) {
+      console.error(err);
+      setSaveError("Something went wrong. Please try again.");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
   function handleEditChange(
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
@@ -231,36 +252,94 @@ export default function ProfilePage() {
     }
   };
 
-  async function handleSaveProfile(e: FormEvent) {
-    e.preventDefault();
+  async function handleUploadChallengeImage(
+    challengeId: number,
+    e: ChangeEvent<HTMLInputElement>
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
     if (!user) return;
 
-    setSavingProfile(true);
-    setSaveError(null);
-    setSaveSuccess(false);
+    try {
+      setUploadingChallengeId(challengeId);
+
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const uploadRes = await fetch("/api/uploads", {
+        method: "POST",
+        body: fd,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const uploadData = await uploadRes.json();
+      const imageUrl = uploadData?.url as string | undefined;
+
+      if (!imageUrl) {
+        throw new Error("Upload failed – missing url");
+      }
+
+      const res = await fetch("/api/challenge-submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challenge_id: challengeId,
+          user_uid: user.firebase_uid,
+          image_url: imageUrl,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to save submission");
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: ["joinedChallenges", user.firebase_uid],
+      });
+    } catch (err) {
+      console.error("Failed to upload challenge image", err);
+    } finally {
+      setUploadingChallengeId(null);
+      e.target.value = "";
+    }
+  }
+
+  async function handleDeletePost(e: MouseEvent, postId: string) {
+    e.stopPropagation();
+
+    if (!confirm("Are you sure you want to delete this post?")) return;
 
     try {
-      const payload: UpdateUserPayload = {
-        name: editForm.name.trim(),
-        username: editForm.username.trim(),
-        bio: editForm.bio.trim(),
-        location: editForm.location.trim(),
-        profil_url: editForm.profil_url,
-      };
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: "DELETE",
+      });
 
-      const updated = await updateUserProfile(user.firebase_uid, payload);
-      queryClient.setQueryData<User>(["user", uid], updated);
-      setSaveSuccess(true);
+      if (!res.ok) {
+        console.error("Failed to delete post");
+        return;
+      }
+
+      console.log("Deleted post:", postId);
+
+      queryClient.invalidateQueries({
+        queryKey: ["posts", user?._id],
+      });
     } catch (err) {
-      console.error(err);
-      setSaveError("Something went wrong. Please try again.");
-    } finally {
-      setSavingProfile(false);
+      console.error("Delete error:", err);
     }
+  }
+
+  function handleEditPost(e: MouseEvent, postId: string) {
+    e.stopPropagation();
+    router.push(`/edit-post/${postId}`);
   }
 
   return (
     <div className={styles.page}>
+      {/* HEADER */}
       <header className={styles.header}>
         <div className={styles.avatarWrapper}>
           {user.profil_url ? (
@@ -275,8 +354,10 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
         <div className={styles.headerText}>
           <h1 className={styles.name}>{user.name ?? user.username}</h1>
+
           <div className={styles.metaRow}>
             <button
               type="button"
@@ -294,6 +375,7 @@ export default function ProfilePage() {
               {(user.following_count ?? 0).toLocaleString()} following
             </button>
           </div>
+
           {user.bio && <p className={styles.bio}>{user.bio}</p>}
           {user.location && (
             <p className={styles.location}>{user.location}</p>
@@ -301,6 +383,7 @@ export default function ProfilePage() {
         </div>
       </header>
 
+      {/* TABS */}
       <nav className={styles.tabs}>
         {[
           ["posts", "My Posts"],
@@ -321,42 +404,69 @@ export default function ProfilePage() {
         ))}
       </nav>
 
+      {/* CONTENT */}
       <section className={styles.content}>
-       {activeTab === "posts" && (
-  <div className={styles.postsSection}>
-    <div className={styles.sectionHeader}>
-      <button
-        className={styles.shareArtBtn}
-        onClick={() => router.push("/create")}
-      >
-        share your art
-        <span className={styles.sharePlus}>+</span>
-      </button>
-    </div>
+        {/* POSTS TAB */}
+        {activeTab === "posts" && (
+          <div className={styles.postsSection}>
+            <button
+              className={styles.shareArtBtn}
+              onClick={() => router.push("/create")}
+            >
+              share your art <span className={styles.sharePlus}>+</span>
+            </button>
 
-    {loadingPosts && <p>Loading posts…</p>}
-    {postsError && <p>Failed to load posts.</p>}
-    {!loadingPosts && posts.length === 0 && (
-      <p className={styles.placeholder}>No posts yet.</p>
-    )}
-    {!loadingPosts && posts.length > 0 && (
-      <div className={styles.postsGrid}>
-        {posts.map((p) => (
-          <div key={p._id} className={styles.postCard}>
-            <img
-              src={p.image_url}
-              alt={p.title}
-              className={styles.postImage}
-            />
-            <div className={styles.postInfo}>
-              <h3 className={styles.postTitle}>{p.title}</h3>
-            </div>
+            {loadingPosts && <p>Loading posts…</p>}
+            {postsError && <p>Failed to load posts.</p>}
+            {!loadingPosts && posts.length === 0 && (
+              <p className={styles.placeholder}>No posts yet.</p>
+            )}
+
+            {!loadingPosts && posts.length > 0 && (
+              <div className={styles.postsGrid}>
+                {posts.map((p) => (
+                  <div
+                    key={p._id}
+                    className={styles.postCard}
+                    onClick={() => {
+  if (p.id != null) {
+    setSelectedPostId(p.id);
+  }
+}}
+                  >
+                    <img
+                      src={p.image_url}
+                      alt={p.title}
+                      className={styles.postImage}
+                    />
+
+                    <div className={styles.postActions}>
+                      <button
+                        className={styles.postActionBtn}
+                        onClick={(e) => handleEditPost(e, p._id)}
+                      >
+                        <Pencil size={18} className={styles.icon} />
+                      </button>
+
+                      <button
+                        className={styles.postActionBtn}
+                        onClick={(e) => handleDeletePost(e, p._id)}
+                      >
+                        <Trash2 size={18} className={styles.iconDelete} />
+                      </button>
+                    </div>
+
+                    <div className={styles.postInfo}>
+                      <h3 className={styles.postTitle}>{p.title}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
-    )}
-  </div>
-)}
+        )}
+
+        {/* SAVED TAB */}
         {activeTab === "saved" && (
           <div className={styles.postsSection}>
             {loadingSaved && <p>Loading saved posts…</p>}
@@ -367,7 +477,11 @@ export default function ProfilePage() {
             {!loadingSaved && savedPosts.length > 0 && (
               <div className={styles.postsGrid}>
                 {savedPosts.map((p) => (
-                  <div key={p._id} className={styles.postCard}>
+                  <div
+                    key={p._id}
+                    className={styles.postCard}
+                   onClick={() => setSelectedPostId(p.id)}
+                  >
                     <img
                       src={p.image_url}
                       alt={p.title}
@@ -383,6 +497,7 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* CHALLENGE TAB */}
         {activeTab === "challenge" && (
           <div className={styles.postsSection}>
             {(loadingJoinedChallenges || loadingAllChallenges) && (
@@ -404,110 +519,102 @@ export default function ProfilePage() {
               !loadingAllChallenges &&
               joinedChallengesWithDetails.length > 0 && (
                 <div className={styles.challengesGrid}>
-                  {joinedChallengesWithDetails.map(({ submission, challenge }) => {
-                    const ch = challenge as Challenge;
-                    const isActive =
-                      ch.status === "active" ||
-                      !ch.end_date ||
-                      new Date(ch.end_date) > new Date();
+                  {joinedChallengesWithDetails.map(
+                    ({ submission, challenge }) => {
+                      const ch = challenge as Challenge;
 
-                    const isSubmitted =
-                      (submission.image_url &&
-                        typeof submission.image_url === "string") ||
-                      submission.status === "submitted";
+                      const isActive =
+                        ch.status === "active" ||
+                        !ch.end_date ||
+                        new Date(ch.end_date) > new Date();
 
-                    const inputId = `challenge-upload-${ch.id}`;
+                      const isSubmitted =
+                        (submission.image_url &&
+                          typeof submission.image_url === "string") ||
+                        submission.status === "submitted";
 
-                    return (
-                      <div
-                        key={submission._id}
-                        className={styles.challengeCard}
-                      >
-                        {ch.picture_url && (
-                          <img
-                            src={ch.picture_url}
-                            alt={ch.title}
-                            className={styles.challengeImage}
-                          />
-                        )}
+                      const inputId = `challenge-upload-${ch.id}`;
 
-                        <div>
-                          <h3 className={styles.challengeTitle}>{ch.title}</h3>
-                          <p className={styles.challengeStatus}>
-                            Status: {isActive ? "Active" : "Finished"}
-                          </p>
-                        </div>
+                      return (
+                        <div
+                          key={submission._id}
+                          className={styles.challengeCard}
+                        >
+                          {ch.picture_url && (
+                            <img
+                              src={ch.picture_url}
+                              alt={ch.title}
+                              className={styles.challengeImage}
+                            />
+                          )}
 
-                        <div className={styles.challengeActions}>
-                          {isActive && !isSubmitted && (
-                            <>
+                          <div>
+                            <h3 className={styles.challengeTitle}>
+                              {ch.title}
+                            </h3>
+                            <p className={styles.challengeStatus}>
+                              Status: {isActive ? "Active" : "Finished"}
+                            </p>
+                          </div>
+
+                          <div className={styles.challengeActions}>
+                            {isActive && !isSubmitted && (
+                              <>
+                                <button
+                                  type="button"
+                                  className={styles.challengeUploadBtn}
+                                  onClick={() =>
+                                    document
+                                      .getElementById(inputId)
+                                      ?.click()
+                                  }
+                                  disabled={uploadingChallengeId === ch.id}
+                                >
+                                  {uploadingChallengeId === ch.id
+                                    ? "Uploading..."
+                                    : "Upload your art"}
+                                </button>
+                                <input
+                                  id={inputId}
+                                  type="file"
+                                  accept="image/*"
+                                  style={{ display: "none" }}
+                                  onChange={(e) =>
+                                    handleUploadChallengeImage(ch.id, e)
+                                  }
+                                />
+                              </>
+                            )}
+
+                            {isActive && isSubmitted && (
+                              <span className={styles.submittedText}>
+                                You already submitted this challenge.
+                              </span>
+                            )}
+
+                            {isActive && (
                               <button
                                 type="button"
-                                className={styles.challengeUploadBtn}
+                                className={styles.challengeLeaveBtn}
                                 onClick={() =>
-                                  document
-                                    .getElementById(inputId)
-                                    ?.click()
+                                  leaveChallengeMutation.mutate(ch.id)
                                 }
-                                disabled={
-                                  uploadingChallengeId === ch.id ||
-                                  uploadChallengeMutation.isPending
-                                }
+                                disabled={leaveChallengeMutation.isPending}
                               >
-                                {uploadingChallengeId === ch.id
-                                  ? "Uploading..."
-                                  : "Upload your art"}
+                                Leave challenge
                               </button>
-                              <input
-                                id={inputId}
-                                type="file"
-                                accept="image/*"
-                                style={{ display: "none" }}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  setUploadingChallengeId(ch.id);
-                                  uploadChallengeMutation.mutate(
-                                    { challengeId: ch.id, file },
-                                    {
-                                      onSettled: () => {
-                                        setUploadingChallengeId(null);
-                                        e.target.value = "";
-                                      },
-                                    }
-                                  );
-                                }}
-                              />
-                            </>
-                          )}
-
-                          {isActive && isSubmitted && (
-                            <span className={styles.submittedText}>
-                              You already submitted this challenge.
-                            </span>
-                          )}
-
-                          {isActive && (
-                            <button
-                              type="button"
-                              className={styles.challengeLeaveBtn}
-                              onClick={() =>
-                                leaveChallengeMutation.mutate(ch.id)
-                              }
-                              disabled={leaveChallengeMutation.isPending}
-                            >
-                              Leave challenge
-                            </button>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    }
+                  )}
                 </div>
               )}
           </div>
         )}
 
+        {/* EDIT PROFILE TAB */}
         {activeTab === "edit" && (
           <form className={styles.editForm} onSubmit={handleSaveProfile}>
             <div className={styles.editGrid}>
@@ -575,9 +682,7 @@ export default function ProfilePage() {
                 </div>
 
                 <label className={styles.editUploadBtn}>
-                  {uploadingAvatar
-                    ? "Uploading…"
-                    : "Change profile picture"}
+                  {uploadingAvatar ? "Uploading…" : "Change profile picture"}
                   <input
                     type="file"
                     accept="image/*"
@@ -630,6 +735,7 @@ export default function ProfilePage() {
           </form>
         )}
 
+        {/* FOLLOWERS TAB */}
         {activeTab === "followers" && (
           <div className={styles.followersSection}>
             <h2 className={styles.sectionTitle}>Followers</h2>
@@ -660,6 +766,7 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* FOLLOWING TAB */}
         {activeTab === "following" && (
           <div className={styles.followersSection}>
             <h2 className={styles.sectionTitle}>Following</h2>
@@ -691,6 +798,15 @@ export default function ProfilePage() {
         )}
       </section>
 
+      {/* מודל לפוסט שנבחר */}
+      {selectedPostId && (
+        <PostModal
+          postId={selectedPostId}
+          onClose={() => setSelectedPostId(null)}
+        />
+      )}
+
+      {/* קרופר לאווטר */}
       {avatarFileToCrop && (
         <AvatarCropper
           imageFile={avatarFileToCrop}
