@@ -87,23 +87,24 @@
 .filterBtn {
   flex: 1;
   border-radius: 999px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #bfdbfe; /* כחול עדין */
   padding: 6px 8px;
   font-size: 12px;
-  background: #f9fafb;
+  background: #eff6ff; /* כחול בהיר */
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .filterBtn:hover {
-  background: #e5e7eb;
+  background: #dbeafe; /* כחול מעט יותר חזק */
 }
 
 .filterBtnActive {
-  background: #020617;
+  background: #2563eb; /* כחול חזק */
   color: #ffffff;
-  border-color: #020617;
+  border-color: #2563eb;
 }
+
 
 .resultsHeader {
   display: flex;
