@@ -1,15 +1,20 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, MouseEvent } from "react";
 import styles from "./profile.module.css";
 import { useRouter } from "next/navigation";
 import AvatarCropper from "../components/CropImage/CropImage";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+
+import { Pencil, Trash2 } from "lucide-react";
+import PostModal from "../components/PostModal/PostModal";
+
 import { useFirebaseUid } from "../../hooks/useFirebaseUid";
 import {
   useProfileEditForm,
   type EditFormState,
 } from "../../hooks/useProfileEditForm";
+
 import {
   getUserByUid,
   updateUserProfile,
@@ -50,6 +55,7 @@ type Challenge = {
   start_date?: string;
   end_date?: string;
 };
+
 type ChallengeSubmission = {
   _id: string;
   challenge_id: number;
@@ -57,7 +63,6 @@ type ChallengeSubmission = {
   status?: string;
   image_url?: string | null;
 };
-
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -70,6 +75,11 @@ export default function ProfilePage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(null);
   const [uploadingChallengeId, setUploadingChallengeId] = useState<number | null>(null);
+
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+
+  // NEW: delete modal state
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   const { uid, ready: uidReady } = useFirebaseUid();
 
@@ -151,14 +161,15 @@ export default function ProfilePage() {
     },
   });
 
+
   const joinedChallengesWithDetails =
     joinedSubmissions && challenges
       ? joinedSubmissions
-          .map((sub) => ({
-            submission: sub,
-            challenge: challenges.find((c) => c.id === sub.challenge_id),
-          }))
-          .filter((x) => x.challenge !== undefined)
+        .map((sub) => ({
+          submission: sub,
+          challenge: challenges.find((c) => c.id === sub.challenge_id),
+        }))
+        .filter((x) => x.challenge !== undefined)
       : [];
 
   const {
@@ -182,16 +193,13 @@ export default function ProfilePage() {
   });
 
   if (!uidReady) return <div className={styles.page}>Loading profile…</div>;
-
   if (!uid)
     return (
       <div className={styles.page}>
         <p>No logged-in user. Please sign in.</p>
       </div>
     );
-
   if (loadingUser) return <div className={styles.page}>Loading profile…</div>;
-
   if (userError || !user)
     return (
       <div className={styles.page}>
@@ -259,8 +267,46 @@ export default function ProfilePage() {
     }
   }
 
+  /** 🟥 מחיקה — פותח מודל */
+  function handleDeletePostClick(e: MouseEvent, postId: string) {
+    e.stopPropagation();
+    setDeletePostId(postId);
+  }
+
+  /** 🟥 מחיקה — אישור במודל */
+  async function confirmDeletePost() {
+    if (!deletePostId) return;
+
+    try {
+      const res = await fetch(`/api/posts/${deletePostId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        console.error("Failed to delete post");
+        return;
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: ["posts", user?._id],
+      });
+    } catch (err) {
+      console.error("Delete error:", err);
+    } finally {
+      setDeletePostId(null);
+    }
+  }
+
+  function handleEditPost(e: MouseEvent, postId: string) {
+    e.stopPropagation();
+    router.push(`/edit-post/${postId}`);
+  }
+
   return (
     <div className={styles.page}>
+
+
+      {/* HEADER */}
       <header className={styles.header}>
         <div className={styles.avatarWrapper}>
           {user.profil_url ? (
@@ -275,8 +321,10 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
         <div className={styles.headerText}>
           <h1 className={styles.name}>{user.name ?? user.username}</h1>
+
           <div className={styles.metaRow}>
             <button
               type="button"
@@ -294,6 +342,7 @@ export default function ProfilePage() {
               {(user.following_count ?? 0).toLocaleString()} following
             </button>
           </div>
+
           {user.bio && <p className={styles.bio}>{user.bio}</p>}
           {user.location && (
             <p className={styles.location}>{user.location}</p>
@@ -301,6 +350,7 @@ export default function ProfilePage() {
         </div>
       </header>
 
+      {/* TABS */}
       <nav className={styles.tabs}>
         {[
           ["posts", "My Posts"],
@@ -311,9 +361,8 @@ export default function ProfilePage() {
         ].map(([key, label]) => (
           <button
             key={key}
-            className={`${styles.tab} ${
-              activeTab === key ? styles.tabActive : ""
-            }`}
+            className={`${styles.tab} ${activeTab === key ? styles.tabActive : ""
+              }`}
             onClick={() => setActiveTab(key as TabKey)}
           >
             {label}
@@ -321,58 +370,56 @@ export default function ProfilePage() {
         ))}
       </nav>
 
+      {/* CONTENT */}
       <section className={styles.content}>
-       {activeTab === "posts" && (
-  <div className={styles.postsSection}>
-    <div className={styles.sectionHeader}>
-      <button
-        className={styles.shareArtBtn}
-        onClick={() => router.push("/create")}
-      >
-        share your art
-        <span className={styles.sharePlus}>+</span>
-      </button>
-    </div>
 
-    {loadingPosts && <p>Loading posts…</p>}
-    {postsError && <p>Failed to load posts.</p>}
-    {!loadingPosts && posts.length === 0 && (
-      <p className={styles.placeholder}>No posts yet.</p>
-    )}
-    {!loadingPosts && posts.length > 0 && (
-      <div className={styles.postsGrid}>
-        {posts.map((p) => (
-          <div key={p._id} className={styles.postCard}>
-            <img
-              src={p.image_url}
-              alt={p.title}
-              className={styles.postImage}
-            />
-            <div className={styles.postInfo}>
-              <h3 className={styles.postTitle}>{p.title}</h3>
-            </div>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-)}
-        {activeTab === "saved" && (
+        {/* POSTS TAB */}
+        {activeTab === "posts" && (
           <div className={styles.postsSection}>
-            {loadingSaved && <p>Loading saved posts…</p>}
-            {savedError && <p>Failed to load saved posts.</p>}
-            {!loadingSaved && savedPosts.length === 0 && (
-              <p className={styles.placeholder}>No saved posts yet.</p>
+            <button
+              className={styles.shareArtBtn}
+              onClick={() => router.push("/create")}
+            >
+              share your art <span className={styles.sharePlus}>+</span>
+            </button>
+
+            {loadingPosts && <p>Loading posts…</p>}
+            {postsError && <p>Failed to load posts.</p>}
+            {!loadingPosts && posts.length === 0 && (
+              <p className={styles.placeholder}>No posts yet.</p>
             )}
-            {!loadingSaved && savedPosts.length > 0 && (
+
+            {!loadingPosts && posts.length > 0 && (
               <div className={styles.postsGrid}>
-                {savedPosts.map((p) => (
-                  <div key={p._id} className={styles.postCard}>
+                {posts.map((p) => (
+                  <div
+                    key={p._id}
+                    className={styles.postCard}
+                    onClick={() => p.id != null && setSelectedPostId(p.id)}
+                  >
                     <img
                       src={p.image_url}
                       alt={p.title}
                       className={styles.postImage}
                     />
+
+                    {/* כפתורי עריכה/מחיקה בהובר */}
+                    <div className={styles.postActions}>
+                      <button
+                        className={styles.postActionBtn}
+                        onClick={(e) => handleEditPost(e, p._id)}
+                      >
+                        <Pencil size={18} className={styles.icon} />
+                      </button>
+
+                      <button
+                        className={styles.postActionBtn}
+                        onClick={(e) => handleDeletePostClick(e, p._id)}
+                      >
+                        <Trash2 size={18} className={styles.iconDelete} />
+                      </button>
+                    </div>
+
                     <div className={styles.postInfo}>
                       <h3 className={styles.postTitle}>{p.title}</h3>
                     </div>
@@ -383,23 +430,47 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* SAVED */}
+        {activeTab === "saved" && (
+          <div className={styles.postsSection}>
+            {loadingSaved && <p>Loading saved posts…</p>}
+            {savedError && <p>Failed to load saved posts.</p>}
+            {!loadingSaved && savedPosts.length === 0 && (
+              <p>No saved posts yet.</p>
+            )}
+
+            {!loadingSaved && savedPosts.length > 0 && (
+              <div className={styles.postsGrid}>
+                {savedPosts.map((p) => (
+                  <div
+                    key={p._id}
+                    className={styles.postCard}
+                    onClick={() => setSelectedPostId(p.id)}
+                  >
+                    <img src={p.image_url} alt={p.title} className={styles.postImage} />
+                    <div className={styles.postInfo}>
+                      <h3 className={styles.postTitle}>{p.title}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CHALLENGE */}
         {activeTab === "challenge" && (
           <div className={styles.postsSection}>
             {(loadingJoinedChallenges || loadingAllChallenges) && (
               <p>Loading your challenges…</p>
             )}
-            {(joinedChallengesError || allChallengesError) && (
-              <p className={styles.placeholder}>
-                Failed to load your challenges.
-              </p>
-            )}
+
             {!loadingJoinedChallenges &&
               !loadingAllChallenges &&
               joinedChallengesWithDetails.length === 0 && (
-                <p className={styles.placeholder}>
-                  You haven&apos;t joined any challenges yet.
-                </p>
+                <p>You haven't joined any challenges yet.</p>
               )}
+
             {!loadingJoinedChallenges &&
               !loadingAllChallenges &&
               joinedChallengesWithDetails.length > 0 && (
@@ -412,54 +483,38 @@ export default function ProfilePage() {
                       new Date(ch.end_date) > new Date();
 
                     const isSubmitted =
-                      (submission.image_url &&
-                        typeof submission.image_url === "string") ||
-                      submission.status === "submitted";
-
-                    const inputId = `challenge-upload-${ch.id}`;
+                      submission.status === "submitted" ||
+                      !!submission.image_url;
 
                     return (
-                      <div
-                        key={submission._id}
-                        className={styles.challengeCard}
-                      >
+                      <div key={submission._id} className={styles.challengeCard}>
                         {ch.picture_url && (
-                          <img
-                            src={ch.picture_url}
-                            alt={ch.title}
-                            className={styles.challengeImage}
-                          />
+                          <img src={ch.picture_url} alt={ch.title} className={styles.challengeImage} />
                         )}
 
-                        <div>
-                          <h3 className={styles.challengeTitle}>{ch.title}</h3>
-                          <p className={styles.challengeStatus}>
-                            Status: {isActive ? "Active" : "Finished"}
-                          </p>
-                        </div>
+                        <h3 className={styles.challengeTitle}>{ch.title}</h3>
+
+                        <p className={styles.challengeStatus}>
+                          Status: {isActive ? "Active" : "Finished"}
+                        </p>
 
                         <div className={styles.challengeActions}>
                           {isActive && !isSubmitted && (
                             <>
                               <button
-                                type="button"
                                 className={styles.challengeUploadBtn}
+                                disabled={uploadingChallengeId === ch.id}
                                 onClick={() =>
-                                  document
-                                    .getElementById(inputId)
-                                    ?.click()
-                                }
-                                disabled={
-                                  uploadingChallengeId === ch.id ||
-                                  uploadChallengeMutation.isPending
+                                  document.getElementById(`upload-${ch.id}`)?.click()
                                 }
                               >
                                 {uploadingChallengeId === ch.id
                                   ? "Uploading..."
                                   : "Upload your art"}
                               </button>
+
                               <input
-                                id={inputId}
+                                id={`upload-${ch.id}`}
                                 type="file"
                                 accept="image/*"
                                 style={{ display: "none" }}
@@ -481,20 +536,16 @@ export default function ProfilePage() {
                             </>
                           )}
 
-                          {isActive && isSubmitted && (
+                          {isSubmitted && (
                             <span className={styles.submittedText}>
-                              You already submitted this challenge.
+                              You already submitted.
                             </span>
                           )}
 
                           {isActive && (
                             <button
-                              type="button"
                               className={styles.challengeLeaveBtn}
-                              onClick={() =>
-                                leaveChallengeMutation.mutate(ch.id)
-                              }
-                              disabled={leaveChallengeMutation.isPending}
+                              onClick={() => leaveChallengeMutation.mutate(ch.id)}
                             >
                               Leave challenge
                             </button>
@@ -508,6 +559,7 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* EDIT PROFILE */}
         {activeTab === "edit" && (
           <form className={styles.editForm} onSubmit={handleSaveProfile}>
             <div className={styles.editGrid}>
@@ -519,7 +571,6 @@ export default function ProfilePage() {
                     value={editForm.name}
                     onChange={handleEditChange}
                     className={styles.editInput}
-                    placeholder="Your full name"
                   />
                 </div>
 
@@ -530,7 +581,6 @@ export default function ProfilePage() {
                     value={editForm.username}
                     onChange={handleEditChange}
                     className={styles.editInput}
-                    placeholder="Unique username"
                   />
                 </div>
 
@@ -541,7 +591,6 @@ export default function ProfilePage() {
                     value={editForm.bio}
                     onChange={handleEditChange}
                     className={styles.editTextarea}
-                    placeholder="Tell people about your art..."
                     rows={4}
                   />
                 </div>
@@ -553,72 +602,41 @@ export default function ProfilePage() {
                     value={editForm.location}
                     onChange={handleEditChange}
                     className={styles.editInput}
-                    placeholder="City, Country"
                   />
                 </div>
               </div>
 
               <div className={styles.editRight}>
                 <p className={styles.editLabel}>Profile picture</p>
+
                 <div className={styles.editAvatarWrapper}>
                   {editForm.profil_url ? (
-                    <img
-                      src={editForm.profil_url}
-                      alt="Profile avatar"
-                      className={styles.editAvatarImg}
-                    />
+                    <img src={editForm.profil_url} className={styles.editAvatarImg} />
                   ) : (
                     <div className={styles.editAvatarFallback}>
-                      {user.username?.charAt(0).toUpperCase()}
+                      {user.username?.charAt(0)}
                     </div>
                   )}
                 </div>
 
                 <label className={styles.editUploadBtn}>
-                  {uploadingAvatar
-                    ? "Uploading…"
-                    : "Change profile picture"}
+                  {uploadingAvatar ? "Uploading…" : "Change profile picture"}
                   <input
                     type="file"
                     accept="image/*"
                     style={{ display: "none" }}
                     onChange={handleAvatarInputChange}
-                    disabled={uploadingAvatar}
                   />
                 </label>
-
-                <p className={styles.editHint}>
-                  JPG, PNG, max 5MB. Use a clear image of your art or yourself.
-                </p>
               </div>
             </div>
 
             {saveError && <p className={styles.editError}>{saveError}</p>}
             {saveSuccess && (
-              <p className={styles.editSuccess}>
-                Profile updated successfully.
-              </p>
+              <p className={styles.editSuccess}>Profile updated!</p>
             )}
 
             <div className={styles.editActions}>
-              <button
-                type="button"
-                className={styles.editSecondaryBtn}
-                onClick={() => {
-                  if (!user) return;
-                  setEditForm({
-                    name: user.name ?? "",
-                    username: user.username ?? "",
-                    bio: user.bio ?? "",
-                    location: user.location ?? "",
-                    profil_url: user.profil_url ?? "",
-                  });
-                  setSaveError(null);
-                  setSaveSuccess(false);
-                }}
-              >
-                Reset
-              </button>
               <button
                 type="submit"
                 className={styles.editPrimaryBtn}
@@ -630,29 +648,18 @@ export default function ProfilePage() {
           </form>
         )}
 
+        {/* FOLLOWERS */}
         {activeTab === "followers" && (
           <div className={styles.followersSection}>
-            <h2 className={styles.sectionTitle}>Followers</h2>
-            {loadingFollowers && <p>Loading followers…</p>}
-            {followersError && <p>Failed to load followers.</p>}
-            {!loadingFollowers && followers.length === 0 && (
-              <p>No followers yet.</p>
-            )}
+            <h2>Followers</h2>
+            {!loadingFollowers && followers.length === 0 && <p>No followers yet.</p>}
             <div className={styles.followersGrid}>
               {followers.map((f) => (
                 <div key={f._id} className={styles.followerCard}>
-                  <img
-                    src={f.profil_url || ""}
-                    alt={f.name ?? f.username}
-                    className={styles.followerAvatar}
-                  />
+                  <img src={f.profil_url || ""} className={styles.followerAvatar} />
                   <div>
-                    <div className={styles.followerName}>
-                      {f.name ?? f.username}
-                    </div>
-                    <div className={styles.followerUsername}>
-                      @{f.username}
-                    </div>
+                    <div className={styles.followerName}>{f.name ?? f.username}</div>
+                    <div className={styles.followerUsername}>@{f.username}</div>
                   </div>
                 </div>
               ))}
@@ -660,37 +667,62 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* FOLLOWING */}
         {activeTab === "following" && (
           <div className={styles.followersSection}>
-            <h2 className={styles.sectionTitle}>Following</h2>
-            {loadingFollowing && <p>Loading following…</p>}
-            {followingError && <p>Failed to load following.</p>}
-            {!loadingFollowing && following.length === 0 && (
-              <p>Not following anyone yet.</p>
-            )}
+            <h2>Following</h2>
+            {!loadingFollowing && following.length === 0 && <p>Not following anyone.</p>}
             <div className={styles.followersGrid}>
               {following.map((f) => (
                 <div key={f._id} className={styles.followerCard}>
-                  <img
-                    src={f.profil_url || ""}
-                    alt={f.name ?? f.username}
-                    className={styles.followerAvatar}
-                  />
+                  <img src={f.profil_url || ""} className={styles.followerAvatar} />
                   <div>
-                    <div className={styles.followerName}>
-                      {f.name ?? f.username}
-                    </div>
-                    <div className={styles.followerUsername}>
-                      @{f.username}
-                    </div>
+                    <div className={styles.followerName}>{f.name ?? f.username}</div>
+                    <div className={styles.followerUsername}>@{f.username}</div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
       </section>
 
+      {/* ✨ פוסט מודאל */}
+      {selectedPostId && (
+        <PostModal
+          postId={String(selectedPostId)}
+          onClose={() => setSelectedPostId(null)}
+        />
+      )}
+
+      {/* 🟥 מודל מחיקה */}
+      {deletePostId && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.modal}>
+            <h3>Delete this post?</h3>
+            <p>This action cannot be undone.</p>
+
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalCancel}
+                onClick={() => setDeletePostId(null)}
+              >
+                Cancel
+              </button>
+
+              <button
+                className={styles.modalConfirm}
+                onClick={confirmDeletePost}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🟦 קרופר */}
       {avatarFileToCrop && (
         <AvatarCropper
           imageFile={avatarFileToCrop}

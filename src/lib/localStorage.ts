@@ -6,8 +6,8 @@ export function setLocalStorageUid(uid: string) {
 }
 
 export function getLocalStorageUid(): string | null {
-    if (typeof window === "undefined") return;
-    localStorage.getItem(key);
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(key);
 }
 
 export function clearLocalStorageUid() {
