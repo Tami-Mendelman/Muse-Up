@@ -112,9 +112,6 @@ export default async function LandingPage() {
                 <Link href="/create" className={styles.primaryBtn}>
                   Share your art
                 </Link>
-                <Link href="/explore" className={styles.linkBtn}>
-                  Explore artworks →
-                </Link>
               </div>
             </section>
 
@@ -155,6 +152,7 @@ export default async function LandingPage() {
             </div>
 
             <aside className={styles.challengeCard}>
+              
               <div className={styles.challengeContent}>
                 <h3 className={styles.challengeTitle}>
                   Weekly Challenge: “Light & Shadow”
@@ -165,6 +163,10 @@ export default async function LandingPage() {
               </div>
               <div className={styles.challengeVisual} />
             </aside>
+            <Link href="/challenges" className={styles.moreLink}>
+  See all challenges →
+</Link>
+
           </div>
         </div>
       </div>
