@@ -4,8 +4,19 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req: Request) {
   await dbConnect();
+
+  const { searchParams } = new URL(req.url);
+  const email = searchParams.get("email");
+  // in case checking by email
+  if (email) {
+    console.log("Fetching unique user by email:", email);
+    const user = await User.findOne({ email });
+    return NextResponse.json(user || null);
+  }
+
+  console.log("Fetching all users");
   const users = await User.find();
   return NextResponse.json(users);
 }

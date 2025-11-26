@@ -48,24 +48,26 @@ export default function ForgetPasswordPage() {
     }
 
     try {
-      await auth.authStateReady();
-
       const emailTrimmed = email.trim().toLowerCase();
-      const providers = await fetchSignInMethodsForEmail(auth, emailTrimmed);
-      console.log("providers:", providers);
+      // console.log(222, "Checking providers for email:", auth, emailTrimmed);
+      fetchSignInMethodsForEmail(auth, emailTrimmed).then(result => {
+        console.log(222, "Fetched providers:", result);
+        return result;
+        
+      })
 
-      if (providers.length === 0) {
-        console.log("auth currentUser:", auth.currentUser);
-        setError("No account found for this email.");
-        return;
-      }
+      // if (providers.length === 0) {
+      //   console.log("auth currentUser:", auth.currentUser.providerData[0].providerId);
+      //   setError("No account found for this email.");
+      //   return;
+      // }
 
-      if (!providers.includes("password")) {
-        setError(
-          `This account is connected via ${providers.join(", ")}. Please log in using that provider.`
-        );
-        return;
-      }
+      // if (!providers.includes("password")) {
+      //   setError(
+      //     `This account is connected via ${providers.join(", ")}. Please log in using that provider.`
+      //   );
+      //   return;
+      // }
 
       await sendPasswordResetEmail(auth, emailTrimmed);
       setMessage("We sent you an email to reset your password.");
@@ -118,3 +120,7 @@ export default function ForgetPasswordPage() {
     </div>
   );
 }
+function res(value: string[]): string[] | PromiseLike<string[]> {
+  throw new Error("Function not implemented.");
+}
+

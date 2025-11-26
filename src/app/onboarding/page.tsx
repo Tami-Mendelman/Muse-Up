@@ -281,13 +281,13 @@ export default function OnboardingPage() {
 
           {/* Bio */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}>Bio</label>
+            <label className={styles.label}>Biography</label>
             <textarea
               name="bio"
               value={form.bio}
               onChange={handleChange}
               rows={4}
-              placeholder="ספרי לנו על הסגנון שלך, ההשראה ומה את יוצרת..."
+              placeholder="Tell us a bit about yourself..."
               className={styles.textarea}
               required
             />

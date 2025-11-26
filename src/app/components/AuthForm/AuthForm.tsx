@@ -25,7 +25,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     const [showPassword, setShowPassword] = useState(false);
     const [emailError, setEmailError] = useState<string | null>(null);
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-
+    const [error, setError] = useState("");
 
     const validateEmail = (value: string): string | null => {
         if (!value) return "Email is required.";
@@ -82,9 +82,9 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
                 if (!mongoUser) {
                     if (firebaseUser) {
-                        alert("You have to complete your sign up.");
+                        setError("You have to complete your sign up.");
                     } else {
-                        alert("No account found with this email. Please sign up first.");
+                        setError("No account found with this email. Please sign up first.");
                         return;
                     }
                 }
@@ -97,34 +97,26 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     console.log("Fetch existing user response status:", res.status);
                     const userData = await res.json();
                     console.log("Existing user data:", userData);
-                    if (userData) {
-                        const firebaseUser = auth.currentUser;
-                        console.log("Current Firebase user:", firebaseUser);
-                        if (!userData.firebase_uid) {
-                            await fetch("/api/users", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ ...userData, firebase_uid: firebaseUser.uid }),
-                            });
-                        }
-                        router.push("/landing");
+                    if (userData !== null) {
+                        setError("This email is already registered. Please log in instead.");
                         return;
                     }
-
                     const methods = await fetchSignInMethodsForEmail(auth, email);
                     if (methods.length > 0) {
-                        alert("This email is already registered in Firebase. Please log in instead.");
+                        setError("This email is already registered in Firebase. Please log in instead.");
                         return;
                     }
 
-                    await createUserWithEmailAndPassword(auth, email, password);
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    console.log("CREATED FIREBASE USER:", cred.user);
+                    // await createUserWithEmailAndPassword(auth, email, password);
                     router.push("/onboarding");
                     alert("register successfully!");
                 }
             }
         } catch (err: any) {
             const msg = getAuthErrorMessage(err, mode);
-            alert(msg);
+            setError(msg);
         }
     };
 
@@ -134,7 +126,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
             const user = result.user;
 
             if (!user.email) {
-                alert("Could not retrieve Google email.");
+                setError("Could not retrieve Google email.");
                 await signOut(auth);
                 return;
             }
@@ -146,7 +138,8 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
             if (mode === "login") {
                 if (!userExists) {
-                    alert("No account found with this email. Please sign up first.");
+                    router.push("/register");
+                    setError("No account found with this email. Please sign up first.");
                     await signOut(auth);
                     return;
                 }
@@ -156,7 +149,8 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
             if (mode === "register") {
                 if (userExists) {
-                    alert("Account already exists. Please log in instead.");
+                    router.push("/login");
+                    setError("Account already exists. Please log in instead.");
                     await signOut(auth);
                     return;
                 }
@@ -165,7 +159,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
             }
         } catch (err: any) {
             console.error("Google authentication failed:", err);
-            alert("Google authentication failed. Try again.");
+            setError("Google authentication failed. Try again.");
         }
     };
 
@@ -188,6 +182,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 </p>
 
                 <form onSubmit={handleSubmit} className={styles.form}>
+                    {error && <div className={styles.globalError}>{error}</div>}
                     {/* Email */}
                     <label className={styles.label}>
                         Email address
@@ -294,7 +289,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
                 <p className={styles.switch}>
                     {mode === "login"
-                        ? "Don't have an account? <br> Forget password?"
+                        ? "Don't have an account?"
                         : "Already have an account?"}{" "}
                     <Link
                         href={mode === "login" ? "/register" : "/login"}
