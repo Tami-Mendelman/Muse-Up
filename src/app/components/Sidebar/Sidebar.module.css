@@ -1,14 +1,18 @@
 :root {
   --sidebar-space: 24px;
-  --pop-dur: 0.6s;       
-  --stagger-step: 0.15s; 
+  --pop-dur: 0.6s;
+  --stagger-step: 0.15s;
 }
 
 .root {
   position: fixed;
   inset-block: 0;
   right: 0;
-  background: #fff;
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 1 !important;
+
   border-left: 1px solid #e6e8ef;
   display: flex;
   flex-direction: column;
@@ -17,67 +21,12 @@
   gap: 8px;
   z-index: 40;
   transition: width 0.25s ease, box-shadow 0.25s ease;
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
-.closed {
-  width: 24px;
-}
 
 .open {
   width: 120px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-}
-
-.handle {
-  all: unset;
-  display: grid;
-  gap: 4px;
-  place-items: center;
-  cursor: pointer;
-  width: 20px;
-  padding: 4px 0;
-}
-
-.dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #9aa3b2;
-}
-
-.closed .avatar,
-.closed .nav,
-.closed .spacer,
-.closed .btn[aria-label="Favorites"] {
-  pointer-events: none;
-  opacity: 0;
-  transform: translateX(8px);
-}
-
-.open .nav .btn,
-.open .avatar,
-.open .btn[aria-label="Favorites"] {
-  animation: pop var(--pop-dur) cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-}
-
-.open .nav .btn[data-i="1"] {
-  animation-delay: calc(var(--stagger-step) * 1);
-}
-.open .nav .btn[data-i="2"] {
-  animation-delay: calc(var(--stagger-step) * 2);
-}
-.open .nav .btn[data-i="3"] {
-  animation-delay: calc(var(--stagger-step) * 3);
-}
-.open .nav .btn[data-i="4"] {
-  animation-delay: calc(var(--stagger-step) * 4);
-}
-.open .nav .btn[data-i="5"] {
-  animation-delay: calc(var(--stagger-step) * 5);
-}
-.open .btn[aria-label="Favorites"] {
-  animation-delay: calc(var(--stagger-step) * 6);
 }
 
 @keyframes pop {
@@ -135,46 +84,37 @@
   flex: 2;
 }
 
-.active { background: #eef3ff; }
-.iconActive { color: #2f76ff; }
-
-
-.root { position: fixed; } 
-.closed .btn { position: relative; }
-.closed .btn:hover::after {
-  content: attr(data-title);
-  position: absolute;
-  right: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  background: #111827;
-  color: #fff;
-  font-size: 12px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  white-space: nowrap;
-  box-shadow: 0 8px 24px rgba(0,0,0,.18);
-  opacity: 0;
-  animation: tooltipIn .18s ease forwards;
-  pointer-events: none;
-}
-.closed .btn:hover::before {
-  content: "";
-  position: absolute;
-  right: calc(100% + 4px);
-  top: 50%;
-  transform: translateY(-50%);
-  border: 6px solid transparent;
-  border-left-color: #111827;
-  opacity: 0;
-  animation: tooltipIn .18s ease forwards;
+.active {
+  background: #eef3ff;
 }
 
-@keyframes tooltipIn {
-  from { opacity: 0; transform: translate(-4px, -50%); }
-  to   { opacity: 1; transform: translate(0, -50%); }
+.iconActive {
+  color: #2f76ff;
+}
+.open .nav .btn,
+.open .avatar,
+.open .btn[aria-label="Favorites"] {
+  animation: pop var(--pop-dur) cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
 
+.open .nav .btn[data-i="1"] {
+  animation-delay: calc(var(--stagger-step) * 1);
+}
+.open .nav .btn[data-i="2"] {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+.open .nav .btn[data-i="3"] {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+.open .nav .btn[data-i="4"] {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+.open .nav .btn[data-i="5"] {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+.open .btn[aria-label="Favorites"] {
+  animation-delay: calc(var(--stagger-step) * 6);
+}
 
 @media (max-width: 640px) {
   .open {

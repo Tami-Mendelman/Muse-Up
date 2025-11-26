@@ -5,8 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import styles from "./Sidebar.module.css";
 
-
-
 import {
   FiHome,
   FiMessageSquare,
@@ -18,30 +16,29 @@ import {
 } from "react-icons/fi";
 
 import ArtistSearchDrawer from "../../../app/components/ArtistSearchDrawer/ArtistSearchDrawer";
-import { useSidebarController } from "../../../hooks/useSidebarController";
 import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
 import { getUserByUid, type User } from "../../../services/userService";
 
 export default function Sidebar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { open, setOpen, ref } = useSidebarController();
   const pathname = usePathname();
   const router = useRouter();
- const baseActiveKey: string =
-  pathname?.startsWith("/messages")
-    ? "messages"
-    : pathname?.startsWith("/following") || pathname?.startsWith("/profile")
-    ? "profile"
-    : pathname?.startsWith("/create")
-    ? "create"
-    : pathname?.startsWith("/search")
-    ? "search"
-    : pathname?.startsWith("/challenges")
-    ? "challenges"
-    : pathname === "/landing" || pathname === "/"
-    ? "home"
-    : "home";
+
+  const baseActiveKey: string =
+    pathname?.startsWith("/messages")
+      ? "messages"
+      : pathname?.startsWith("/following") || pathname?.startsWith("/profile")
+      ? "profile"
+      : pathname?.startsWith("/create")
+      ? "create"
+      : pathname?.startsWith("/search")
+      ? "search"
+      : pathname?.startsWith("/challenges")
+      ? "challenges"
+      : pathname === "/landing" || pathname === "/"
+      ? "home"
+      : "home";
 
   const activeKey = drawerOpen ? "search" : baseActiveKey;
 
@@ -57,26 +54,13 @@ export default function Sidebar() {
     user?.profil_url && user.profil_url.trim() !== ""
       ? user.profil_url
       : null;
+
   return (
     <>
       <aside
-        ref={ref}
-        className={`${styles.root} ${open ? styles.open : styles.closed}`}
+        className={`${styles.root} ${styles.open}`}
         aria-label="Primary"
       >
-        <button
-          className={styles.handle}
-          aria-label={open ? "Close menu" : "Open menu"}
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen((v) => !v);
-          }}
-        >
-          <span className={styles.dot} />
-          <span className={styles.dot} />
-          <span className={styles.dot} />
-        </button>
-
         {avatarUrl ? (
           <img
             src={avatarUrl}
@@ -162,22 +146,20 @@ export default function Sidebar() {
               }`}
             />
           </button>
-                    
-<button
-  onClick={() => router.push("/challenges")}
-  className={`${styles.btn} ${
-    activeKey === "challenges" ? styles.active : ""
-  }`}
-  aria-label="challenges"
->
-  <FiAward
-    className={`${styles.icon} ${
-      activeKey === "challenges" ? styles.iconActive : ""
-    }`}
-  />
-</button>
 
-
+          <button
+            onClick={() => router.push("/challenges")}
+            className={`${styles.btn} ${
+              activeKey === "challenges" ? styles.active : ""
+            }`}
+            aria-label="challenges"
+          >
+            <FiAward
+              className={`${styles.icon} ${
+                activeKey === "challenges" ? styles.iconActive : ""
+              }`}
+            />
+          </button>
         </nav>
 
         <div className={styles.spacer} />
@@ -185,9 +167,6 @@ export default function Sidebar() {
         <button className={styles.btn} aria-label="Favorites">
           <FiHeart className={styles.icon} />
         </button>
-
-
-
       </aside>
 
       <ArtistSearchDrawer
