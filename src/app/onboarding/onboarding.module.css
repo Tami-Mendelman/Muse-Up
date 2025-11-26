@@ -16,15 +16,18 @@
   width: 580px;
   height: 580px;
   border-radius: 50%;
-  filter: blur(150px);
+  /* filter: blur(80px); */
+  opacity: 0.3;
   opacity: 0.45;
   z-index: 0;
 }
+
 .container::before {
   background: #c7d2fe;
   top: -120px;
   left: -120px;
 }
+
 .container::after {
   background: #fbcfe8;
   bottom: -140px;
@@ -39,7 +42,7 @@
   padding: 2.8rem 2.6rem;
   border-radius: 26px;
   background: #ffffffaa;
-  backdrop-filter: blur(22px);
+  background: rgba(255, 255, 255, 0.65);
   box-shadow:
     0 25px 65px rgba(25, 25, 40, 0.18),
     0 0 50px rgba(160, 180, 255, 0.15);
@@ -52,6 +55,7 @@
     opacity: 0;
     transform: translateY(25px) scale(0.97);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -225,4 +229,4 @@
   justify-content: center;
   font-size: 1.2rem;
   color: #475569;
-  
+}
