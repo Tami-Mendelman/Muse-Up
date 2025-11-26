@@ -10,7 +10,7 @@ export function getLocalStorageUid(): string | null {
     return localStorage.getItem(key);
 }
 
-export function clearLocalStorageUid() {
+export function removeLocalStorageUid() {
     if (typeof window === "undefined") return;
     localStorage.removeItem(key);
 }
