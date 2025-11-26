@@ -1,73 +1,146 @@
 export const runtime = "nodejs";
-
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
-import ChallengeSubmission from "../../../models/ChallengeSubmission";
-
+import ChallengeSubmissionModel from "../../../models/ChallengeSubmission";
+import UserModel from "../../../models/User";
+const ChallengeSubmission: any = ChallengeSubmissionModel;
+const User: any = UserModel;
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const challengeIdParam = searchParams.get("challengeId");
-    const userIdParam = searchParams.get("userId");
-    const postIdParam = searchParams.get("postId");
 
-    const filter: any = {};
+    const user_uid =
+      searchParams.get("user_uid") ||
+      searchParams.get("userId") ||
+      searchParams.get("uid");
 
-    if (challengeIdParam) filter.challenge_id = Number(challengeIdParam);
-    if (userIdParam) filter.user_id = Number(userIdParam);
-    if (postIdParam) filter.post_id = Number(postIdParam);
-
-    const submissions = await (ChallengeSubmission as any)
-      .find(filter)
-      .lean();
-
-    return Response.json(submissions, { status: 200 });
-  } catch (err: any) {
-    console.error("GET /api/challenge-submissions error:", err);
-    return Response.json(
-      { message: "Failed to fetch submissions", details: err.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    await dbConnect();
-
-    const { challenge_id, post_id, user_id, status } = await req.json();
-
-    if (!challenge_id || !post_id || !user_id) {
-      return Response.json(
-        { message: "challenge_id, post_id and user_id are required" },
+    if (!user_uid) {
+      return NextResponse.json(
+        { message: "user_uid is required" },
         { status: 400 }
       );
     }
 
-    const lastSubmission = await (ChallengeSubmission as any)
-      .findOne()
+    const user = await User.findOne({ firebase_uid: user_uid }).lean();
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    const submissions = await ChallengeSubmission.find({
+      user_id: user.id,
+    }).lean();
+
+    return NextResponse.json(submissions, { status: 200 });
+  } catch (err) {
+    console.error("GET /api/challenge-submissions error:", err);
+    return NextResponse.json(
+      { message: "Server error" },
+      { status: 500 }
+    );
+  }
+}
+export async function POST(req: NextRequest) {
+  try {
+    await dbConnect();
+
+    const body = await req.json();
+    const { challenge_id, user_uid, image_url } = body;
+
+    if (!challenge_id || !user_uid) {
+      return NextResponse.json(
+        { message: "challenge_id and user_uid are required" },
+        { status: 400 }
+      );
+    }
+    const user = await User.findOne({ firebase_uid: user_uid }).lean();
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+    let existing = await ChallengeSubmission.findOne({
+      challenge_id,
+      user_id: user.id,
+    });
+    if (existing) {
+      if (image_url) {
+        existing.image_url = image_url;
+        existing.status = "submitted";
+        await existing.save(); 
+      }
+      return NextResponse.json(
+        { message: "Submission saved", submission: existing },
+        { status: 200 }
+      );
+    }
+    const last = await ChallengeSubmission.findOne()
       .sort({ id: -1 })
       .lean();
+    const nextId = last ? last.id + 1 : 1;
 
-    const nextId = (lastSubmission?.id ?? 0) + 1;
-
-    const newSubmission = await (ChallengeSubmission as any)
-      .create({
-        id: nextId,
-        challenge_id,
-        post_id,
-        user_id,
-        status: status || "submitted",
-      })
-      .then((doc: any) => doc.toObject());
-
-    return Response.json(newSubmission, { status: 201 });
-  } catch (err: any) {
+    const doc = new ChallengeSubmission({
+      id: nextId,
+      challenge_id,
+      user_id: user.id,
+      post_id: null,
+      status: image_url ? "submitted" : "joined",
+      image_url: image_url ?? null,
+    });
+    await doc.save(); 
+    return NextResponse.json(doc.toObject(), { status: 201 });
+  } catch (err) {
     console.error("POST /api/challenge-submissions error:", err);
-    return Response.json(
-      { message: "Failed to create submission", details: err.message },
+    return NextResponse.json(
+      { message: "Server error" },
+      { status: 500 }
+    );
+  }
+}
+export async function DELETE(req: NextRequest) {
+  try {
+    await dbConnect();
+
+    const { searchParams } = new URL(req.url);
+    const challenge_id = searchParams.get("challenge_id");
+    const user_uid =
+      searchParams.get("user_uid") ||
+      searchParams.get("userId") ||
+      searchParams.get("user_id");
+
+    if (!challenge_id || !user_uid) {
+      return NextResponse.json(
+        { message: "challenge_id and user_uid are required" },
+        { status: 400 }
+      );
+    }
+
+    const user = await User.findOne({ firebase_uid: user_uid }).lean();
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    await ChallengeSubmission.deleteOne({
+      challenge_id: parseInt(challenge_id, 10),
+      user_id: user.id,
+    });
+
+    return NextResponse.json(
+      { message: "Left challenge" },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("DELETE /api/challenge-submissions error:", err);
+    return NextResponse.json(
+      { message: "Server error" },
       { status: 500 }
     );
   }

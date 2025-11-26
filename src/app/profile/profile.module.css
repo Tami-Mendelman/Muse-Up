@@ -1,567 +1,122 @@
-/* -------------------------------------------------------
-   PAGE LAYOUT
-------------------------------------------------------- */
-
-.page {
-  max-width: 1100px;
-  margin: 40px auto;
-  padding: 0 24px 40px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-/* -------------------------------------------------------
-   HEADER
-------------------------------------------------------- */
-
-.header {
-  display: flex;
-  align-items: center;
+.challengesGrid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
-  margin-bottom: 24px;
 }
 
-.avatarWrapper {
-  flex-shrink: 0;
-}
-
-.avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-}
-
-.avatarFallback {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-  font-weight: 600;
-  color: #4b5563;
-}
-
-.headerText {
+.challengeCard {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 20px 24px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
 }
 
-.name {
-  font-size: 28px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
+.challengeTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
-.metaRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.challengeStatus {
   font-size: 14px;
   color: #6b7280;
+  margin-bottom: 18px;
 }
 
-.metaItemButton {
-  border: none;
-  padding: 0;
-  background: none;
-  color: #111827;
+.challengeLeaveBtn {
+  align-self: flex-start;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
   font-size: 14px;
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
+}
+
+.challengeLeaveBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+  box-shadow: 0 4px 10px rgba(148, 163, 184, 0.35);
+  transform: translateY(-1px);
+}
+
+.challengeLeaveBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+}
+
+.challengeImage {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  margin-bottom: 12px;
+}
+
+.challengeActions {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.challengeUploadBtn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.challengeUploadBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.submittedText {
+  font-size: 13px;
+  color: #4caf50;
   font-weight: 500;
 }
 
-.metaItemButton:hover {
-  text-decoration: underline;
-}
-
-.divider {
-  color: #d1d5db;
-}
-
-.bio {
-  margin: 0;
-  font-size: 14px;
-  color: #4b5563;
-}
-
-.location {
-  margin: 0;
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-/* -------------------------------------------------------
-   TABS
-------------------------------------------------------- */
-
-.tabs {
-  margin-top: 24px;
+.sectionHeader {
   display: flex;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.tab {
-  flex: 1;
-  padding: 10px 0;
-  text-align: center;
-  font-size: 14px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #6b7280;
-  border-bottom: 2px solid transparent;
-}
-
-.tab:hover {
-  background: #f9fafb;
-}
-
-.tabActive {
-  color: #111827;
-  border-bottom-color: #2563eb;
-  font-weight: 600;
-}
-
-/* -------------------------------------------------------
-   CONTENT AREA
-------------------------------------------------------- */
-
-.content {
-  margin-top: 24px;
-}
-
-.placeholder {
-  font-size: 14px;
-  color: #6b7280;
-}
-
-/* -------------------------------------------------------
-   POSTS GRID (Posts + Saved)
-------------------------------------------------------- */
-
-.postsSection {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.postsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
-}
-
-.postCard {
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.postCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
-}
-
-.postImageWrapper {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  background: #f3f4f6;
-}
-
-.postImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.postInfo {
-  padding: 8px 12px 12px;
-}
-
-.postTitle {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* -------------------------------------------------------
-   FOLLOWERS & FOLLOWING LISTS
-------------------------------------------------------- */
-
-.followersSection {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
 .sectionTitle {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
+}
+
+.postCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.postInfo {
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
+.postTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;      
   margin: 0;
-}
-
-.followersGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.followerCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
-}
-
-.followerAvatarWrapper {
-  flex-shrink: 0;
-}
-
-.followerAvatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.followerAvatarFallback {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  color: #4b5563;
-}
-
-.followerInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.followerName {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.followerUsername {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-/* -------------------------------------------------------
-   EDIT PROFILE
-------------------------------------------------------- */
-
-.editForm {
-  margin-top: 24px;
-  padding: 20px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.editGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
-  gap: 24px;
-}
-
-@media (max-width: 800px) {
-  .editGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.editLeft,
-.editRight {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.editField {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.editLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: #4b5563;
-}
-
-.editInput,
-.editTextarea {
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  padding: 8px 10px;
-  font-size: 14px;
-  background: #f9fafb;
-}
-
-.editInput:focus,
-.editTextarea:focus {
-  border-color: #6366f1;
-  background: #ffffff;
-}
-
-.editTextarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.editAvatarWrapper {
-  width: 120px;
-  height: 120px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.editAvatarImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.editAvatarFallback {
-  width: 100%;
-  height: 100%;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(135deg, #6366f1, #ec4899);
-}
-
-.editUploadBtn {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid #d1d5db;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  background: #f9fafb;
-}
-
-.editUploadBtn:hover {
-  background: #f3f4f6;
-}
-
-.editHint {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-/* Save/Error messages */
-
-.editError {
-  color: #b91c1c;
-  background: #fee2e2;
-  padding: 8px 10px;
-  border-radius: 10px;
-  font-size: 13px;
-}
-
-.editSuccess {
-  color: #166534;
-  background: #dcfce7;
-  padding: 8px 10px;
-  border-radius: 10px;
-  font-size: 13px;
-}
-
-.editActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.editPrimaryBtn,
-.editSecondaryBtn {
-  min-width: 120px;
-  height: 38px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.editPrimaryBtn {
-  background: linear-gradient(135deg, #4f46e5, #ec4899);
-  color: #ffffff;
-}
-
-.editPrimaryBtn:disabled {
-  opacity: 0.6;
-}
-
-.editSecondaryBtn {
-  background: #ffffff;
-  color: #374151;
-  border: 1px solid #d1d5db;
-}
-
-.editSecondaryBtn:hover {
-  background: #f3f4f6;
-}
-
-/* -------------------------------------------------------
-   RESPONSIVE
-------------------------------------------------------- */
-
-@media (max-width: 768px) {
-  .page {
-    margin-top: 24px;
-    padding: 0 16px 32px;
-  }
-
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .avatar,
-  .avatarFallback {
-    width: 96px;
-    height: 96px;
-  }
-}
-.shareArtBtn {
-  width: 200px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #4f46e5, #ec4899);
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-  transition: opacity 0.2s ease, transform 0.1s ease;
-}
-
-.shareArtBtn:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-.shareWrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.shareArtBtn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 24px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
-  background: linear-gradient(135deg, #4f46e5, #ec4899);
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.15);
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.shareArtBtn:hover {
-  opacity: 0.92;
-  transform: translateY(-2px);
-}
-
-.sharePlus {
-  display: block;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1;
-}
-/* -------------------------------
-   POST ACTION BUTTONS — lucide-react
--------------------------------- */
-
-.postActions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  gap: 10px;
-  z-index: 20;
-}
-
-.postActionBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-  transition: 0.15s ease-in-out;
-}
-
-.postActionBtn:hover {
-  background: white;
-  transform: translateY(-2px);
-}
-
-.icon {
-  stroke: #1e293b; /* Slate-800 */
-}
-
-.iconDelete {
-  stroke: #dc2626; /* Red */
-}
-
-.postActionBtn:hover .icon {
-  stroke: #4f46e5; /* Indigo hover */
-}
-
-.postActionBtn:hover .iconDelete {
-  stroke: #b91c1c; /* Darker red hover */
+  text-align: left;
+  line-height: 1.2;
 }

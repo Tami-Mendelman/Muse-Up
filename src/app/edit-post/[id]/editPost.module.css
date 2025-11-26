@@ -1,6 +1,4 @@
-/* ------------------------------------
-   PAGE WRAPPER
------------------------------------- */
+
 .container {
   max-width: 700px;
   margin: 40px auto;
@@ -8,9 +6,6 @@
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* ------------------------------------
-   TITLE
------------------------------------- */
 .title {
   font-size: 32px;
   font-weight: 700;
@@ -18,10 +13,6 @@
   margin-bottom: 24px;
   text-align: center;
 }
-
-/* ------------------------------------
-   FORM
------------------------------------- */
 .form {
   background: #ffffff;
   padding: 24px 28px;
@@ -32,9 +23,6 @@
   gap: 20px;
 }
 
-/* ------------------------------------
-   LABEL
------------------------------------- */
 .label {
   font-size: 14px;
   font-weight: 600;
@@ -42,9 +30,6 @@
   margin-bottom: -6px;
 }
 
-/* ------------------------------------
-   INPUTS
------------------------------------- */
 .input,
 .textarea,
 .select {
@@ -70,9 +55,6 @@
   min-height: 100px;
 }
 
-/* ------------------------------------
-   IMAGE PREVIEW
------------------------------------- */
 .imagePreview {
   width: 100%;
   border-radius: 14px;
@@ -82,17 +64,10 @@
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
-/* ------------------------------------
-   FILE INPUT
------------------------------------- */
 .fileInput {
   padding: 8px 4px;
   cursor: pointer;
 }
-
-/* ------------------------------------
-   SAVE BUTTON
------------------------------------- */
 .saveBtn {
   margin-top: 10px;
   background: linear-gradient(135deg, #4f46e5, #ec4899);
@@ -117,10 +92,6 @@
   cursor: default;
   transform: none;
 }
-
-/* ------------------------------------
-   RESPONSIVE
------------------------------------- */
 @media (max-width: 600px) {
   .form {
     padding: 20px;

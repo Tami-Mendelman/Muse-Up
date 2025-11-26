@@ -1,7 +1,7 @@
 import Link from "next/link";
 import styles from "./Footer.module.css";
 
-export default function Footer() {
+const Footer = () => {
   return (
     <footer className={styles.footer}>
       <div>© {new Date().getFullYear()} MuseUp. All rights reserved.</div>
@@ -16,3 +16,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default Footer;
