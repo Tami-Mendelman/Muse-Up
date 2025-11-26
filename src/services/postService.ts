@@ -38,3 +38,23 @@ export async function updatePostLikes(postId: number, delta: number) {
   });
   if (!res.ok) throw new Error("Failed to update likes");
 }
+export type UpdatePostPayload = {
+  title?: string;
+  body?: string;
+  image_url?: string;
+  tags?: string[];
+};
+
+export async function updatePost(postId: string, payload: UpdatePostPayload) {
+  const res = await fetch(`/api/posts/${postId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update post");
+  }
+
+  return res.json();
+}
