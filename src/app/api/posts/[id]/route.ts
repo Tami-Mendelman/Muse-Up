@@ -10,34 +10,23 @@ type ParamsCtx = {
   params: Promise<{ id: string }>;
 };
 
-/** -----------------------------
- *  GET /api/posts/[id]
- *  שליפת פוסט + פרטי יוצר
- * ----------------------------- */
+
 export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   try {
     const { id } = await ctx.params;
-    const numericId = Number(id);
-
-    if (Number.isNaN(numericId)) {
-      return Response.json({ message: "Invalid id" }, { status: 400 });
-    }
 
     await dbConnect();
 
-    // שליפת הפוסט לפי id מספרי
-    const post = await (Post as any).findOne({ id: numericId }).lean();
+    const isObjectId = mongoose.isValidObjectId(id);
+    const query = isObjectId ? { _id: id } : { id: Number(id) };
+
+    const post = await (Post as any).findOne(query).lean();
     if (!post) {
       return Response.json({ message: "Post not found" }, { status: 404 });
     }
 
-    // שליפת מידע על היוצר
     let author = null;
-
-    if (
-      typeof post.user_id === "string" &&
-      mongoose.isValidObjectId(post.user_id)
-    ) {
+    if (post.user_id && mongoose.isValidObjectId(post.user_id)) {
       const user = await (User as any)
         .findById(post.user_id)
         .lean()
@@ -45,21 +34,31 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
       if (user) {
         author = {
-          name: user.name,
-          avatar_url: user.avatar_url ?? user.profil_url ?? null,
-          followers_count: user.followers_count,
-          username: user.username,
+          name: user.name || "Unknown",
+          avatar_url:
+            user.avatar_url ||
+            user.profil_url ||
+            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+          followers_count: user.followers_count ?? 0,
+          username: user.username ?? "",
         };
       }
     }
+    const finalPost = {
+      ...post,
+      image_url:
+        post.image_url ??
+        "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1730000000/placeholder.jpg",
+      author:
+        author || {
+          name: "Unknown",
+          avatar_url:
+            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+          followers_count: 0,
+        },
+    };
 
-    return Response.json(
-      {
-        ...post,
-        author, // יכול להיות null אם אין יוצר
-      },
-      { status: 200 }
-    );
+    return Response.json(finalPost, { status: 200 });
   } catch (err: any) {
     console.error("GET /api/posts/[id] error:", err);
     return Response.json(
@@ -71,37 +70,92 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
     const { id } = await ctx.params;
-    const numericId = Number(id);
-
-    if (Number.isNaN(numericId)) {
-      return Response.json({ message: "Invalid id" }, { status: 400 });
-    }
-
-    const body = await req.json().catch(() => ({}));
-    const rawDelta = body?.delta;
-    const delta =
-      typeof rawDelta === "number" && !Number.isNaN(rawDelta) ? rawDelta : 1;
+    const isObjectId = mongoose.isValidObjectId(id);
+    const query = isObjectId ? { _id: id } : { id: Number(id) };
 
     await dbConnect();
+    const body = await req.json().catch(() => ({}));
 
-    const updated = await (Post as any)
-      .findOneAndUpdate(
-        { id: numericId },
-        { $inc: { likes_count: delta } },
-        { new: true }
-      )
+    // 🟣 אם מדובר בלייקים — נשאר מסלול הלייקים
+    if (body.delta !== undefined) {
+      const delta =
+        typeof body.delta === "number" && !Number.isNaN(body.delta)
+          ? body.delta
+          : 1;
+
+      const updatedLikes = await (Post as any)
+        .findOneAndUpdate(query, { $inc: { likes_count: delta } }, { new: true })
+        .lean();
+
+      if (!updatedLikes) {
+        return Response.json({ message: "Post not found" }, { status: 404 });
+      }
+
+      return Response.json(
+        { likes_count: updatedLikes.likes_count },
+        { status: 200 }
+      );
+    }
+
+    // 🟣 מסלול עדכון פוסט מלא
+    const allowed = [
+      "title",
+      "body",
+      "image_url",
+      "category",
+      "tags",
+      "visibility",
+      "status",
+    ];
+
+    const updateData: any = {};
+    for (const key of allowed) {
+      if (body[key] !== undefined) updateData[key] = body[key];
+    }
+
+    const updatedPost = await (Post as any)
+      .findOneAndUpdate(query, updateData, { new: true })
       .lean();
 
-    if (!updated) {
+    if (!updatedPost) {
       return Response.json({ message: "Post not found" }, { status: 404 });
     }
 
-    return Response.json({ likes_count: updated.likes_count }, { status: 200 });
+    return Response.json(updatedPost, { status: 200 });
   } catch (err: any) {
     console.error("PATCH /api/posts/[id] error:", err);
     return Response.json(
-      { message: "Failed to update likes", details: err.message },
+      { message: "Failed to update post", details: err.message },
       { status: 500 }
     );
   }
 }
+
+  export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
+  try {
+    const { id } = await ctx.params;
+
+    await dbConnect();
+
+    const isObjectId = mongoose.isValidObjectId(id);
+    const query = isObjectId ? { _id: id } : { id: Number(id) };
+
+    const deleted = await (Post as any).findOneAndDelete(query).lean();
+
+    if (!deleted) {
+      return Response.json({ message: "Post not found" }, { status: 404 });
+    }
+
+    return Response.json(
+      { message: "Post deleted successfully", deletedId: id },
+      { status: 200 }
+    );
+  } catch (err: any) {
+    console.error("DELETE /api/posts/[id] error:", err);
+    return Response.json(
+      { message: "Failed to delete post", details: err.message },
+      { status: 500 }
+    );
+  }
+}
+
