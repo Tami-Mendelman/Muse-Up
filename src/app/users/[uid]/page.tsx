@@ -22,7 +22,7 @@ export default function PublicProfilePage() {
   const params = useParams();
   const uid = params?.uid as string | undefined;
   const [activeTab, setActiveTab] = useState<TabKey>("posts");
-  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const {
     data: user,
     isLoading: loadingUser,
@@ -152,7 +152,7 @@ export default function PublicProfilePage() {
                     className={styles.postCard}
                     onClick={() => {
                       if (p.id != null) {
-                        setSelectedPostId(p.id);
+                        setSelectedPostId(String(p.id));
                       }
                     }}
                   >
