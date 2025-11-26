@@ -29,10 +29,6 @@ async function uploadToServer(file: File): Promise<string> {
   }
 
   const data = await res.json();
-  if (!data?.url) {
-    throw new Error("Upload response missing url");
-  }
-
   return data.url as string;
 }
 
@@ -81,8 +77,7 @@ export default function OnboardingPage() {
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    setTempFile(file);
+    if (file) setTempFile(file);
   };
 
   const handleCropConfirm = async (croppedFile: File) => {
@@ -91,9 +86,6 @@ export default function OnboardingPage() {
       setAvatarUploading(true);
       const url = await uploadToServer(croppedFile);
       setForm((prev) => ({ ...prev, avatar_url: url }));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to upload image");
     } finally {
       setAvatarUploading(false);
     }
@@ -104,67 +96,46 @@ export default function OnboardingPage() {
     setError(null);
 
     const user = auth.currentUser;
-    if (!user) {
-      setError("No authenticated user");
-      return;
-    }
-    const trimmedName = form.name.trim();
-    const trimmedUsername = form.username.trim();
-    const trimmedLocation = form.location.trim();
-    const trimmedBio = form.bio.trim();
+    if (!user) return setError("No authenticated user found");
+
+    const trimmed = {
+      name: form.name.trim(),
+      username: form.username.trim(),
+      location: form.location.trim(),
+      bio: form.bio.trim(),
+    };
+
+    if (!trimmed.name || !trimmed.username || !trimmed.location || !trimmed.bio)
+      return setError("All fields are required.");
 
     const email = form.email || user.email || "";
     const googleAvatar = user.photoURL;
-    const hasGoogleAvatar = !!googleAvatar;
-    const hasUploadedAvatar = !!form.avatar_url;
-
-    if (!trimmedName || !trimmedUsername || !trimmedLocation || !trimmedBio || !email) {
-      setError("All fields are required");
-      return;
-    }
-
-    if (!hasGoogleAvatar && !hasUploadedAvatar) {
-      setError("Profile picture is required");
-      return;
-    }
-
-    setSubmitting(true);
 
     let avatarToSave = googleAvatar;
     if (form.avatar_url && form.avatar_url !== googleAvatar) {
       avatarToSave = form.avatar_url;
     }
 
-    try {
-      console.log("Current avatar_url in form state:", form.avatar_url);
-      console.log("Submitting user data:");
-      console.log({
-        firebase_uid: user.uid,
-        name: trimmedName,
-        email: email,
-        username: trimmedUsername,
-        profil_url: avatarToSave,
-        bio: trimmedBio,
-        location: trimmedLocation,
-      });
+    setSubmitting(true);
 
+    try {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           firebase_uid: user.uid,
-          name: trimmedName,
-          email: email,
-          username: trimmedUsername,
+          name: trimmed.name,
+          email,
+          username: trimmed.username,
           profil_url: avatarToSave,
-          bio: trimmedBio,
-          location: trimmedLocation,
+          bio: trimmed.bio,
+          location: trimmed.location,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || "Failed to save profile");
+        throw new Error(data.message);
       }
 
       router.push("/landing");
@@ -184,7 +155,7 @@ export default function OnboardingPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>Welcome to MuseUp</h1>
         <p className={styles.subtitle}>
-          לפני שנתחיל, בואי נכיר אותך קצת יותר לעומק.
+          Before you begin, let’s set up your profile.
         </p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -223,12 +194,8 @@ export default function OnboardingPage() {
                   />
                 )}
                 <p className={styles.helperText}>
-                  אם התחברת דרך Google – זו התמונה משם. אפשר לעדכן לתמונה
-                  אחרת.
+                  You may keep your Google profile picture or upload a new one.
                 </p>
-                {avatarUploading && (
-                  <p className={styles.helperText}>Uploading image...</p>
-                )}
               </div>
             </div>
           </div>
@@ -257,12 +224,9 @@ export default function OnboardingPage() {
               value={form.username}
               onChange={handleChange}
               placeholder="your_username"
-              required
               className={styles.input}
+              required
             />
-            <p className={styles.helperText}>
-              זה השם שיופיע בפרופיל שלך ובקישורים שלך בפלטפורמה.
-            </p>
           </div>
 
           {/* Location */}
@@ -279,7 +243,7 @@ export default function OnboardingPage() {
             />
           </div>
 
-          {/* Bio */}
+          {/* Biography */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Biography</label>
             <textarea
@@ -287,7 +251,8 @@ export default function OnboardingPage() {
               value={form.bio}
               onChange={handleChange}
               rows={4}
-              placeholder="Tell us a bit about yourself..."
+              placeholder="Tell us about your style, inspiration, and creative journey..."
+
               className={styles.textarea}
               required
             />

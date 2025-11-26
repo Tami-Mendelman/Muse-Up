@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation"; 
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import styles from "./Sidebar.module.css";
+
+
+
 import {
   FiHome,
   FiMessageSquare,
@@ -10,55 +14,49 @@ import {
   FiPlusSquare,
   FiSearch,
   FiHeart,
+  FiAward,
 } from "react-icons/fi";
 
 import ArtistSearchDrawer from "../../../app/components/ArtistSearchDrawer/ArtistSearchDrawer";
+import { useSidebarController } from "../../../hooks/useSidebarController";
+import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
+import { getUserByUid, type User } from "../../../services/userService";
 
 export default function Sidebar() {
-  const [open, setOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false); 
-  const ref = useRef<HTMLDivElement | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const { open, setOpen, ref } = useSidebarController();
   const pathname = usePathname();
-  const router = useRouter(); 
+  const router = useRouter();
+ const baseActiveKey: string =
+  pathname?.startsWith("/messages")
+    ? "messages"
+    : pathname?.startsWith("/following") || pathname?.startsWith("/profile")
+    ? "profile"
+    : pathname?.startsWith("/create")
+    ? "create"
+    : pathname?.startsWith("/search")
+    ? "search"
+    : pathname?.startsWith("/challenges")
+    ? "challenges"
+    : pathname === "/landing" || pathname === "/"
+    ? "home"
+    : "home";
 
-  const activeKey: string =
-    pathname?.startsWith("/messages")
-      ? "messages"
-      : pathname?.startsWith("/profile")
-      ? "profile"
-      : pathname?.startsWith("/create")
-      ? "create"
-      : pathname?.startsWith("/search")
-      ? "search"
-      : pathname?.startsWith("/about")
-      ? "about"
-      : "home";
+  const activeKey = drawerOpen ? "search" : baseActiveKey;
 
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--sidebar-space",
-      open ? "88px" : "24px"
-    );
-  }, [open]);
+  const { uid, ready: uidReady } = useFirebaseUid();
 
-  useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      if (!ref.current) return;
-      const target = e.target as HTMLElement | null;
+  const { data: user } = useQuery<User>({
+    queryKey: ["user", uid],
+    queryFn: () => getUserByUid(uid as string),
+    enabled: uidReady && !!uid,
+  });
 
-      if (target?.closest("[data-sidebar-ignore-click='true']")) {
-        return;
-      }
-
-      if (!ref.current.contains(target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("click", onDocClick);
-    return () => document.removeEventListener("click", onDocClick);
-  }, []);
-
+  const avatarUrl =
+    user?.profil_url && user.profil_url.trim() !== ""
+      ? user.profil_url
+      : null;
   return (
     <>
       <aside
@@ -79,12 +77,24 @@ export default function Sidebar() {
           <span className={styles.dot} />
         </button>
 
-        <div className={styles.avatar} aria-hidden="true" />
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt="Profile"
+            className={styles.avatar}
+            onClick={() => router.push("/profile")}
+          />
+        ) : (
+          <div
+            className={styles.avatar}
+            aria-hidden="true"
+            onClick={() => router.push("/profile")}
+          />
+        )}
 
         <nav className={styles.nav}>
-
           <button
-            onClick={() => router.push("/landing")}  
+            onClick={() => router.push("/landing")}
             className={`${styles.btn} ${
               activeKey === "home" ? styles.active : ""
             }`}
@@ -98,6 +108,7 @@ export default function Sidebar() {
           </button>
 
           <button
+            onClick={() => router.push("/messages")}
             className={`${styles.btn} ${
               activeKey === "messages" ? styles.active : ""
             }`}
@@ -110,22 +121,22 @@ export default function Sidebar() {
             />
           </button>
 
-        <button
-  onClick={() => router.push("/following")}
-  className={`${styles.btn} ${
-    activeKey === "profile" ? styles.active : ""
-  }`}
-  aria-label="Following"
->
-  <FiUser
-    className={`${styles.icon} ${
-      activeKey === "profile" ? styles.iconActive : ""
-    }`}
-  />
-</button>
-
+          <button
+            onClick={() => router.push("/following")}
+            className={`${styles.btn} ${
+              activeKey === "profile" ? styles.active : ""
+            }`}
+            aria-label="Following"
+          >
+            <FiUser
+              className={`${styles.icon} ${
+                activeKey === "profile" ? styles.iconActive : ""
+              }`}
+            />
+          </button>
 
           <button
+            onClick={() => router.push("/create")}
             className={`${styles.btn} ${
               activeKey === "create" ? styles.active : ""
             }`}
@@ -151,6 +162,22 @@ export default function Sidebar() {
               }`}
             />
           </button>
+                    
+<button
+  onClick={() => router.push("/challenges")}
+  className={`${styles.btn} ${
+    activeKey === "challenges" ? styles.active : ""
+  }`}
+  aria-label="challenges"
+>
+  <FiAward
+    className={`${styles.icon} ${
+      activeKey === "challenges" ? styles.iconActive : ""
+    }`}
+  />
+</button>
+
+
         </nav>
 
         <div className={styles.spacer} />
@@ -158,7 +185,11 @@ export default function Sidebar() {
         <button className={styles.btn} aria-label="Favorites">
           <FiHeart className={styles.icon} />
         </button>
+
+
+
       </aside>
+
       <ArtistSearchDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}

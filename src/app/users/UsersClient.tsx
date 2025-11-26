@@ -1,79 +1,50 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { User } from "./page";
 import styles from "./users.module.css";
+
+import { useFirebaseUid } from "../../hooks/useFirebaseUid";
+import {
+  getRawFollowingForUser,
+  toggleFollowUser,
+  type FollowDoc,
+} from "../../services/followService";
 
 type Props = {
   initialUsers: User[];
 };
 
-type FollowDoc = {
-  following_user_id: string;
-  followed_user_id: string;
-};
-
 export default function UsersClient({ initialUsers }: Props) {
   const [users, setUsers] = useState<User[]>(initialUsers);
-  const [currentUid, setCurrentUid] = useState<string | null>(null);
-  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [togglingUid, setTogglingUid] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const { uid: currentUid, ready: uidReady } = useFirebaseUid();
 
-    const fromStorage =
-      window.localStorage.getItem("firebase_uid") ??
-      window.localStorage.getItem("firebaseUid") ??
-      window.localStorage.getItem("userId");
+  const {
+    data: followingDocs = [],
+    isLoading: loadingFollowingList,
+    error: followingListError,
+  } = useQuery<FollowDoc[]>({
+    queryKey: ["following-raw", currentUid],
+    queryFn: () => getRawFollowingForUser(currentUid as string),
+    enabled: uidReady && !!currentUid,
+  });
 
-    if (fromStorage) {
-      setCurrentUid(fromStorage);
-    } else {
-      setCurrentUid(null);
-    }
-  }, []);
+  const [followingIdsOverride, setFollowingIdsOverride] =
+    useState<Set<string> | null>(null);
 
-  useEffect(() => {
-    if (!currentUid) {
-      return;
-    }
+  const effectiveFollowingIds = useMemo(() => {
+    if (followingIdsOverride) return followingIdsOverride;
 
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const res = await fetch(
-          `/api/follows?userId=${encodeURIComponent(
-            currentUid
-          )}&type=following`
-        );
-
-        if (!res.ok) {
-          const errText = await res.text();
-          console.error("Failed to load following list", errText);
-          return;
-        }
-
-        const data: FollowDoc[] = await res.json();
-
-        if (!cancelled) {
-          const ids = new Set<string>(
-            data.map((f) => f.followed_user_id).filter(Boolean)
-          );
-          setFollowingIds(ids);
-        }
-      } catch (err) {
-        console.error("Failed to load following list", err);
-      }
-    }
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currentUid]);
+    const ids = new Set<string>(
+      followingDocs
+        .map((f) => f.followed_user_id)
+        .filter((id): id is string => !!id)
+    );
+    return ids;
+  }, [followingIdsOverride, followingDocs]);
 
   const usersToShow = useMemo(() => {
     if (!currentUid) return users;
@@ -85,30 +56,23 @@ export default function UsersClient({ initialUsers }: Props) {
   const handleToggleFollow = async (targetUid: string) => {
     if (!currentUid || currentUid === targetUid) return;
 
-    const isAlreadyFollowing = followingIds.has(targetUid);
+    const isAlreadyFollowing = effectiveFollowingIds.has(targetUid);
 
     try {
       setTogglingUid(targetUid);
 
-      const method = isAlreadyFollowing ? "DELETE" : "POST";
+      await toggleFollowUser(currentUid, targetUid, isAlreadyFollowing);
 
-      const res = await fetch("/api/follows", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          following_user_id: currentUid,
-          followed_user_id: targetUid,
-        }),
-      });
+      setFollowingIdsOverride((prev) => {
+        const base =
+          prev ??
+          new Set<string>(
+            followingDocs
+              .map((f) => f.followed_user_id)
+              .filter((id): id is string => !!id)
+          );
 
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error("Failed to toggle follow", errText);
-        return;
-      }
-
-      setFollowingIds((prev) => {
-        const next = new Set(prev);
+        const next = new Set(base);
         if (isAlreadyFollowing) {
           next.delete(targetUid);
         } else {
@@ -116,7 +80,6 @@ export default function UsersClient({ initialUsers }: Props) {
         }
         return next;
       });
-
       setUsers((prev) =>
         prev.map((u) => {
           if (u.firebase_uid === targetUid) {
@@ -129,7 +92,6 @@ export default function UsersClient({ initialUsers }: Props) {
               ),
             };
           }
-
           if (u.firebase_uid === currentUid) {
             const delta = isAlreadyFollowing ? -1 : 1;
             return {
@@ -156,77 +118,91 @@ export default function UsersClient({ initialUsers }: Props) {
   }
 
   return (
-    <ul className={styles.grid} aria-label="Artists list">
-      {usersToShow.map((u) => {
-        const avatarSrc = (u as any).profil_url || (u as any).avatar_url || "";
-        const targetUid = u.firebase_uid;
-        const isFollowing = targetUid ? followingIds.has(targetUid) : false;
+    <>
+      {followingListError && (
+        <p className={styles.followError}>
+          Failed to load following list.
+        </p>
+      )}
 
-        return (
-          <li key={u._id} className={styles.card}>
-            <div className={styles.avatarWrapper}>
-              {avatarSrc ? (
-                <img
-                  src={avatarSrc}
-                  alt={u.username}
-                  className={styles.avatarImage}
-                />
-              ) : (
-                <div className={styles.avatarInitial}>
-                  {u.username?.[0]?.toUpperCase() ?? "?"}
-                </div>
-              )}
-            </div>
+      <ul className={styles.grid} aria-label="Artists list">
+        {usersToShow.map((u) => {
+          const avatarSrc =
+            (u as any).profil_url || (u as any).avatar_url || "";
+          const targetUid = u.firebase_uid;
+          const isFollowing = targetUid
+            ? effectiveFollowingIds.has(targetUid)
+            : false;
 
-            <div className={styles.cardBody}>
-              <div className={styles.header}>
-                <h2 className={styles.username}>{u.username}</h2>
-                {u.name ? (
-                  <p className={styles.fullName}>
-                    {u.name} · <span className={styles.role}>{u.role}</span>
-                  </p>
+          return (
+            <li key={u._id} className={styles.card}>
+              <div className={styles.avatarWrapper}>
+                {avatarSrc ? (
+                  <img
+                    src={avatarSrc}
+                    alt={u.username}
+                    className={styles.avatarImage}
+                  />
                 ) : (
-                  <p className={styles.roleOnly}>{u.role}</p>
+                  <div className={styles.avatarInitial}>
+                    {u.username?.[0]?.toUpperCase() ?? "?"}
+                  </div>
                 )}
               </div>
 
-              {u.bio && <p className={styles.bio}>{u.bio}</p>}
+              <div className={styles.cardBody}>
+                <div className={styles.header}>
+                  <h2 className={styles.username}>{u.username}</h2>
+                  {u.name ? (
+                    <p className={styles.fullName}>
+                      {u.name} ·{" "}
+                      <span className={styles.role}>{u.role}</span>
+                    </p>
+                  ) : (
+                    <p className={styles.roleOnly}>{u.role}</p>
+                  )}
+                </div>
 
-              <div className={styles.statsRow}>
-                <div className={styles.statItem}>
-                  <span className={styles.statLabel}>Followers</span>
-                  <span className={styles.statValue}>
-                    {u.followers_count ?? 0}
-                  </span>
+                {u.bio && <p className={styles.bio}>{u.bio}</p>}
+
+                <div className={styles.statsRow}>
+                  <div className={styles.statItem}>
+                    <span className={styles.statLabel}>Followers</span>
+                    <span className={styles.statValue}>
+                      {u.followers_count ?? 0}
+                    </span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span className={styles.statLabel}>Following</span>
+                    <span className={styles.statValue}>
+                      {u.following_count ?? 0}
+                    </span>
+                  </div>
                 </div>
-                <div className={styles.statItem}>
-                  <span className={styles.statLabel}>Following</span>
-                  <span className={styles.statValue}>
-                    {u.following_count ?? 0}
-                  </span>
-                </div>
+
+                {currentUid && targetUid && (
+                  <button
+                    type="button"
+                    className={`${styles.followButton} ${
+                      isFollowing ? styles.following : ""
+                    }`}
+                    disabled={
+                      togglingUid === targetUid || loadingFollowingList
+                    }
+                    onClick={() => handleToggleFollow(targetUid)}
+                  >
+                    {togglingUid === targetUid
+                      ? "Saving..."
+                      : isFollowing
+                      ? "Unfollow"
+                      : "Follow"}
+                  </button>
+                )}
               </div>
-
-              {currentUid && targetUid && (
-                <button
-                  type="button"
-                  className={`${styles.followButton} ${
-                    isFollowing ? styles.following : ""
-                  }`}
-                  disabled={togglingUid === targetUid}
-                  onClick={() => handleToggleFollow(targetUid)}
-                >
-                  {togglingUid === targetUid
-                    ? "Saving..."
-                    : isFollowing
-                    ? "Unfollow"
-                    : "Follow"}
-                </button>
-              )}
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }

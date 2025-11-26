@@ -1,129 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import styles from "../following/following.module.css";
 
-type UserSummary = {
-  _id: string;
-  name: string;
-  username: string;
-  profil_url?: string;
-  bio?: string;
-};
+import { useQuery } from "@tanstack/react-query";
+import { useFirebaseUid } from "../../hooks/useFirebaseUid";
+import {
+  getFollowersForUser,
+  getFollowingForUser,
+  toggleFollowUser,
+  type SimpleUser,
+} from "../../services/followService";
 
 export default function FollowersPage() {
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [followers, setFollowers] = useState<UserSummary[]>([]);
-  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const { uid, ready: uidReady } = useFirebaseUid();
+  const {
+    data: followers = [],
+    isLoading: loadingFollowers,
+    error: followersError,
+    refetch: refetchFollowers,
+  } = useQuery<SimpleUser[]>({
+    queryKey: ["followers", uid],
+    queryFn: () => getFollowersForUser(uid as string),
+    enabled: uidReady && !!uid,
+  });
 
-  // לקרוא את ה-userId מה-localStorage כמו שהוא (מחרוזת, לא Number)
-useEffect(() => {
-  if (typeof window === "undefined") return;
+  const {
+    data: following = [],
+    isLoading: loadingFollowing,
+    error: followingError,
+    refetch: refetchFollowing,
+  } = useQuery<SimpleUser[]>({
+    queryKey: ["following", uid],
+    queryFn: () => getFollowingForUser(uid as string),
+    enabled: uidReady && !!uid,
+  });
+  const followingIds = new Set<string>(
+    (following ?? []).map((u) => u._id)
+  );
 
-  // החדש – מהפיירבייס
-  const firebaseUid = window.localStorage.getItem("firebase_uid");
-  // הישן – אם היה פעם userId מספרי
-  const legacyId = window.localStorage.getItem("userId");
+  const handleToggleFollow = async (targetId: string) => {
+    if (!uid) return;
 
-  const idToUse = firebaseUid ?? legacyId;
-
-  if (idToUse) {
-    setCurrentUserId(idToUse);
-  } else {
-    setLoading(false);
-  }
-}, []);
-
-
-  // להביא את מי שעוקבים אחרי
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    const fetchFollowers = async () => {
-      try {
-        const res = await fetch(`/api/followers-users?userId=${currentUserId}`);
-        if (!res.ok) throw new Error("Failed to fetch followers");
-        const data = await res.json();
-        setFollowers(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error fetching followers", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFollowers();
-  }, [currentUserId]);
-
-  // להביא את מי שאני עוקבת אחריהם (כדי לדעת אם זה Follow Back או Unfollow)
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    const fetchFollowing = async () => {
-      try {
-        const res = await fetch(`/api/followers-users?userId=${currentUserId}`);
-        if (!res.ok) throw new Error("Failed to fetch following");
-        const data = await res.json();
-        const ids = new Set<string>(
-          (Array.isArray(data) ? data : []).map((u: any) => u._id)
-        );
-        setFollowingIds(ids);
-      } catch (err) {
-        console.error("Error fetching following", err);
-      }
-    };
-
-    fetchFollowing();
-  }, [currentUserId]);
-
-  // Follow / Unfollow
-  const toggleFollow = async (targetId: string) => {
-    if (!currentUserId) return;
-
-    const isFollowing = followingIds.has(targetId);
+    const currentlyFollowing = followingIds.has(targetId);
 
     try {
-      const method = isFollowing ? "DELETE" : "POST";
+   await toggleFollowUser(
+  uid,
+  targetId,
+  currentlyFollowing
+);
 
-      const res = await fetch("/api/followers-users", {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: currentUserId,   // המשתמש המחובר
-          followerId: targetId,    // זה שעליו לוחצים
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        console.error("Failed to toggle follow", res.status, body);
-        return;
-      }
-
-      // לרענן את הרשימה של מי שאני עוקבת אחריהם
-      const followRes = await fetch(
-        `/api/following-users?userId=${currentUserId}`
-      );
-      if (followRes.ok) {
-        const followData = await followRes.json();
-        setFollowingIds(
-          new Set<string>(
-            (Array.isArray(followData) ? followData : []).map(
-              (u: any) => u._id
-            )
-          )
-        );
-      }
+      await Promise.all([refetchFollowers(), refetchFollowing()]);
     } catch (err) {
       console.error("Error toggling follow", err);
     }
   };
 
-  if (loading) {
+  if (!uidReady) {
     return (
       <div className={styles.container}>
         <h1 className={styles.title}>Followers</h1>
@@ -132,11 +66,29 @@ useEffect(() => {
     );
   }
 
-  if (!currentUserId) {
+  if (!uid) {
     return (
       <div className={styles.container}>
         <h1 className={styles.title}>Followers</h1>
         <p>לא נמצא משתמש מחובר.</p>
+      </div>
+    );
+  }
+
+  if (loadingFollowers || loadingFollowing) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Followers</h1>
+        <p>טוען...</p>
+      </div>
+    );
+  }
+
+  if (followersError || followingError) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Followers</h1>
+        <p>שגיאה בטעינת הנתונים.</p>
       </div>
     );
   }
@@ -159,16 +111,16 @@ useEffect(() => {
             return (
               <div className={styles.card} key={user._id}>
                 <div className={styles.avatarWrapper}>
-                 <Image
-  src={
-    user.profil_url && user.profil_url.trim() !== ""
-      ? user.profil_url
-      : "/media/default-avatar.png"
-  }
-  alt={user.username || "user avatar"}
-  width={40}
-  height={40}
-/>
+                  <Image
+                    src={
+                      user.profil_url && user.profil_url.trim() !== ""
+                        ? user.profil_url
+                        : "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763545782/45d4e069425e26a062a08f62116db827_ajjxke.jpg"
+                    }
+                    alt={user.username || "user avatar"}
+                    width={72}
+                    height={72}
+                  />
                 </div>
 
                 <div className={styles.info}>
@@ -182,7 +134,7 @@ useEffect(() => {
                 <div className={styles.actions}>
                   <button
                     className={buttonClass}
-                    onClick={() => toggleFollow(user._id)}
+                    onClick={() => handleToggleFollow(user._id)}
                   >
                     {buttonText}
                   </button>

@@ -31,8 +31,11 @@ export default function AvatarCropper({ imageFile, onUpload, onCancel }: AvatarC
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
         <h2 className={styles.title}>Adjust your profile picture</h2>
-        
+
         <div className={styles.cropperContainer}>
+          {/* Camera icon overlay */}
+          <div className={styles.cameraIcon}>📷</div>
+
           <Cropper
             image={URL.createObjectURL(imageFile)}
             crop={crop}
@@ -42,7 +45,7 @@ export default function AvatarCropper({ imageFile, onUpload, onCancel }: AvatarC
             onZoomChange={setZoom}
             onCropComplete={handleCropComplete}
             cropShape="round"
-            showGrid={true}
+            showGrid={false}
           />
         </div>
 
@@ -62,6 +65,7 @@ export default function AvatarCropper({ imageFile, onUpload, onCancel }: AvatarC
           <button className={styles.confirmBtn} onClick={handleConfirm}>
             Save
           </button>
+
           {onCancel && (
             <button className={styles.cancelBtn} onClick={onCancel}>
               Cancel

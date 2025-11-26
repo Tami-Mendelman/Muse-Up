@@ -6,7 +6,6 @@ import Link from "next/link";
 
 type UserCard = {
   _id: string;
-  id?: number;
   username: string;
   name?: string;
   profil_url?: string;
@@ -16,13 +15,13 @@ type UserCard = {
 
 type PostCard = {
   _id: string;
-  user_id: number;
+  user_id: string;
   image_url?: string;
 };
 
 async function getHomeData(): Promise<{
   users: UserCard[];
-  artworkByUserId: Map<number, string>;
+  artworkByUserId: Record<string, string>;
 }> {
   await dbConnect();
 
@@ -31,19 +30,25 @@ async function getHomeData(): Promise<{
     .limit(6)
     .lean()) as unknown as UserCard[];
 
-  const userIds = users
-    .map((u) => u.id)
-    .filter((id): id is number => id !== undefined);
+  const userIds = users.map((u) => String(u._id));
 
-const posts = (await (Post as any)
-  .find({ user_id: { $in: userIds } })
-  .sort({ created_at: -1 })
-  .lean()) as PostCard[];
+  const posts = (await (Post as any)
+    .find({ user_id: { $in: userIds } })
+    .sort({ created_at: -1 })
+    .lean()) as PostCard[];
 
-  const artworkByUserId = new Map<number, string>();
+  console.log("HOME users ids:", userIds);
+  console.log("HOME posts count:", posts.length);
+  console.log("HOME posts user_ids:", posts.map((p) => p.user_id));
+
+  const artworkByUserId: Record<string, string> = {};
+
   for (const post of posts) {
-    if (!artworkByUserId.has(post.user_id) && post.image_url) {
-      artworkByUserId.set(post.user_id, post.image_url);
+    const uid = String(post.user_id);
+    if (!uid || !post.image_url) continue;
+
+    if (!artworkByUserId[uid]) {
+      artworkByUserId[uid] = post.image_url;
     }
   }
 
@@ -59,7 +64,7 @@ export default async function HomePage() {
         <header className={styles.header}>
           <div className={styles.logoArea}>
             <img
-              src="/images/museup_logo.png"
+              src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763634918/image__1_-removebg-preview_tepfvv.png"
               alt="MuseUp Logo"
               style={{
                 width: "70px",
@@ -93,10 +98,9 @@ export default async function HomePage() {
             const followers = Number(u.followers_count ?? 0).toLocaleString();
             const likes = Number(u.likes_received ?? 0).toLocaleString();
 
-            const userNumericId = u.id ?? -1;
-            const artworkSrc =
-              artworkByUserId.get(userNumericId) || u.profil_url || "";
-            const avatarSrc = u.profil_url || "";
+            const userKey = String(u._id);
+            const artworkSrc = artworkByUserId[userKey] || ""; 
+            const avatarSrc = u.profil_url || ""; 
 
             return (
               <article key={u._id} className={styles.card}>
@@ -109,6 +113,7 @@ export default async function HomePage() {
                     />
                   )}
                 </div>
+
                 <div className={styles.artistCircle}>
                   {avatarSrc && (
                     <img
@@ -154,7 +159,7 @@ export default async function HomePage() {
 
         <div className={styles.illustrationBox}>
           <img
-            src="/images/eb57c0b0-9262-4fa0-a466-df17288cae0b.png"
+            src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763634876/eb57c0b0-9262-4fa0-a466-df17288cae0b_vcdv6o.png"
             alt="Artist illustration"
           />
         </div>

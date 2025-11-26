@@ -1,4 +1,4 @@
-:root{
+:root {
   --sidebar-w: 90px;
   --surface: #ffffff;
   --text: #0f172a;
@@ -9,13 +9,14 @@
   --shadow: 0 6px 18px rgba(15,23,42,.06);
 }
 
-.page{
+/* ===== PAGE LAYOUT ===== */
+.page {
   background: var(--surface);
   min-height: 100dvh;
   padding-left: var(--sidebar-w);
 }
 
-.container{
+.container {
   max-width: 1180px;
   margin: 0 auto;
   padding: 24px 24px 64px;
@@ -23,19 +24,19 @@
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
 }
 
-.mainGrid{
+.mainGrid {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1.05fr);
   gap: 24px;
   align-items: flex-start;
 }
 
-.leftCol{
+.leftCol {
   display: flex;
   flex-direction: column;
 }
 
-.hero{
+.hero {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -44,26 +45,26 @@
   margin-bottom: 24px;
 }
 
-.title{
+.title {
   font-size: 32px;
   line-height: 1.2;
   font-weight: 800;
   margin: 0 0 8px;
 }
 
-.subtitle{
+.subtitle {
   color: var(--muted);
   font-size: 15px;
   margin-bottom: 14px;
 }
 
-.actions{
+.actions {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
-.primaryBtn{
+.primaryBtn {
   background: var(--brand);
   color: #fff;
   text-decoration: none;
@@ -75,26 +76,27 @@
   transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
 
-.primaryBtn:hover{
+.primaryBtn:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(29,78,216,.25);
   background: #2563eb;
 }
 
-.linkBtn{
+.linkBtn {
   text-decoration: none;
   color: var(--brand);
   font-weight: 600;
   font-size: 14px;
 }
 
-.bottomLeft{
+/* ===== SECTIONS ===== */
+.bottomLeft {
   display: grid;
   grid-template-columns: 1.6fr 1.4fr;
   gap: 24px;
 }
 
-.card{
+.card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -102,28 +104,27 @@
   padding: 18px;
 }
 
-.cardTitle{
+.cardTitle {
   font-size: 18px;
   font-weight: 700;
   margin: 0 0 12px;
 }
 
-/* ⭐⭐⭐ TRENDING ⭐⭐⭐ */
-
-.trendingGrid{
+/* ===== TRENDING ===== */
+.trendingGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 16px;
 }
 
-.artCard{
+.artCard {
   display: flex;
   flex-direction: column;
   cursor: pointer;
 }
 
 .trendingThumb {
-  position: relative;   /* ⭐ חובה! */
+  position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 12px;
@@ -132,12 +133,11 @@
   border: 1px solid var(--line);
 }
 
-
-.artThumb img{
+.artThumb img {
   object-fit: cover;
 }
 
-.artTitle{
+.artTitle {
   font-weight: 600;
   margin-top: 6px;
   font-size: 14px;
@@ -148,14 +148,36 @@
   overflow: hidden;
 }
 
-.artLikes{
+.artLikes {
   color: var(--muted);
   font-size: 12px;
   margin-top: 2px;
 }
 
-/* ⭐ Artists */
-.artistList{
+/* ===== AUTHORS ===== */
+.authorBoxTrending {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.authorAvatarTrending {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.authorNameTrending {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ===== ARTISTS ===== */
+.artistList {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -163,7 +185,7 @@
   gap: 8px;
 }
 
-.artistRow{
+.artistRow {
   display: grid;
   grid-template-columns: 44px 1fr auto;
   align-items: center;
@@ -172,30 +194,30 @@
   border-radius: 10px;
 }
 
-.artistRow:hover{
+.artistRow:hover {
   background: #f8fafc;
 }
 
-.avatarWrap{
+.avatarWrap {
   width: 44px;
   height: 44px;
 }
 
-.avatar{
+.avatar {
   border-radius: 50%;
   border: 1px solid var(--line);
 }
 
-.artistName{
+.artistName {
   font-weight: 600;
 }
 
-.artistType{
+.artistType {
   color: var(--muted);
   font-size: 12px;
 }
 
-.followBtn{
+.followBtn {
   appearance: none;
   border: 1px solid #93c5fd;
   background: var(--brand-weak);
@@ -206,22 +228,27 @@
   cursor: pointer;
 }
 
-.moreLink{
-  display: inline-block;
-  margin-top: 8px;
+/* ===== LINKS ===== */
+.moreLink {
+  display: block;
+  text-align: right;
+  margin-top: 12px;
+  color: #2563eb;
+  font-weight: 500;
   text-decoration: none;
-  color: var(--brand);
-  font-weight: 600;
-  font-size: 14px;
 }
 
-.rightCol{
+.moreLink:hover {
+  text-decoration: underline;
+}
+
+/* ===== RIGHT COLUMN ===== */
+.rightCol {
   display: flex;
   flex-direction: column;
 }
 
-/* ⭐⭐⭐ התיקון העיקרי פה ⭐⭐⭐ */
-.heroImageCard{
+.heroImageCard {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -231,18 +258,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;   /* ←←← הדבר שמונע מהתמונה לצאת החוצה */
+  overflow: hidden;
   max-height: 420px;
 }
 
-.heroImg{
+.heroImg {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 12px;
 }
 
-.challengeCard{
+.challengeCard {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -254,23 +281,23 @@
   align-items: center;
 }
 
-.challengeContent{
+.challengeContent {
   text-align: left;
 }
 
-.challengeTitle{
+.challengeTitle {
   font-size: 18px;
   font-weight: 700;
   margin: 0 0 6px;
 }
 
-.challengeText{
+.challengeText {
   color: var(--muted);
   font-size: 14px;
   margin: 0;
 }
 
-.challengeVisual{
+.challengeVisual {
   width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: 12px;
@@ -278,22 +305,14 @@
   background: linear-gradient(135deg, #f8fafc, #ffffff);
 }
 
-/* ⭐ Responsive */
-@media (max-width: 1280px){
-  .title{ font-size: 30px; }
-  .hero{ padding: 24px 24px; }
-
-  .trendingGrid{
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1280px) {
+  .title { font-size: 30px; }
+  .hero { padding: 24px 24px; }
+  .trendingGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 1060px){
-  .mainGrid{
-    grid-template-columns: 1fr;
-  }
-
-  .bottomLeft{
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 1060px) {
+  .mainGrid { grid-template-columns: 1fr; }
+  .bottomLeft { grid-template-columns: 1fr; }
 }
