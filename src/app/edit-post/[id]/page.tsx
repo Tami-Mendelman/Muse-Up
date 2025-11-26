@@ -19,20 +19,18 @@ export default function EditPostPage() {
     category: "",
     tags: [] as string[],
     visibility: "public",
-    image_url: "",
+    image_url: "", // ✔ FIXED: removed imageUrl bug
   });
 
   const [newTag, setNewTag] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
-  // -------------------------------------------------------
-  // Load Post
-  // -------------------------------------------------------
   useEffect(() => {
     async function loadPost() {
       try {
         const res = await fetch(`/api/posts/${postId}`);
         const data = await res.json();
+
         setForm({
           title: data.title ?? "",
           body: data.body ?? "",
@@ -51,9 +49,6 @@ export default function EditPostPage() {
     loadPost();
   }, [postId]);
 
-  // -------------------------------------------------------
-  // Handlers
-  // -------------------------------------------------------
   function handleChange(
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) {
@@ -63,10 +58,12 @@ export default function EditPostPage() {
   function handleAddTag(e: FormEvent) {
     e.preventDefault();
     if (!newTag.trim()) return;
+
     setForm((prev) => ({
       ...prev,
       tags: [...prev.tags, newTag.trim()],
     }));
+
     setNewTag("");
   }
 
@@ -85,7 +82,8 @@ export default function EditPostPage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/posts/${postId}/edit`, {
+      // ✔ FIX: Correct API route
+      const res = await fetch(`/api/posts/${postId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -109,21 +107,10 @@ export default function EditPostPage() {
 
   return (
     <div className={styles.container}>
-
-      {/* ---------------------------------------
-          PAGE TITLE
-      ---------------------------------------- */}
       <h1 className={styles.title}>Edit Post</h1>
 
-      {/* ---------------------------------------
-          IMAGE PANEL
-      ---------------------------------------- */}
       <div className={styles.imageBox}>
-        <img
-          src={form.image_url}
-          alt="Post Image"
-          className={styles.imagePreview}
-        />
+        <img src={form.image_url} alt="Post Image" className={styles.imagePreview} />
 
         <button className={styles.changeImageBtn}>
           Change Image
@@ -136,12 +123,7 @@ export default function EditPostPage() {
         </button>
       </div>
 
-      {/* ---------------------------------------
-          FORM PANEL
-      ---------------------------------------- */}
       <form className={styles.form} onSubmit={handleSave}>
-
-        {/* Title */}
         <div>
           <label className={styles.label}>Title</label>
           <input
@@ -152,7 +134,6 @@ export default function EditPostPage() {
           />
         </div>
 
-        {/* Body */}
         <div>
           <label className={styles.label}>Body</label>
           <textarea
@@ -163,7 +144,6 @@ export default function EditPostPage() {
           />
         </div>
 
-        {/* Category */}
         <div>
           <label className={styles.label}>Category</label>
           <input
@@ -174,7 +154,6 @@ export default function EditPostPage() {
           />
         </div>
 
-        {/* Tags */}
         <div>
           <label className={styles.label}>Tags</label>
 
@@ -183,7 +162,6 @@ export default function EditPostPage() {
               <span key={i} className={styles.tagChip}>{t}</span>
             ))}
 
-            {/* אין form פנימי! */}
             <input
               className={styles.tagInputField}
               value={newTag}
@@ -199,8 +177,6 @@ export default function EditPostPage() {
           </div>
         </div>
 
-
-        {/* Visibility */}
         <div>
           <label className={styles.label}>Visibility</label>
           <select
@@ -214,7 +190,6 @@ export default function EditPostPage() {
           </select>
         </div>
 
-        {/* Save button */}
         <button type="submit" className={styles.saveBtn} disabled={saving}>
           {saving ? "Saving…" : "Save changes"}
         </button>
