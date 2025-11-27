@@ -90,20 +90,20 @@
 .filterBtn {
   flex: 1;
   border-radius: 999px;
-  border: 1px solid #bfdbfe; /* כחול עדין */
+  border: 1px solid #bfdbfe; 
   padding: 6px 8px;
   font-size: 12px;
-  background: #eff6ff; /* כחול בהיר */
+  background: #eff6ff; 
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .filterBtn:hover {
-  background: #dbeafe; /* כחול מעט יותר חזק */
+  background: #dbeafe; 
 }
 
 .filterBtnActive {
-  background: #2563eb; /* כחול חזק */
+  background: #2563eb; 
   color: #ffffff;
   border-color: #2563eb;
 }
@@ -146,18 +146,12 @@
   background: #d1d5db;
   border-radius: 999px;
 }
-
 .item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 8px 4px;
-  border: none;
-  background: transparent;
-  width: 100%;
-  text-align: left;
+  padding: 10px 6px;
   cursor: pointer;
-  border-radius: 999px;
 }
 
 .item:hover {
@@ -217,3 +211,29 @@
   color: #6b7280;
   padding: 8px 0;
 }
+.actionsRow {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-start;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.infoShort {
+  display: flex;
+  flex-direction: column;
+}
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; 
+  gap: 16px;                   
+}
+
+.topRow button {
+  flex-shrink: 0;
+}
+

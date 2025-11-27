@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config({ path: ".env" }); 
+
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI!;
@@ -9,9 +12,9 @@ interface MongooseCache {
   promise: Promise<typeof mongoose> | null;
 }
 
-// @ts-ignore
+
 let cached: MongooseCache = global.mongoose ?? { conn: null, promise: null };
-// @ts-ignore
+
 global.mongoose = cached;
 
 export async function dbConnect() {

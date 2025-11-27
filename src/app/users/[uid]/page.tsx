@@ -232,10 +232,10 @@ export default function PublicProfilePage() {
         )}
       </section>
       {selectedPostId && (
-        <PostModal
-          postId={selectedPostId}
-          onClose={() => setSelectedPostId(null)}
-        />
+       <PostModal
+  postId={String(selectedPostId)}
+  onClose={() => setSelectedPostId(null)}
+/>
       )}
     </div>
   );
