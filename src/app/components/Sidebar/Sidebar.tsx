@@ -5,19 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import styles from "./Sidebar.module.css";
 
-import {
-  FiHome,
-  FiMessageSquare,
-  FiUser,
-  FiPlusSquare,
-  FiSearch,
-  FiHeart,
-  FiAward,
-} from "react-icons/fi";
+import { FiHome, FiMessageSquare, FiUser, FiPlusSquare, FiSearch, FiHeart, FiAward, FiLogOut } from "react-icons/fi";
 
 import ArtistSearchDrawer from "../../../app/components/ArtistSearchDrawer/ArtistSearchDrawer";
 import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
 import { getUserByUid, type User } from "../../../services/userService";
+import { removeLocalStorageUid } from "../../../lib/localStorage";
 
 export default function Sidebar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -29,16 +22,16 @@ export default function Sidebar() {
     pathname?.startsWith("/messages")
       ? "messages"
       : pathname?.startsWith("/following") || pathname?.startsWith("/profile")
-      ? "profile"
-      : pathname?.startsWith("/create")
-      ? "create"
-      : pathname?.startsWith("/search")
-      ? "search"
-      : pathname?.startsWith("/challenges")
-      ? "challenges"
-      : pathname === "/landing" || pathname === "/"
-      ? "home"
-      : "home";
+        ? "profile"
+        : pathname?.startsWith("/create")
+          ? "create"
+          : pathname?.startsWith("/search")
+            ? "search"
+            : pathname?.startsWith("/challenges")
+              ? "challenges"
+              : pathname === "/landing" || pathname === "/"
+                ? "home"
+                : "home";
 
   const activeKey = drawerOpen ? "search" : baseActiveKey;
 
@@ -79,93 +72,86 @@ export default function Sidebar() {
         <nav className={styles.nav}>
           <button
             onClick={() => router.push("/landing")}
-            className={`${styles.btn} ${
-              activeKey === "home" ? styles.active : ""
-            }`}
+            className={`${styles.btn} ${activeKey === "home" ? styles.active : ""
+              }`}
             aria-label="Home"
           >
             <FiHome
-              className={`${styles.icon} ${
-                activeKey === "home" ? styles.iconActive : ""
-              }`}
+              className={`${styles.icon} ${activeKey === "home" ? styles.iconActive : ""
+                }`}
             />
           </button>
 
           <button
             onClick={() => router.push("/messages")}
-            className={`${styles.btn} ${
-              activeKey === "messages" ? styles.active : ""
-            }`}
+            className={`${styles.btn} ${activeKey === "messages" ? styles.active : ""
+              }`}
             aria-label="Messages"
           >
             <FiMessageSquare
-              className={`${styles.icon} ${
-                activeKey === "messages" ? styles.iconActive : ""
-              }`}
+              className={`${styles.icon} ${activeKey === "messages" ? styles.iconActive : ""
+                }`}
             />
           </button>
 
           <button
             onClick={() => router.push("/following")}
-            className={`${styles.btn} ${
-              activeKey === "profile" ? styles.active : ""
-            }`}
+            className={`${styles.btn} ${activeKey === "profile" ? styles.active : ""
+              }`}
             aria-label="Following"
           >
             <FiUser
-              className={`${styles.icon} ${
-                activeKey === "profile" ? styles.iconActive : ""
-              }`}
+              className={`${styles.icon} ${activeKey === "profile" ? styles.iconActive : ""
+                }`}
             />
           </button>
 
           <button
             onClick={() => router.push("/create")}
-            className={`${styles.btn} ${
-              activeKey === "create" ? styles.active : ""
-            }`}
+            className={`${styles.btn} ${activeKey === "create" ? styles.active : ""
+              }`}
             aria-label="Create"
           >
             <FiPlusSquare
-              className={`${styles.icon} ${
-                activeKey === "create" ? styles.iconActive : ""
-              }`}
+              className={`${styles.icon} ${activeKey === "create" ? styles.iconActive : ""
+                }`}
             />
           </button>
 
           <button
             onClick={() => setDrawerOpen(true)}
-            className={`${styles.btn} ${
-              activeKey === "search" ? styles.active : ""
-            }`}
+            className={`${styles.btn} ${activeKey === "search" ? styles.active : ""
+              }`}
             aria-label="Search"
           >
             <FiSearch
-              className={`${styles.icon} ${
-                activeKey === "search" ? styles.iconActive : ""
-              }`}
+              className={`${styles.icon} ${activeKey === "search" ? styles.iconActive : ""
+                }`}
             />
           </button>
 
           <button
             onClick={() => router.push("/challenges")}
-            className={`${styles.btn} ${
-              activeKey === "challenges" ? styles.active : ""
-            }`}
+            className={`${styles.btn} ${activeKey === "challenges" ? styles.active : ""
+              }`}
             aria-label="challenges"
           >
             <FiAward
-              className={`${styles.icon} ${
-                activeKey === "challenges" ? styles.iconActive : ""
-              }`}
+              className={`${styles.icon} ${activeKey === "challenges" ? styles.iconActive : ""
+                }`}
             />
           </button>
         </nav>
 
         <div className={styles.spacer} />
 
-        <button className={styles.btn} aria-label="Favorites">
-          <FiHeart className={styles.icon} />
+        <button className={styles.btn} aria-label="Logout"
+          onClick={() => {
+            removeLocalStorageUid();
+            router.push("/");
+          }}
+        >
+          <FiLogOut className={styles.icon} />
         </button>
       </aside>
 

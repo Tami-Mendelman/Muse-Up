@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getLocalStorageUid } from "../lib/localStorage";
 
 export function useFirebaseUid() {
-  const [uid, setUid] = useState<string | null>(null);
+  const [uid, setUid] = useState<string | undefined>(undefined);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const value =
-      localStorage.getItem("firebase_uid") || sessionStorage.getItem("firebase_uid");
-
+    const value = getLocalStorageUid();
     setUid(value);
     setReady(true);
   }, []);

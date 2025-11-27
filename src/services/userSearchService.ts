@@ -12,7 +12,7 @@ export type ArtistUser = {
 };
 
 export async function getAllArtists(): Promise<ArtistUser[]> {
-  const res = await fetch("/api/Users", { method: "GET" });
+  const res = await fetch("/api/users", { method: "GET" });
 
   if (!res.ok) {
     console.error("Failed to load users", await res.text());
