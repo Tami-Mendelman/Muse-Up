@@ -18,8 +18,9 @@ type Conversation = {
 };
 
 export default function MessagesPage() {
-  const socket = useSocket();
   const router = useRouter();
+  const socket = useSocket();
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,48 +48,74 @@ export default function MessagesPage() {
     );
   }, [socket]);
 
-  const handleOpenConversation = (conversationId: string) => {
-    router.push(`/messages/${conversationId}`);
+  const handleSelectConversation = (id: string) => {
+    router.push(`/messages/${id}`);
   };
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Messages</h1>
+    <div className={styles.page}>
+      <div className={styles.layout}>
+        <aside className={styles.sidebar}>
+          <header className={styles.sidebarHeader}>
+            <h1 className={styles.sidebarTitle}>Messages</h1>
+          </header>
 
-      {loading && <p className={styles.subtitle}>Loading conversations...</p>}
+          <div className={styles.conversationsList}>
+            {loading && (
+              <p className={styles.emptyState}>Loading conversations…</p>
+            )}
 
-      {!loading && conversations.length === 0 && (
-        <p className={styles.subtitle}>No conversations yet.</p>
-      )}
+            {!loading && conversations.length === 0 && (
+              <p className={styles.emptyState}>No conversations yet.</p>
+            )}
 
-      <ul className={styles.list}>
-        {conversations.map((c) => (
-          <li
-            key={c._id}
-            className={styles.item}
-            onClick={() => handleOpenConversation(c._id)}
-          >
-            <div className={styles.avatar}>
-              {c.otherUser?.profil_url ? (
-                <img
-                  src={c.otherUser.profil_url}
-                  alt={c.otherUser.username || ""}
-                  className={styles.avatarImg}
-                />
-              ) : null}
-            </div>
+            {conversations.map((c) => (
+              <button
+                key={c._id}
+                type="button"
+                className={styles.conversationItem}
+                onClick={() => handleSelectConversation(c._id)}
+              >
+                <div className={styles.conversationAvatar}>
+                  {c.otherUser?.profil_url && (
+                    <img
+                      src={c.otherUser.profil_url}
+                      alt={c.otherUser.username || ""}
+                    />
+                  )}
+                </div>
 
-            <div className={styles.itemText}>
-              <div className={styles.itemName}>
-                {c.otherUser?.name || c.otherUser?.username || "Unknown user"}
-              </div>
-              <div className={styles.itemLastMessage}>
-                {c.lastMessageText || "No messages yet"}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+                <div className={styles.conversationInfo}>
+                  <div className={styles.conversationTopRow}>
+                    <span className={styles.conversationName}>
+                      {c.otherUser?.name ||
+                        c.otherUser?.username ||
+                        "Unknown user"}
+                    </span>
+                    {c.lastMessageAt && (
+                      <span className={styles.conversationTime}>
+                        {new Date(c.lastMessageAt).toLocaleTimeString(
+                          "he-IL",
+                          { hour: "2-digit", minute: "2-digit" }
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.conversationPreview}>
+                    {c.lastMessageText || "No messages yet"}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </aside>
+        <section className={styles.chatPane}>
+          <div className={styles.chatEmpty}>
+            <h2>Select a conversation</h2>
+            <p>Choose an artist from the list to start chatting.</p>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
