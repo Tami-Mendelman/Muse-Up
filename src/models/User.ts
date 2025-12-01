@@ -5,13 +5,14 @@ export interface IUser extends Document {
   name: string;
   email: string;
   username: string;
-  profil_url?: string;  
+  profil_url?: string;
   bio?: string;
   location?: string;
   role: string;
   followers_count: number;
   following_count: number;
   created_at: Date;
+  saved_posts?: number[];
 }
 
 const UserSchema = new Schema<IUser>(
@@ -42,7 +43,7 @@ const UserSchema = new Schema<IUser>(
     },
     profil_url: {
       type: String,
-    },  
+    },
     bio: {
       type: String,
     },
@@ -64,6 +65,10 @@ const UserSchema = new Schema<IUser>(
     created_at: {
       type: Date,
       default: Date.now,
+    },
+    saved_posts: {
+      type: [Number],
+      default: [],
     },
   },
   {

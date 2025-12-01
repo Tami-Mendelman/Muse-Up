@@ -11,15 +11,23 @@ export async function GET(req: NextRequest) {
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+    const firebase_uid = searchParams.get("firebase_uid");
 
     const filter: any = {};
-    if (userId) {
-      filter.user_id = userId;
+
+    if (firebase_uid) {
+      // מוצאים את המשתמש לפי firebase_uid
+      const user = await User.findOne({ firebase_uid }).lean();
+
+      if (!user) {
+        return NextResponse.json([], { status: 200 });
+      }
+
+      // מסננים לפי user_id
+      filter.user_id = user._id;
     }
 
-    const posts = await (PostModel as any)
-      .find(filter)
+    const posts = await PostModel.find(filter)
       .sort({ created_at: -1 })
       .lean();
 
@@ -54,41 +62,58 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// ---------------- CREATE POST ----------------
 export async function POST(req: NextRequest) {
   try {
     await dbConnect();
 
     const body = await req.json();
-
     const {
       title,
       body: content,
       image_url,
-      user_id,
+      user_uid,
       category,
       tags,
       visibility,
     } = body;
 
-    if (!title || !image_url || !user_id) {
+    if (!title || !image_url || !user_uid) {
       return NextResponse.json(
-        { error: "title, image_url and user_id are required" },
+        { error: "title, image_url and user_uid are required" },
         { status: 400 }
       );
     }
 
-    const newPost = await (PostModel as any).create({
+    // מוצאים את המשתמש לפי firebase_uid
+    const user = await User.findOne({ firebase_uid: user_uid }).lean();
+    if (!user) {
+      return NextResponse.json(
+        { error: "No user found for this firebase UID" },
+        { status: 404 }
+      );
+    }
+
+    // יצירת ID מספרי אוטומטי (כמו הפוסטים הישנים)
+    const lastPost = await PostModel.findOne().sort({ id: -1 }).lean();
+    const nextId = lastPost?.id ? lastPost.id + 1 : 1;
+
+    // יצירת הפוסט
+    const newPost = await PostModel.create({
+      id: nextId, // חשוב מאוד
       title,
       body: content ?? "",
       image_url,
-      user_id,
       category: category ?? "",
       tags: tags ?? [],
       visibility: visibility ?? "public",
       status: "active",
       likes_count: 0,
       comments_count: 0,
+      user_uid,
+      user_id: user._id,
       created_at: new Date(),
+      updated_at: new Date(),
     });
 
     return NextResponse.json(newPost, { status: 201 });

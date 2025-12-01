@@ -62,35 +62,40 @@ export default async function LandingPage() {
     (p, index, arr) => index === arr.findIndex((x) => x.id === p.id)
   );
 
-  const trendingWithAuthors = await Promise.all(
-    trendingRaw.map(async (post: any) => {
-      let author = null;
+ const trendingWithAuthors = await Promise.all(
+  trendingRaw.map(async (post: any) => {
+    let user = null;
 
-      if (post.user_id && ("" + post.user_id).length >= 10) {
-        const user = await UserModel.findById(post.user_id)
-          .lean()
-          .catch(() => null);
+    // אם זה ObjectId רגיל
+    if (mongoose.isValidObjectId(post.user_id)) {
+      user = await UserModel.findById(post.user_id).lean().catch(() => null);
+    } 
+    // אחרת — זה firebase_uid
+    else {
+      user = await UserModel.findOne({ firebase_uid: post.user_id })
+        .lean()
+        .catch(() => null);
+    }
 
-        if (user) {
-          author = {
-            name: user.name || "Unknown",
-            avatar_url:
-              user.avatar_url ||
-              user.profil_url ||
-              "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
-          };
+    const author = user
+      ? {
+          name: user.name || "Unknown",
+          avatar_url:
+            user.avatar_url ||
+            user.profil_url ||
+            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+          followers_count: user.followers_count ?? 0,
         }
-      }
-      return {
-        ...post,
-        author: author || {
+      : {
           name: "Unknown",
           avatar_url:
             "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
-        },
-      };
-    })
-  );
+          followers_count: 0,
+        };
+
+    return { ...post, author };
+  })
+);
 
   const trending = trendingWithAuthors;
 
@@ -117,7 +122,6 @@ export default async function LandingPage() {
 
        <section className={styles.bottomLeft}>
   <div className={styles.card}>
-    <h2 className={styles.cardTitle}>Trending this week</h2>
 
     <TrendingSection trending={trending} />
 
