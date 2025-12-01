@@ -16,6 +16,7 @@
     "emoji-picker-react": "^4.15.1",
     "express": "^5.1.0",
     "firebase": "^12.5.0",
+    "firebase-admin": "^13.6.0",
     "lucide-react": "^0.553.0",
     "mogoose": "^0.0.1-security",
     "mongodb": "^6.9.0",

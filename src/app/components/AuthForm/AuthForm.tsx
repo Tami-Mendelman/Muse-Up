@@ -17,6 +17,7 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import getAuthErrorMessage from "../../../lib/authErrors";
 import { checkUserInDB } from "../../../lib/checkUserInDB";
 import { setLocalStorageUid } from "../../../lib/localStorage";
+import { addTokenToCookie } from "../../../services/loginService";
 
 
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -89,6 +90,11 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         return;
                     }
                 }
+                // save token
+                const user = auth.currentUser;
+                const token = await user?.getIdToken();
+                await addTokenToCookie(token);
+
                 setLocalStorageUid(firebaseUser.user.uid);
                 router.push("/landing");
                 alert("Login successfully!");
@@ -111,6 +117,12 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     const cred = await createUserWithEmailAndPassword(auth, email, password);
                     console.log("CREATED FIREBASE USER:", cred.user);
                     // await createUserWithEmailAndPassword(auth, email, password);
+
+                    // save token
+                    const user = auth.currentUser;
+                    const token = await user?.getIdToken();
+                    await addTokenToCookie(token);
+
                     setLocalStorageUid(cred.user.uid);
                     router.push("/onboarding");
                     alert("register successfully!");
@@ -145,6 +157,11 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     await signOut(auth);
                     return;
                 }
+                // save token
+                const user = auth.currentUser;
+                const token = await user?.getIdToken();
+                await addTokenToCookie(token);
+
                 setLocalStorageUid(user.uid);
                 router.push("/landing");
                 return;
@@ -157,6 +174,11 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     await signOut(auth);
                     return;
                 }
+                // save token
+                const user = auth.currentUser;
+                const token = await user?.getIdToken();
+                await addTokenToCookie(token);
+
                 setLocalStorageUid(user.uid);
                 router.push("/onboarding");
                 return;
