@@ -4,15 +4,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
 import User from "../../../models/User";
 import FollowModel from "../../../models/Follow";
+import { verifyToken } from "../../../lib/auth";
 
 const Follow: any = FollowModel;
 
 export async function GET(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId"); 
+    const userId = searchParams.get("userId");
 
     if (!userId) {
       return NextResponse.json(
@@ -23,7 +31,7 @@ export async function GET(req: NextRequest) {
 
 
     const follows = await Follow.find({
-      following_user_id: userId,         
+      following_user_id: userId,
     }).lean();
 
     const followedIds = follows.map((f: any) => f.followed_user_id);
@@ -33,11 +41,11 @@ export async function GET(req: NextRequest) {
     }
 
     const users = await User.find({
-  firebase_uid: { $in: followedIds },
-})
-  .select("_id firebase_uid name username profil_url bio") 
-  .lean();
-  
+      firebase_uid: { $in: followedIds },
+    })
+      .select("_id firebase_uid name username profil_url bio")
+      .lean();
+
 
     return NextResponse.json(users);
   } catch (err) {

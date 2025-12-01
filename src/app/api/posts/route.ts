@@ -5,9 +5,17 @@ import { dbConnect } from "../../../lib/mongoose";
 import PostModel from "../../../models/Post";
 import User from "../../../models/User";
 import mongoose from "mongoose";
+import { verifyToken } from "../../../lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
@@ -56,6 +64,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const body = await req.json();

@@ -3,10 +3,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
 import ChallengeSubmissionModel from "../../../models/ChallengeSubmission";
 import UserModel from "../../../models/User";
+import { verifyToken } from "../../../lib/auth";
 const ChallengeSubmission: any = ChallengeSubmissionModel;
 const User: any = UserModel;
+
 export async function GET(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const _user = await verifyToken(token || "");
+    if (!_user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
@@ -46,6 +55,13 @@ export async function GET(req: NextRequest) {
 }
 export async function POST(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const _user = await verifyToken(token || "");
+    if (!_user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const body = await req.json();
@@ -72,7 +88,7 @@ export async function POST(req: NextRequest) {
       if (image_url) {
         existing.image_url = image_url;
         existing.status = "submitted";
-        await existing.save(); 
+        await existing.save();
       }
       return NextResponse.json(
         { message: "Submission saved", submission: existing },
@@ -92,7 +108,7 @@ export async function POST(req: NextRequest) {
       status: image_url ? "submitted" : "joined",
       image_url: image_url ?? null,
     });
-    await doc.save(); 
+    await doc.save();
     return NextResponse.json(doc.toObject(), { status: 201 });
   } catch (err) {
     console.error("POST /api/challenge-submissions error:", err);

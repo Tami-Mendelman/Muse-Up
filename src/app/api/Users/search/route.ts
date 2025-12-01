@@ -1,11 +1,19 @@
 export const runtime = "nodejs";
 
+import { verifyToken } from "../../../../lib/auth";
 import { dbConnect } from "../../../../lib/mongoose";
 import User from "../../../../models/User";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
@@ -51,10 +59,10 @@ export async function GET(req: NextRequest) {
       .limit(limit)
       .lean();
 
-    return Response.json(users, { status: 200 });
+    return NextResponse.json(users, { status: 200 });
   } catch (err: any) {
     console.error("Error fetching users (artists)", err);
-    return Response.json(
+    return NextResponse.json(
       { message: err?.message ?? "Server error" },
       { status: 500 }
     );

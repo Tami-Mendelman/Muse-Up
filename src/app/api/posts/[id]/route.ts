@@ -1,10 +1,11 @@
 export const runtime = "nodejs";
 
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { dbConnect } from "../../../../lib/mongoose";
 import Post from "../../../../models/Post";
 import User from "../../../../models/User";
 import mongoose from "mongoose";
+import { verifyToken } from "../../../../lib/auth";
 
 type ParamsCtx = {
   params: Promise<{ id: string }>;
@@ -13,6 +14,13 @@ type ParamsCtx = {
 
 export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   try {
+    // auth by token in cookie
+    const token = _req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await ctx.params;
 
     await dbConnect();
@@ -22,7 +30,7 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
     const post = await (Post as any).findOne(query).lean();
     if (!post) {
-      return Response.json({ message: "Post not found" }, { status: 404 });
+      return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
 
     let author = null;
@@ -58,10 +66,10 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
         },
     };
 
-    return Response.json(finalPost, { status: 200 });
+    return NextResponse.json(finalPost, { status: 200 });
   } catch (err: any) {
     console.error("GET /api/posts/[id] error:", err);
-    return Response.json(
+    return NextResponse.json(
       { message: "Failed to fetch post", details: err.message },
       { status: 500 }
     );
@@ -69,6 +77,13 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 }
 export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await ctx.params;
     const isObjectId = mongoose.isValidObjectId(id);
     const query = isObjectId ? { _id: id } : { id: Number(id) };
@@ -76,7 +91,6 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
     await dbConnect();
     const body = await req.json().catch(() => ({}));
 
-    // 🟣 אם מדובר בלייקים — נשאר מסלול הלייקים
     if (body.delta !== undefined) {
       const delta =
         typeof body.delta === "number" && !Number.isNaN(body.delta)
@@ -88,16 +102,15 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
         .lean();
 
       if (!updatedLikes) {
-        return Response.json({ message: "Post not found" }, { status: 404 });
+        return NextResponse.json({ message: "Post not found" }, { status: 404 });
       }
 
-      return Response.json(
+      return NextResponse.json(
         { likes_count: updatedLikes.likes_count },
         { status: 200 }
       );
     }
 
-    // 🟣 מסלול עדכון פוסט מלא
     const allowed = [
       "title",
       "body",
@@ -118,21 +131,28 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
       .lean();
 
     if (!updatedPost) {
-      return Response.json({ message: "Post not found" }, { status: 404 });
+      return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
 
-    return Response.json(updatedPost, { status: 200 });
+    return NextResponse.json(updatedPost, { status: 200 });
   } catch (err: any) {
     console.error("PATCH /api/posts/[id] error:", err);
-    return Response.json(
+    return NextResponse.json(
       { message: "Failed to update post", details: err.message },
       { status: 500 }
     );
   }
 }
 
-  export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
+export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
   try {
+    // auth by token in cookie
+    const token = _req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await ctx.params;
 
     await dbConnect();
@@ -143,16 +163,16 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
     const deleted = await (Post as any).findOneAndDelete(query).lean();
 
     if (!deleted) {
-      return Response.json({ message: "Post not found" }, { status: 404 });
+      return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
 
-    return Response.json(
+    return NextResponse.json(
       { message: "Post deleted successfully", deletedId: id },
       { status: 200 }
     );
   } catch (err: any) {
     console.error("DELETE /api/posts/[id] error:", err);
-    return Response.json(
+    return NextResponse.json(
       { message: "Failed to delete post", details: err.message },
       { status: 500 }
     );
