@@ -9,6 +9,8 @@ type Conversation = {
   _id: string;
   lastMessageText?: string;
   lastMessageAt?: string;
+  unread_count?: number;
+  unreadByUser?: Record<string, number>;
   otherUser?: {
     firebase_uid: string;
     username?: string;
@@ -20,7 +22,6 @@ type Conversation = {
 export default function MessagesPage() {
   const router = useRouter();
   const socket = useSocket();
-
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,9 +38,39 @@ export default function MessagesPage() {
     socket.emit(
       "getConversations",
       { userUid: uid },
-      (res: { ok: boolean; conversations?: Conversation[]; error?: string }) => {
+      (res: {
+        ok: boolean;
+        conversations?: any[];
+        error?: string;
+      }) => {
+        console.log("getConversations raw:", res);
         if (res?.ok && res.conversations) {
-          setConversations(res.conversations);
+          const mapped: Conversation[] = res.conversations.map((c: any) => {
+            let unread = Number(c.unread_count ?? 0);
+
+            if (c.unreadByUser && typeof c.unreadByUser === "object") {
+              const asRecord = c.unreadByUser as Record<string, number>;
+              if (uid in asRecord) {
+                unread = asRecord[uid] ?? unread;
+              }
+            }
+
+            return {
+              _id: c._id,
+              lastMessageText: c.lastMessageText,
+              lastMessageAt: c.lastMessageAt,
+              unread_count: unread,
+              otherUser: c.otherUser,
+            };
+          });
+          mapped.sort(
+            (a, b) =>
+              new Date(b.lastMessageAt || 0).getTime() -
+              new Date(a.lastMessageAt || 0).getTime()
+          );
+
+          console.log("mapped conversations:", mapped);
+          setConversations(mapped);
         } else {
           console.error("getConversations error", res?.error);
         }
@@ -73,7 +104,11 @@ export default function MessagesPage() {
               <button
                 key={c._id}
                 type="button"
-                className={styles.conversationItem}
+                className={`${styles.conversationItem} ${
+                  c.unread_count && c.unread_count > 0
+                    ? styles.conversationItemUnread
+                    : ""
+                }`}
                 onClick={() => handleSelectConversation(c._id)}
               >
                 <div className={styles.conversationAvatar}>

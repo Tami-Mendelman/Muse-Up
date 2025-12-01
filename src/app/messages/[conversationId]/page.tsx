@@ -7,9 +7,10 @@ import {
   FormEvent,
 } from "react";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useSocket } from "../../../lib/useSocket";
 import styles from "./conversation.module.css";
-import dynamic from "next/dynamic";
+
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,
 }) as any;
@@ -27,6 +28,8 @@ type Conversation = {
   _id: string;
   lastMessageText?: string;
   lastMessageAt?: string;
+  unread_count?: number;
+  unreadByUser?: Record<string, number>;
   otherUser?: {
     firebase_uid: string;
     username?: string;
@@ -49,7 +52,9 @@ export default function ConversationPage() {
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  const chatBoxRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const autoScrollRef = useRef(true); 
 
   const currentUid =
     typeof window !== "undefined"
@@ -57,10 +62,24 @@ export default function ConversationPage() {
       : null;
 
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages.length]);
+    if (!autoScrollRef.current) return;
+    if (!bottomRef.current) return;
+
+    bottomRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [messages.length, conversationId]);
+
+  const handleChatScroll = () => {
+    const box = chatBoxRef.current;
+    if (!box) return;
+
+    const distanceFromBottom =
+      box.scrollHeight - box.scrollTop - box.clientHeight;
+
+    autoScrollRef.current = distanceFromBottom < 80;
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -75,9 +94,43 @@ export default function ConversationPage() {
     socket.emit(
       "getConversations",
       { userUid: uid },
-      (res: { ok: boolean; conversations?: Conversation[]; error?: string }) => {
+      (res: {
+        ok: boolean;
+        conversations?: any[];
+        error?: string;
+      }) => {
+        console.log("getConversations (conversation page) raw:", res);
         if (res?.ok && res.conversations) {
-          setConversations(res.conversations);
+          const mapped: Conversation[] = res.conversations.map((c: any) => {
+            let unread = Number(c.unread_count ?? 0);
+
+            if (c.unreadByUser && typeof c.unreadByUser === "object") {
+              const asRecord = c.unreadByUser as Record<string, number>;
+              if (uid in asRecord) {
+                unread = asRecord[uid] ?? unread;
+              }
+            }
+
+            return {
+              _id: c._id,
+              lastMessageText: c.lastMessageText,
+              lastMessageAt: c.lastMessageAt,
+              unread_count: unread,
+              otherUser: c.otherUser,
+            };
+          });
+
+          mapped.sort(
+            (a, b) =>
+              new Date(b.lastMessageAt || 0).getTime() -
+              new Date(a.lastMessageAt || 0).getTime()
+          );
+
+          console.log(
+            "mapped conversations (conversation page):",
+            mapped
+          );
+          setConversations(mapped);
         } else {
           console.error("getConversations error", res?.error);
         }
@@ -105,16 +158,55 @@ export default function ConversationPage() {
       (res: { ok: boolean; messages?: Message[]; error?: string }) => {
         if (res?.ok && res.messages) {
           setMessages(res.messages);
+          autoScrollRef.current = true;
         } else {
           console.error("getMessages error", res?.error);
         }
       }
     );
 
+    socket.emit("markConversationRead", {
+      conversationId,
+      userUid: uid,
+    });
+
+    setConversations((prev) =>
+      prev.map((c) =>
+        c._id === conversationId ? { ...c, unread_count: 0 } : c
+      )
+    );
+
     const handleIncoming = (payload: {
       conversationId: string;
       message: Message;
     }) => {
+      setConversations((prev) => {
+        const updated = prev.map((c) => {
+          if (c._id !== payload.conversationId) return c;
+
+          const base = {
+            ...c,
+            lastMessageText: payload.message.text,
+            lastMessageAt: payload.message.createdAt,
+          };
+
+          if (payload.conversationId === conversationId) {
+            return { ...base, unread_count: 0 };
+          }
+
+          return {
+            ...base,
+            unread_count: (c.unread_count || 0) + 1,
+          };
+        });
+
+        return updated.sort(
+          (a, b) =>
+            new Date(b.lastMessageAt || 0).getTime() -
+            new Date(a.lastMessageAt || 0).getTime()
+        );
+      });
+
       if (payload.conversationId === conversationId) {
         setMessages((prev) => [...prev, payload.message]);
       }
@@ -152,6 +244,7 @@ export default function ConversationPage() {
           return;
         }
         setInput("");
+        autoScrollRef.current = true;
       }
     );
   };
@@ -192,8 +285,10 @@ export default function ConversationPage() {
                 key={c._id}
                 type="button"
                 className={`${styles.conversationItem} ${
-                  c._id === conversationId
-                    ? styles.conversationItemActive
+                  c._id === conversationId ? styles.conversationItemActive : ""
+                } ${
+                  c.unread_count && c.unread_count > 0
+                    ? styles.conversationItemUnread
                     : ""
                 }`}
                 onClick={() => handleSelectConversation(c._id)}
@@ -231,6 +326,8 @@ export default function ConversationPage() {
             ))}
           </div>
         </aside>
+
+        {/* CHAT PANE */}
         <section className={styles.chatPane}>
           {!conversationId && (
             <div className={styles.chatEmpty}>
@@ -266,24 +363,24 @@ export default function ConversationPage() {
                 </div>
               </header>
 
-              <div className={styles.chatBox}>
+              <div
+                className={styles.chatBox}
+                ref={chatBoxRef}
+                onScroll={handleChatScroll}
+              >
                 {messages.map((m) => {
                   const isMe = m.sender_uid === currentUid;
                   return (
                     <div
                       key={m._id}
-                      className={
-                        isMe ? styles.rowMe : styles.rowOther
-                      }
+                      className={isMe ? styles.rowMe : styles.rowOther}
                     >
                       <div
                         className={
                           isMe ? styles.bubbleMe : styles.bubbleOther
                         }
                       >
-                        <div className={styles.messageText}>
-                          {m.text}
-                        </div>
+                        <div className={styles.messageText}>{m.text}</div>
                         <div className={styles.messageTime}>
                           {new Date(m.createdAt).toLocaleTimeString(
                             "he-IL",
@@ -301,7 +398,6 @@ export default function ConversationPage() {
                 className={styles.inputRow}
                 onSubmit={handleSend}
               >
-
                 <div className={styles.emojiWrapper}>
                   <button
                     type="button"
