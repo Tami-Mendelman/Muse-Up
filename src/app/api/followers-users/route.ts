@@ -4,15 +4,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
 import User from "../../../models/User";
 import FollowModel from "../../../models/Follow";
+import { verifyToken } from "../../../lib/auth";
 
 const Follow: any = FollowModel;
 
 export async function GET(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId"); 
+    const userId = searchParams.get("userId");
 
     if (!userId) {
       return NextResponse.json(
@@ -23,7 +31,7 @@ export async function GET(req: NextRequest) {
 
 
     const follows = await Follow.find({
-      followed_user_id: userId, 
+      followed_user_id: userId,
     }).lean();
 
     if (!follows.length) {
@@ -32,19 +40,19 @@ export async function GET(req: NextRequest) {
 
     const followerUids = follows.map((f: any) => f.following_user_id);
 
-const users = await User.find({
-  firebase_uid: { $in: followerUids },
-})
-  .select("firebase_uid name username profil_url bio")
-  .lean();
+    const users = await User.find({
+      firebase_uid: { $in: followerUids },
+    })
+      .select("firebase_uid name username profil_url bio")
+      .lean();
 
-const result = users.map((u: any) => ({
-  _id: u.firebase_uid as string,
-  name: u.name,
-  username: u.username,
-  profil_url: u.profil_url, 
-  bio: u.bio,
-}));
+    const result = users.map((u: any) => ({
+      _id: u.firebase_uid as string,
+      name: u.name,
+      username: u.username,
+      profil_url: u.profil_url,
+      bio: u.bio,
+    }));
 
 
     return NextResponse.json(result, { status: 200 });
@@ -59,6 +67,13 @@ const result = users.map((u: any) => ({
 
 export async function POST(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const body = await req.json().catch(() => null);
@@ -103,6 +118,13 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const body = await req.json().catch(() => null);
