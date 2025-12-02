@@ -10,9 +10,11 @@ type ParamsCtx = {
   params: Promise<{ id: string }>;
 };
 
+const DEFAULT_AVATAR =
+  "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
+
 /* ---------------------------------------------------
    GET /api/posts/[id]
-   שליפת פוסט + פרטי היוצר לפי firebase_uid
 --------------------------------------------------- */
 export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   try {
@@ -20,7 +22,7 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
     await dbConnect();
 
-    // תמיכה גם ב-id מספרי וגם ב-_id של מונגו
+    // אפשר גם ObjectId וגם id מספרי
     const query = mongoose.isValidObjectId(id)
       ? { _id: id }
       : { id: Number(id) };
@@ -31,12 +33,24 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
       return Response.json({ message: "Post not found" }, { status: 404 });
     }
 
-    /* --------------------------
-       שליפת היוצר לפי firebase_uid
-    -------------------------- */
-    let author = null;
+    let author: any = null;
 
-    if (post.user_id) {
+    // 🔹 1) user_id הוא ObjectId → למצוא לפי _id
+    if (post.user_id && mongoose.isValidObjectId(post.user_id)) {
+      const user = await User.findById(post.user_id).lean().catch(() => null);
+
+      if (user) {
+        author = {
+          name: user.name || "Unknown",
+          username: user.username || "",
+          followers_count: user.followers_count ?? 0,
+          avatar_url: user.avatar_url || user.profil_url || DEFAULT_AVATAR,
+        };
+      }
+    }
+
+    // 🔹 2) אם עדיין אין author — user_id הוא בעצם firebase_uid
+    if (!author && post.user_id) {
       const user = await User.findOne({ firebase_uid: post.user_id })
         .lean()
         .catch(() => null);
@@ -46,10 +60,7 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
           name: user.name || "Unknown",
           username: user.username || "",
           followers_count: user.followers_count ?? 0,
-          avatar_url:
-            user.avatar_url ||
-            user.profil_url ||
-            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+          avatar_url: user.avatar_url || user.profil_url || DEFAULT_AVATAR,
         };
       }
     }
@@ -60,8 +71,7 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
         author || {
           name: "Unknown",
           followers_count: 0,
-          avatar_url:
-            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+          avatar_url: DEFAULT_AVATAR,
         },
       image_url:
         post.image_url ||
@@ -80,7 +90,6 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
 /* ---------------------------------------------------
    PATCH /api/posts/[id]
-   עדכון לייקים + עדכוני פוסט רגילים
 --------------------------------------------------- */
 export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
@@ -93,7 +102,7 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
 
     const body = await req.json().catch(() => ({}));
 
-    // מסלול לייקים בלבד
+    // לייקים בלבד
     if (body.delta !== undefined) {
       const delta =
         typeof body.delta === "number" && !Number.isNaN(body.delta)
@@ -114,7 +123,7 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
       );
     }
 
-    // מסלול עדכון מלא
+    // עדכון מלא לפוסט
     const allowed = [
       "title",
       "body",
@@ -150,7 +159,6 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
 
 /* ---------------------------------------------------
    DELETE /api/posts/[id]
-   מחיקת פוסט
 --------------------------------------------------- */
 export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
   try {

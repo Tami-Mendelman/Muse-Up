@@ -5,6 +5,7 @@ import styles from "./PostModal.module.css";
 
 import { savePost, unsavePost } from "../../../services/postService";
 import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
+import { Share2, Copy, Mail, Send, Link2, MessageCircle } from "lucide-react";
 
 type Comment = {
   id: number;
@@ -43,6 +44,8 @@ export default function PostModal({ onClose, postId }: Props) {
   const [saved, setSaved] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+
 
   const commentsRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -187,7 +190,23 @@ export default function PostModal({ onClose, postId }: Props) {
       setSaved(!newSaved);
     }
   }
+  // ⭐ SHARE FUNCTION
+  function handleShare() {
+    if (!post?.id) return;
 
+    const url = `${window.location.origin}/posts/${post.id}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: post.title,
+        text: "Check out this artwork!",
+        url,
+      }).catch(() => { });
+    } else {
+      navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
+    }
+  }
   return (
     <div className={styles.bg}>
       <div className={styles.box}>
@@ -219,15 +238,59 @@ export default function PostModal({ onClose, postId }: Props) {
               >
                 {saved ? "✓" : "＋"}
               </button>
-
-              <button
-                className={styles.iconBtn}
-                onClick={() => setShowReactions((v) => !v)}
-              >
-                👍
+              <button className={styles.iconBtn} onClick={() => setShowShare((v) => !v)}>
+                <Share2 size={22} strokeWidth={1.8} />
               </button>
             </div>
+            {showShare && (
+              <div className={styles.shareMenu}>
+                <button
+                  className={styles.shareItem}
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    setShowShare(false);
+                  }}
+                >
+                  <Copy size={18} /> Copy link
+                </button>
 
+                <button
+                  className={styles.shareItem}
+                  onClick={() => {
+                    window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`);
+                    setShowShare(false);
+                  }}
+                >
+                  <MessageCircle size={18} /> WhatsApp
+                </button>
+
+                <button
+                  className={styles.shareItem}
+                  onClick={() => {
+                    window.location.href = `mailto:?subject=Check this out&body=${encodeURIComponent(window.location.href)}`;
+                    setShowShare(false);
+                  }}
+                >
+                  <Mail size={18} /> Email
+                </button>
+
+                {navigator.share && (
+                  <button
+                    className={styles.shareItem}
+                    onClick={() => {
+                      navigator.share({
+                        title: post?.title,
+                        text: post?.body,
+                        url: window.location.href,
+                      });
+                      setShowShare(false);
+                    }}
+                  >
+                    <Send size={18} /> Share (device)
+                  </button>
+                )}
+              </div>
+            )}
             {/* REACTIONS MENU */}
             {showReactions && (
               <div className={styles.reactionsMenu}>
