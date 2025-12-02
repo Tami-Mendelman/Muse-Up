@@ -191,22 +191,21 @@ export default function PostModal({ onClose, postId }: Props) {
     }
   }
   // ⭐ SHARE FUNCTION
-  function handleShare() {
-    if (!post?.id) return;
-
-    const url = `${window.location.origin}/posts/${post.id}`;
+  function handleShare(p) {
+    const shareUrl = `${window.location.origin}/landing?postId=${p.id}`;
 
     if (navigator.share) {
       navigator.share({
-        title: post.title,
-        text: "Check out this artwork!",
-        url,
-      }).catch(() => { });
+        title: p.title,
+        text: p.body,
+        url: shareUrl,
+      });
     } else {
-      navigator.clipboard.writeText(url);
-      alert("Link copied to clipboard!");
+      navigator.clipboard.writeText(shareUrl);
+      alert("Link copied!");
     }
   }
+
   return (
     <div className={styles.bg}>
       <div className={styles.box}>
@@ -244,44 +243,53 @@ export default function PostModal({ onClose, postId }: Props) {
             </div>
             {showShare && (
               <div className={styles.shareMenu}>
+
+                {/* ⭐ COPY LINK */}
                 <button
                   className={styles.shareItem}
                   onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
+                    const shareUrl = `${window.location.origin}/landing?postId=${post?.id}`;
+                    navigator.clipboard.writeText(shareUrl);
                     setShowShare(false);
                   }}
                 >
                   <Copy size={18} /> Copy link
                 </button>
 
+                {/* ⭐ WHATSAPP */}
                 <button
                   className={styles.shareItem}
                   onClick={() => {
-                    window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`);
+                    const shareUrl = `${window.location.origin}/landing?postId=${post?.id}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`);
                     setShowShare(false);
                   }}
                 >
                   <MessageCircle size={18} /> WhatsApp
                 </button>
 
+                {/* ⭐ EMAIL */}
                 <button
                   className={styles.shareItem}
                   onClick={() => {
-                    window.location.href = `mailto:?subject=Check this out&body=${encodeURIComponent(window.location.href)}`;
+                    const shareUrl = `${window.location.origin}/landing?postId=${post?.id}`;
+                    window.location.href = `mailto:?subject=Check this out&body=${encodeURIComponent(shareUrl)}`;
                     setShowShare(false);
                   }}
                 >
                   <Mail size={18} /> Email
                 </button>
 
+                {/* ⭐ NATIVE SHARE (MOBILE) */}
                 {navigator.share && (
                   <button
                     className={styles.shareItem}
                     onClick={() => {
+                      const shareUrl = `${window.location.origin}/landing?postId=${post?.id}`;
                       navigator.share({
                         title: post?.title,
                         text: post?.body,
-                        url: window.location.href,
+                        url: shareUrl,
                       });
                       setShowShare(false);
                     }}
@@ -289,8 +297,10 @@ export default function PostModal({ onClose, postId }: Props) {
                     <Send size={18} /> Share (device)
                   </button>
                 )}
+
               </div>
             )}
+
             {/* REACTIONS MENU */}
             {showReactions && (
               <div className={styles.reactionsMenu}>
