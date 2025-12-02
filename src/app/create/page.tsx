@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo } from "react";
 import styles from "./create.module.css";
-
+import { useFirebaseUid } from "../../hooks/useFirebaseUid"; // <-- כמו בפרופיל
 type Visibility = "public" | "private";
 
 function PreviewCard({
@@ -52,7 +52,7 @@ export default function CreatePage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-
+  const { uid } = useFirebaseUid();
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [tagsInput, setTagsInput] = useState("");
@@ -104,52 +104,68 @@ export default function CreatePage() {
     return data.url;
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    resetMessages();
+async function onSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  resetMessages();
 
-    try {
-      if (!file) return setMsg({ type: "error", text: "Please choose an artwork image." });
-      if (!title.trim()) return setMsg({ type: "error", text: "Title is required." });
-
-      setLoading(true);
-
-      const imageUrl = await uploadToServer(file);
-
-      const payload = {
-        title,
-        image_url: imageUrl,
-        user_id: "64b7e56b7b2f0a1234567890",
-        body: caption,
-        category,
-        tags,
-        visibility,
-      };
-
-      const res = await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Failed to create post");
-
-      setMsg({ type: "success", text: "Artwork published successfully!" });
-
-      setFile(null);
-      setPreview(null);
-      setTitle("");
-      setCaption("");
-      setTagsInput("");
-      setCategory("Digital");
-      setVisibility("public");
-    } catch (err: any) {
-      setMsg({ type: "error", text: err.message || "Something went wrong." });
-    } finally {
-      setLoading(false);
-    }
+  if (!uid) {
+    setMsg({
+      type: "error",
+      text: "You must be logged in to publish artwork.",
+    });
+    return;
   }
 
+  try {
+    if (!file)
+      return setMsg({
+        type: "error",
+        text: "Please choose an artwork image.",
+      });
+    if (!title.trim())
+      return setMsg({
+        type: "error",
+        text: "Title is required.",
+      });
+
+    setLoading(true);
+
+    const imageUrl = await uploadToServer(file);
+
+    const payload = {
+      title,
+      image_url: imageUrl,
+      user_uid: uid,  
+      body: caption,
+      category,
+      tags,
+      visibility,
+    };
+
+    const res = await fetch("/api/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error("Failed to create post");
+
+    setMsg({ type: "success", text: "Artwork published successfully!" });
+
+    // reset form...
+    setFile(null);
+    setPreview(null);
+    setTitle("");
+    setCaption("");
+    setTagsInput("");
+    setCategory("Digital");
+    setVisibility("public");
+  } catch (err: any) {
+    setMsg({ type: "error", text: err.message || "Something went wrong." });
+  } finally {
+    setLoading(false);
+  }
+}
   return (
     <div className={styles.wrapper}>
       <h1 className={styles.pageTitle}>Create new post</h1>

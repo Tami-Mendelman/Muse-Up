@@ -98,24 +98,32 @@ export default function ProfilePage() {
     useProfileEditForm(user ?? null);
 
   const {
-    data: posts = [],
-    isLoading: loadingPosts,
-    error: postsError,
-  } = useQuery<PostCard[]>({
-    queryKey: ["posts", user?._id],
-    queryFn: () => getUserPosts(user!._id),
-    enabled: !!user && activeTab === "posts",
-  });
+  data: posts = [],
+  isLoading: loadingPosts,
+  error: postsError,
+} = useQuery<PostCard[]>({
+  queryKey: ["posts", user?.firebase_uid],
+  enabled: !!user?.firebase_uid && activeTab === "posts",
+ queryFn: async () => {
+  if (!user || !user.firebase_uid) return [];
+
+  const result = await getUserPosts(user.firebase_uid);
+  console.log("🔥 FETCHED POSTS FROM API:", result);
+
+  return result;
+},
+});
 
   const {
-    data: savedPosts = [],
-    isLoading: loadingSaved,
-    error: savedError,
-  } = useQuery<PostCard[]>({
-    queryKey: ["savedPosts"],
-    queryFn: getSavedPosts,
-    enabled: activeTab === "saved",
-  });
+  data: savedPosts = [],
+  isLoading: loadingSaved,
+  error: savedError,
+} = useQuery<PostCard[]>({
+  queryKey: ["savedPosts", uid],
+  queryFn: () => getSavedPosts(uid!),
+  enabled: !!uid && activeTab === "saved",
+});
+
 
   const {
     data: joinedSubmissions = [],
@@ -268,13 +276,11 @@ export default function ProfilePage() {
     }
   }
 
-  /** 🟥 מחיקה — פותח מודל */
   function handleDeletePostClick(e: MouseEvent, postId: string) {
     e.stopPropagation();
     setDeletePostId(postId);
   }
 
-  /** 🟥 מחיקה — אישור במודל */
   async function confirmDeletePost() {
     if (!deletePostId) return;
 
@@ -289,7 +295,7 @@ export default function ProfilePage() {
       }
 
       queryClient.invalidateQueries({
-        queryKey: ["posts", user?._id],
+      queryKey: ["posts", user?.firebase_uid]
       });
     } catch (err) {
       console.error("Delete error:", err);
@@ -356,7 +362,6 @@ export default function ProfilePage() {
         {[
           ["posts", "My Posts"],
           ["saved", "Saved"],
-          ["collections", "Collections"],
           ["challenge", "Challenge"],
           ["edit", "Edit"],
         ].map(([key, label]) => (
@@ -404,7 +409,6 @@ export default function ProfilePage() {
                       className={styles.postImage}
                     />
 
-                    {/* כפתורי עריכה/מחיקה בהובר */}
                     <div className={styles.postActions}>
                       <button
                         className={styles.postActionBtn}

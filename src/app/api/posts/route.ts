@@ -4,43 +4,43 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
 import PostModel from "../../../models/Post";
 import User from "../../../models/User";
-import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+    const firebase_uid = searchParams.get("firebase_uid");
 
     const filter: any = {};
-    if (userId) {
-      filter.user_id = userId;
+
+    if (firebase_uid) {
+      // ❗ מסננים לפי firebase_uid ישירות
+      filter.user_id = firebase_uid;
     }
 
-    const posts = await (PostModel as any)
-      .find(filter)
+    const posts = await PostModel.find(filter)
       .sort({ created_at: -1 })
       .lean();
 
     const populatedPosts = await Promise.all(
       posts.map(async (post: any) => {
-        let author = null;
+        let author = await User.findOne({ firebase_uid: post.user_id })
+          .lean()
+          .catch(() => null);
 
-        if (post.user_id && mongoose.isValidObjectId(post.user_id)) {
-          const user = await User.findById(post.user_id).lean().catch(() => null);
-
-          if (user) {
-            author = {
-              name: user.name,
-              avatar_url: user.avatar_url ?? user.profil_url ?? null,
-              followers_count: user.followers_count,
-              username: user.username,
-            };
-          }
-        }
-
-        return { ...post, author };
+        return {
+          ...post,
+          author:
+            author
+              ? {
+                  name: author.name,
+                  avatar_url: author.avatar_url ?? author.profil_url ?? null,
+                  followers_count: author.followers_count,
+                  username: author.username,
+                }
+              : null,
+        };
       })
     );
 
@@ -54,41 +54,57 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// ---------------- CREATE POST ----------------
 export async function POST(req: NextRequest) {
   try {
     await dbConnect();
 
     const body = await req.json();
-
     const {
       title,
       body: content,
       image_url,
-      user_id,
+      user_uid,
       category,
       tags,
       visibility,
     } = body;
 
-    if (!title || !image_url || !user_id) {
+    if (!title || !image_url || !user_uid) {
       return NextResponse.json(
-        { error: "title, image_url and user_id are required" },
+        { error: "title, image_url and user_uid are required" },
         { status: 400 }
       );
     }
 
-    const newPost = await (PostModel as any).create({
+    const user = await User.findOne({ firebase_uid: user_uid }).lean();
+    if (!user) {
+      return NextResponse.json(
+        { error: "No user found for this firebase UID" },
+        { status: 404 }
+      );
+    }
+
+    const lastPost = await PostModel.findOne().sort({ id: -1 }).lean();
+    const nextId = lastPost?.id ? lastPost.id + 1 : 1;
+
+    const newPost = await PostModel.create({
+      id: nextId,
       title,
       body: content ?? "",
       image_url,
-      user_id,
       category: category ?? "",
       tags: tags ?? [],
       visibility: visibility ?? "public",
       status: "active",
       likes_count: 0,
       comments_count: 0,
+
+      // ❗ שומרים firebase_uid ולא ObjectId
+      user_id: user_uid,
+      user_uid,
       created_at: new Date(),
+      updated_at: new Date(),
     });
 
     return NextResponse.json(newPost, { status: 201 });

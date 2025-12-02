@@ -9,7 +9,7 @@ export function useSocket() {
   useEffect(() => {
     if (socket) return;
 
-    const newSocket = io("http://localhost:4000", {
+    const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
       transports: ["websocket"],
     });
 

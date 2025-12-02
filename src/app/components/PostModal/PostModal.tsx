@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, type FormEvent, useCallback } from "react";
 import styles from "./PostModal.module.css";
 
+import { savePost, unsavePost } from "../../../services/postService";
+import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
+
 type Comment = {
   id: number;
   post_id: string;
@@ -22,6 +25,8 @@ const DEFAULT_AVATAR =
   "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
 
 export default function PostModal({ onClose, postId }: Props) {
+  const { uid } = useFirebaseUid();
+
   const [post, setPost] = useState<any>(null);
   const [loadingPost, setLoadingPost] = useState(true);
 
@@ -43,18 +48,13 @@ export default function PostModal({ onClose, postId }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const emojiRef = useRef<HTMLDivElement | null>(null);
 
-  // ----------------------------------------
-  // CLEAN FIXED USE EFFECT
-  // ----------------------------------------
+  // Disable scroll under modal
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    return () => { document.body.style.overflow = prev; };
   }, []);
 
-  // Autofocus
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -68,14 +68,14 @@ export default function PostModal({ onClose, postId }: Props) {
       const data = await res.json();
       setPost(data);
       setLikes(data.likes_count ?? 0);
+      console.log("📌 MODAL POST:", data);
+
     } finally {
       setLoadingPost(false);
     }
   }, [postId]);
 
-  useEffect(() => {
-    loadPost();
-  }, [loadPost]);
+  useEffect(() => { loadPost(); }, [loadPost]);
 
   // Load comments
   const loadComments = useCallback(async () => {
@@ -90,20 +90,18 @@ export default function PostModal({ onClose, postId }: Props) {
     }
   }, [postId]);
 
-  useEffect(() => {
-    loadComments();
-  }, [loadComments]);
+  useEffect(() => { loadComments(); }, [loadComments]);
 
-  // Restore Like & Save state
+  // Restore Like & Save local-only state
   useEffect(() => {
     const likedArr: string[] = JSON.parse(localStorage.getItem("likedPosts") || "[]");
     setLiked(likedArr.includes(postId));
 
+    // saved is now synced from server, but keep initial UI stable
     const savedArr: string[] = JSON.parse(localStorage.getItem("savedPosts") || "[]");
     setSaved(savedArr.includes(postId));
   }, [postId]);
 
-  // Scroll comments
   useEffect(() => {
     commentsRef.current?.scrollTo({
       top: commentsRef.current.scrollHeight,
@@ -111,7 +109,7 @@ export default function PostModal({ onClose, postId }: Props) {
     });
   }, [comments.length]);
 
-  // Close emoji picker when clicking outside
+  // Close emoji picker outside click
   useEffect(() => {
     function closePicker(e: MouseEvent) {
       if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
@@ -121,11 +119,6 @@ export default function PostModal({ onClose, postId }: Props) {
     if (showEmojiPicker) document.addEventListener("mousedown", closePicker);
     return () => document.removeEventListener("mousedown", closePicker);
   }, [showEmojiPicker]);
-
-  // ----------------------------------------
-  // ACTIONS
-  // ----------------------------------------
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!commentText.trim() || sending) return;
@@ -177,18 +170,23 @@ export default function PostModal({ onClose, postId }: Props) {
     }
   }
 
-  function handleSave() {
+  // ⭐ UPDATED — SAVE USING MONGODB
+  async function handleSave() {
+    if (!uid || !post?.id) return;
+
     const newSaved = !saved;
     setSaved(newSaved);
 
-    const arr: string[] = JSON.parse(localStorage.getItem("savedPosts") || "[]");
-    const updated = newSaved ? [...arr, postId] : arr.filter((x) => x !== postId);
-    localStorage.setItem("savedPosts", JSON.stringify(updated));
+    try {
+      if (newSaved) {
+        await savePost(uid, post.id);
+      } else {
+        await unsavePost(uid, post.id);
+      }
+    } catch (e) {
+      setSaved(!newSaved);
+    }
   }
-
-  // ----------------------------------------
-  // RENDER
-  // ----------------------------------------
 
   return (
     <div className={styles.bg}>
