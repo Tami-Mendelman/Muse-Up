@@ -1,24 +1,27 @@
-// src/services/savedPostService.ts
 import { PostCard } from "./postService";
 
-export async function getSavedPosts(): Promise<PostCard[]> {
-  const savedIds = JSON.parse(localStorage.getItem("savedPosts") || "[]");
-
-  if (savedIds.length === 0) {
+export async function getSavedPostIds(uid: string): Promise<number[]> {
+  const res = await fetch(`/api/users/${uid}/saved-posts`);
+  // עכשיו ה-API תמיד מחזיר 200, אז אפשר לא לזרוק:
+  if (!res.ok) {
+    console.error("Failed to fetch saved post IDs, status:", res.status);
     return [];
   }
+  return res.json();
+}
 
-  const results: PostCard[] = [];
+export async function getSavedPosts(uid: string): Promise<PostCard[]> {
+  const ids = await getSavedPostIds(uid);
 
-  await Promise.all(
-    savedIds.map(async (id: number) => {
+  if (ids.length === 0) return [];
+
+  const posts = await Promise.all(
+    ids.map(async (id: number) => {
       const res = await fetch(`/api/posts/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        results.push(data);
-      }
+      if (!res.ok) return null;
+      return res.json();
     })
   );
 
-  return results;
+  return posts.filter(Boolean) as PostCard[];
 }

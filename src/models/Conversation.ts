@@ -16,11 +16,19 @@ const ConversationSchema = new Schema(
     lastMessageAt: {
       type: Date,
     },
+    unreadByUser: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
+
 const Conversation =
   models.Conversation || model("Conversation", ConversationSchema);
+
 export default Conversation;
+ 

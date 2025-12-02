@@ -11,7 +11,12 @@ type ParamsCtx = {
   params: Promise<{ id: string }>;
 };
 
+const DEFAULT_AVATAR =
+  "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
 
+/* ---------------------------------------------------
+   GET /api/posts/[id]
+--------------------------------------------------- */
 export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   try {
     // auth by token in cookie
@@ -25,45 +30,60 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
     await dbConnect();
 
-    const isObjectId = mongoose.isValidObjectId(id);
-    const query = isObjectId ? { _id: id } : { id: Number(id) };
+    // אפשר גם ObjectId וגם id מספרי
+    const query = mongoose.isValidObjectId(id)
+      ? { _id: id }
+      : { id: Number(id) };
 
     const post = await (Post as any).findOne(query).lean();
+
     if (!post) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
 
-    let author = null;
+    let author: any = null;
+
+    // 🔹 1) user_id הוא ObjectId → למצוא לפי _id
     if (post.user_id && mongoose.isValidObjectId(post.user_id)) {
-      const user = await (User as any)
-        .findById(post.user_id)
+      const user = await User.findById(post.user_id).lean().catch(() => null);
+
+      if (user) {
+        author = {
+          name: user.name || "Unknown",
+          username: user.username || "",
+          followers_count: user.followers_count ?? 0,
+          avatar_url: user.avatar_url || user.profil_url || DEFAULT_AVATAR,
+        };
+      }
+    }
+
+    // 🔹 2) אם עדיין אין author — user_id הוא בעצם firebase_uid
+    if (!author && post.user_id) {
+      const user = await User.findOne({ firebase_uid: post.user_id })
         .lean()
         .catch(() => null);
 
       if (user) {
         author = {
           name: user.name || "Unknown",
-          avatar_url:
-            user.avatar_url ||
-            user.profil_url ||
-            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+          username: user.username || "",
           followers_count: user.followers_count ?? 0,
-          username: user.username ?? "",
+          avatar_url: user.avatar_url || user.profil_url || DEFAULT_AVATAR,
         };
       }
     }
+
     const finalPost = {
       ...post,
-      image_url:
-        post.image_url ??
-        "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1730000000/placeholder.jpg",
       author:
         author || {
           name: "Unknown",
-          avatar_url:
-            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
           followers_count: 0,
+          avatar_url: DEFAULT_AVATAR,
         },
+      image_url:
+        post.image_url ||
+        "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1730000000/placeholder.jpg",
     };
 
     return NextResponse.json(finalPost, { status: 200 });
@@ -75,6 +95,10 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
     );
   }
 }
+
+/* ---------------------------------------------------
+   PATCH /api/posts/[id]
+--------------------------------------------------- */
 export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
     // auth by token in cookie
@@ -85,10 +109,12 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
     }
 
     const { id } = await ctx.params;
+
+    await dbConnect();
+
     const isObjectId = mongoose.isValidObjectId(id);
     const query = isObjectId ? { _id: id } : { id: Number(id) };
 
-    await dbConnect();
     const body = await req.json().catch(() => ({}));
 
     if (body.delta !== undefined) {
@@ -144,6 +170,10 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   }
 }
 
+
+/* ---------------------------------------------------
+   DELETE /api/posts/[id]
+--------------------------------------------------- */
 export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
   try {
     // auth by token in cookie
@@ -178,4 +208,3 @@ export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
     );
   }
 }
-

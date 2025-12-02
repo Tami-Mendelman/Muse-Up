@@ -9,7 +9,7 @@ import StartChatButton from "../../components/StartChatButton/StartChatButton";
 
 type ArtistUser = {
   _id: string;
-  firebase_uid: string;   
+  firebase_uid: string;
   username: string;
   name?: string;
   avatar_url?: string;
@@ -21,11 +21,13 @@ type ArtistUser = {
   artworks_count: number;
   likes_received: number;
 };
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSelectArtist?: (artist: ArtistUser) => void;
 };
+
 export default function ArtistSearchDrawer({
   isOpen,
   onClose,
@@ -36,6 +38,7 @@ export default function ArtistSearchDrawer({
   const [searchMode, setSearchMode] = useState<
     "name" | "country" | "specialty"
   >("name");
+
   const {
     data: artists = [],
     isLoading: loading,
@@ -47,6 +50,7 @@ export default function ArtistSearchDrawer({
     },
     enabled: isOpen,
   });
+
   const filteredArtists = useMemo(() => {
     const qLower = q.toLowerCase();
     return artists.filter((artist) => {
@@ -57,7 +61,9 @@ export default function ArtistSearchDrawer({
       ).toLowerCase();
       const countryText = (artist.location || "").toLowerCase();
       const specialtyText = (artist.bio || "").toLowerCase();
+
       let matchSearch = true;
+
       if (qLower) {
         switch (searchMode) {
           case "name":
@@ -71,135 +77,144 @@ export default function ArtistSearchDrawer({
             break;
         }
       }
+
       return matchSearch;
     });
   }, [artists, q, searchMode]);
 
   if (!isOpen) return null;
+
   return (
-  <div
-    className={styles.overlay}
-    data-sidebar-ignore-click="true"
-  >
-    <aside className={styles.drawer}>
-      <header className={styles.header}>
-        <button
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label="Close"
-        >
-          ✕
-        </button>
-        <div className={styles.headerText}>
-          <h2 className={styles.title}>Discover artists</h2>
-          <p className={styles.subtitle}>
-            Search and filter creators from the MuseUp community.
-          </p>
+    <div
+      className={styles.overlay}
+      data-sidebar-ignore-click="true"
+    >
+      <aside className={styles.drawer}>
+        <header className={styles.header}>
+          <button
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+          <div className={styles.headerText}>
+            <h2 className={styles.title}>Discover artists</h2>
+            <p className={styles.subtitle}>
+              Search and filter creators from the MuseUp community.
+            </p>
+          </div>
+        </header>
+
+        <div className={styles.searchBar}>
+          <input
+            type="text"
+            placeholder="Search artist or artwork"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
         </div>
-      </header>
-      <div className={styles.searchBar}>
-        <input
-          type="text"
-          placeholder="Search artist or artwork"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-      </div>
-      <div className={styles.filters}>
-        <button
-          type="button"
-          className={`${styles.filterBtn} ${
-            searchMode === "name" ? styles.filterBtnActive : ""
-          }`}
-          onClick={() => setSearchMode("name")}
-        >
-          Name
-        </button>
-        <button
-          type="button"
-          className={`${styles.filterBtn} ${
-            searchMode === "country" ? styles.filterBtnActive : ""
-          }`}
-          onClick={() => setSearchMode("country")}
-        >
-          Country
-        </button>
-        <button
-          type="button"
-          className={`${styles.filterBtn} ${
-            searchMode === "specialty" ? styles.filterBtnActive : ""
-          }`}
-          onClick={() => setSearchMode("specialty")}
-        >
-          Specialty
-        </button>
-      </div>
-      <div className={styles.resultsHeader}>
-        <span className={styles.resultsLabel}>Artists</span>
-        <span className={styles.resultsCount}>
-          {filteredArtists.length} found
-        </span>
-      </div>
-      <div className={styles.list}>
-        {loading && (
-          <div className={styles.loading}>Loading artists…</div>
-        )}
-        {!loading &&
-          filteredArtists.map((artist) => (
-            <div
-              key={artist._id}
-              className={styles.item}
-              onClick={() => {
-                if (onSelectArtist) {
-                  onSelectArtist(artist);
-                }
-                if (artist.firebase_uid) {
-                  router.push(`/users/${artist.firebase_uid}`);
-                }
-                onClose();
-              }}
-            >
-              <div className={styles.avatar}>
-                <img
-                  src={artist.profil_url || "/default-avatar.png"}
-                  alt={artist.username}
-                />
-              </div>
 
-              <div className={styles.info}>
-                <div className={styles.name}>
-                  {artist.name || artist.username}
+        <div className={styles.filters}>
+          <button
+            type="button"
+            className={`${styles.filterBtn} ${
+              searchMode === "name" ? styles.filterBtnActive : ""
+            }`}
+            onClick={() => setSearchMode("name")}
+          >
+            Name
+          </button>
+          <button
+            type="button"
+            className={`${styles.filterBtn} ${
+              searchMode === "country" ? styles.filterBtnActive : ""
+            }`}
+            onClick={() => setSearchMode("country")}
+          >
+            Country
+          </button>
+          <button
+            type="button"
+            className={`${styles.filterBtn} ${
+              searchMode === "specialty" ? styles.filterBtnActive : ""
+            }`}
+            onClick={() => setSearchMode("specialty")}
+          >
+            Specialty
+          </button>
+        </div>
+
+        <div className={styles.resultsHeader}>
+          <span className={styles.resultsLabel}>Artists</span>
+          <span className={styles.resultsCount}>
+            {filteredArtists.length} found
+          </span>
+        </div>
+
+        <div className={styles.list}>
+          {loading && (
+            <div className={styles.loading}>Loading artists…</div>
+          )}
+
+          {!loading &&
+            filteredArtists.map((artist) => (
+              <div
+                key={artist._id}
+                className={styles.item}
+                onClick={() => {
+                  if (onSelectArtist) {
+                    onSelectArtist(artist);
+                  }
+                  if (artist.firebase_uid) {
+                    router.push(`/users/${artist.firebase_uid}`);
+                  }
+                  onClose();
+                }}
+              >
+                <div className={styles.avatar}>
+                  <img
+                    src={artist.profil_url || "/default-avatar.png"}
+                    alt={artist.username}
+                  />
                 </div>
-                <div className={styles.meta}>
-                  {artist.bio
-                    ? artist.bio.slice(0, 50) +
-                      (artist.bio.length > 50 ? "…" : "")
-                    : "Artist"}
-                </div>
-                {artist.location && (
-                  <div className={styles.location}>
-                    {artist.location}
+
+                <div className={styles.info}>
+                  <div className={styles.name}>
+                    {artist.name || artist.username}
                   </div>
-                )}
-
-                <div className={styles.actionsRow}>
-                  {artist.firebase_uid && (
-                    <StartChatButton
-                      otherUserUid={artist.firebase_uid}
-                      label="Message"
-                       onClose={onClose}
-                    />
+                  <div className={styles.meta}>
+                    {artist.bio
+                      ? artist.bio.slice(0, 50) +
+                        (artist.bio.length > 50 ? "…" : "")
+                      : "Artist"}
+                  </div>
+                  {artist.location && (
+                    <div className={styles.location}>
+                      {artist.location}
+                    </div>
                   )}
+                  <div
+                    className={styles.actionsRow}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {artist.firebase_uid && (
+                      <StartChatButton
+                        otherUserUid={artist.firebase_uid}
+                        label="Message"
+                        onClose={onClose}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-        {!loading && filteredArtists.length === 0 && (
-          <div className={styles.empty}>No artists found.</div>
-        )}
-      </div>
-    </aside>
-  </div>
-);
+          {!loading && filteredArtists.length === 0 && (
+            <div className={styles.empty}>No artists found.</div>
+          )}
+        </div>
+      </aside>
+    </div>
+  );
 }
