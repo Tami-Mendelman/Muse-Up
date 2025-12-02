@@ -361,6 +361,25 @@ const performDeleteMessage = () => {
       }
     );
   };
+function getDateLabel(dateStr: string) {
+  const date = new Date(dateStr);
+  const today = new Date();
+
+  const d1 = date.toDateString();
+  const d2 = today.toDateString();
+
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (d1 === d2) return "היום";
+  if (d1 === yesterday.toDateString()) return "אתמול";
+
+  return date.toLocaleDateString("he-IL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
 
   return (
     <div className={styles.page}>
@@ -491,59 +510,67 @@ const performDeleteMessage = () => {
                 ref={chatBoxRef}
                 onScroll={handleChatScroll}
               >
-                {messages.map((m) => {
-                  const isMe = m.sender_uid === currentUid;
-                  const isEditing = editingMessageId === m._id;
+              {messages.map((m, index) => {
+  const isMe = m.sender_uid === currentUid;
+  const isEditing = editingMessageId === m._id;
 
-                  return (
-                    <div
-                      key={m._id}
-                      className={isMe ? styles.rowMe : styles.rowOther}
-                    >
-                      <div
-                        className={
-                          isMe ? styles.bubbleMe : styles.bubbleOther
-                        }
-                      >
-                        <div className={styles.messageText}>{m.text}</div>
+  const currentDate = new Date(m.createdAt).toDateString();
+  const prevDate =
+    index > 0 ? new Date(messages[index - 1].createdAt).toDateString() : null;
 
-                        <div className={styles.messageTimeRow}>
-                          <span className={styles.messageTime}>
-                            {new Date(m.createdAt).toLocaleTimeString(
-                              "he-IL",
-                              { hour: "2-digit", minute: "2-digit" }
-                            )}
-                          </span>
+  const shouldShowDate = index === 0 || currentDate !== prevDate;
 
-                          {isMe && (
-                            <div className={styles.messageActions}>
-                              <button
-                                type="button"
-                                className={styles.messageActionBtn}
-                                onClick={() => startEditMessage(m)}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                className={`${styles.messageActionBtn} ${styles.messageActionDelete}`}
-                                onClick={() => handleDeleteMessage(m._id)}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                        </div>
+  return (
+    <div key={m._id}>
+      {shouldShowDate && (
+        <div className={styles.dateSeparator}>
+          {getDateLabel(m.createdAt)}
+        </div>
+      )}
 
-                        {isEditing && (
-                          <div className={styles.editBadge}>
-                            Editing this message
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+      <div className={isMe ? styles.rowMe : styles.rowOther}>
+        <div className={isMe ? styles.bubbleMe : styles.bubbleOther}>
+          <div className={styles.messageText}>{m.text}</div>
+
+          <div className={styles.messageTimeRow}>
+            <span className={styles.messageTime}>
+              {new Date(m.createdAt).toLocaleTimeString("he-IL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+
+            {isMe && (
+              <div className={styles.messageActions}>
+                <button
+                  type="button"
+                  className={styles.messageActionBtn}
+                  onClick={() => startEditMessage(m)}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.messageActionBtn} ${styles.messageActionDelete}`}
+                  onClick={() => handleDeleteMessage(m._id)}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+
+          {isEditing && (
+            <div className={styles.editBadge}>
+              Editing this message
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+})}
+
                 <div ref={bottomRef} />
               </div>
 
