@@ -5,13 +5,14 @@ import { dbConnect } from "../../../lib/mongoose";
 import PostModel from "../../../models/Post";
 import User from "../../../models/User";
 import mongoose from "mongoose";
+import { verifyToken } from "../../../lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
     // auth by token in cookie
     const token = req.cookies.get("token")?.value;
-    const user = await verifyToken(token || "");
-    if (!user) {
+    const _user = await verifyToken(token || "");
+    if (!_user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -42,11 +43,11 @@ export async function GET(req: NextRequest) {
           author:
             author
               ? {
-                  name: author.name,
-                  avatar_url: author.avatar_url ?? author.profil_url ?? null,
-                  followers_count: author.followers_count,
-                  username: author.username,
-                }
+                name: author.name,
+                avatar_url: author.avatar_url ?? author.profil_url ?? null,
+                followers_count: author.followers_count,
+                username: author.username,
+              }
               : null,
         };
       })
@@ -67,8 +68,8 @@ export async function POST(req: NextRequest) {
   try {
     // auth by token in cookie
     const token = req.cookies.get("token")?.value;
-    const user = await verifyToken(token || "");
-    if (!user) {
+    const _user = await verifyToken(token || "");
+    if (!_user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -92,8 +93,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = await User.findOne({ firebase_uid: user_uid }).lean();
-    if (!user) {
+    const foundUser = await User.findOne({ firebase_uid: user_uid }).lean();
+    if (!foundUser) {
       return NextResponse.json(
         { error: "No user found for this firebase UID" },
         { status: 404 }
@@ -115,7 +116,6 @@ export async function POST(req: NextRequest) {
       likes_count: 0,
       comments_count: 0,
 
-      // ❗ שומרים firebase_uid ולא ObjectId
       user_id: user_uid,
       user_uid,
       created_at: new Date(),
