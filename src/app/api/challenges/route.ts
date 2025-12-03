@@ -1,25 +1,33 @@
 export const runtime = "nodejs";
 
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { dbConnect } from "../../../lib/mongoose";
 import Challenge from "../../../models/Challenge";
+import { verifyToken } from "../../../lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status"); 
+    const status = searchParams.get("status");
 
     const filter: any = {};
     if (status) filter.status = status;
 
     const challenges = await (Challenge as any).find(filter).lean();
 
-    return Response.json(challenges, { status: 200 });
+    return NextResponse.json(challenges, { status: 200 });
   } catch (err: any) {
     console.error("GET /api/challenges error:", err);
-    return Response.json(
+    return NextResponse.json(
       { message: "Failed to fetch challenges", details: err.message },
       { status: 500 }
     );
@@ -28,12 +36,19 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // auth by token in cookie
+    const token = req.cookies.get("token")?.value;
+    const user = await verifyToken(token || "");
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
 
     const { title, description, picture_url, status } = await req.json();
 
     if (!title || !description || !picture_url) {
-      return Response.json(
+      return NextResponse.json(
         { message: "title, description and picture_url are required" },
         { status: 400 }
       );
@@ -56,10 +71,10 @@ export async function POST(req: NextRequest) {
       })
       .then((doc: any) => doc.toObject());
 
-    return Response.json(newChallenge, { status: 201 });
+    return NextResponse.json(newChallenge, { status: 201 });
   } catch (err: any) {
     console.error("POST /api/challenges error:", err);
-    return Response.json(
+    return NextResponse.json(
       { message: "Failed to create challenge", details: err.message },
       { status: 500 }
     );

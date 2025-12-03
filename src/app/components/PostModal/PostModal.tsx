@@ -11,6 +11,8 @@ import { usePost } from "../../../hooks/usePost";
 import { useComments } from "../../../hooks/useComments";
 
 import { Share2, Copy, Mail, Send, MessageCircle } from "lucide-react";
+import AiArtCritiqueButton from "../../components/AiArtCritiqueButton";
+
 type Props = {
   onClose: () => void;
   postId: string;
@@ -22,19 +24,17 @@ type Comment = {
   user_id: string;
   body: string;
 };
+
+const EMOJIS = ["😊", "😂", "😍", "🥰", "😎", "🔥", "👍"];
+const DEFAULT_AVATAR =
+  "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
+
 export default function PostModal({ onClose, postId }: Props) {
   const { uid } = useFirebaseUid();
 
   /* ✨ React Query Data */
-  const {
-    data: post,
-    isLoading: loadingPost,
-  } = usePost(postId);
-
-  const {
-    data: comments = [],
-    isLoading: loadingComments,
-  } = useComments(postId);
+  const { data: post, isLoading: loadingPost } = usePost(postId);
+  const { data: comments = [], isLoading: loadingComments } = useComments(postId);
 
   /* ✨ Local UI State */
   const [commentText, setCommentText] = useState("");
@@ -53,6 +53,8 @@ export default function PostModal({ onClose, postId }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const emojiRef = useRef<HTMLDivElement | null>(null);
   const shareRef = useRef<HTMLDivElement | null>(null);
+
+  /* ✨ UI Hook */
   useModalUI({
     autoFocusRef: inputRef,
     emojiRef,
@@ -62,6 +64,8 @@ export default function PostModal({ onClose, postId }: Props) {
     onCloseEmoji: () => setShowEmojiPicker(false),
     onCloseShare: () => setShowShare(false),
   });
+
+  /* --------------------------------------------- */
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!commentText.trim() || sending) return;
@@ -69,7 +73,7 @@ export default function PostModal({ onClose, postId }: Props) {
     setSending(true);
 
     try {
-      const res = await fetch(`/api/comments`, {
+      await fetch(`/api/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -79,13 +83,12 @@ export default function PostModal({ onClose, postId }: Props) {
         }),
       });
 
-      if (!res.ok) return;
-
       setCommentText("");
     } finally {
       setSending(false);
     }
   }
+
   async function handleLike() {
     if (savingLike || !post) return;
 
@@ -106,41 +109,39 @@ export default function PostModal({ onClose, postId }: Props) {
       setSavingLike(false);
     }
   }
+
   async function handleSave() {
     if (!uid || !post?.id) return;
     const newSaved = !saved;
     setSaved(newSaved);
 
     try {
-      if (newSaved) {
-        await savePost(uid, post.id);
-      } else {
-        await unsavePost(uid, post.id);
-      }
+      if (newSaved) await savePost(uid, post.id);
+      else await unsavePost(uid, post.id);
     } catch {
       setSaved(!newSaved);
     }
   }
+
+  /* SHARE ACTIONS */
   function copyShareLink() {
     if (!post?.id) return;
-    const shareUrl = `${window.location.origin}/landing?postId=${post.id}`;
-    navigator.clipboard.writeText(shareUrl);
+    const url = `${window.location.origin}/landing?postId=${post.id}`;
+    navigator.clipboard.writeText(url);
     setShowShare(false);
   }
 
   function shareWhatsApp() {
     if (!post?.id) return;
-    const shareUrl = `${window.location.origin}/landing?postId=${post.id}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`);
+    const url = `${window.location.origin}/landing?postId=${post.id}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(url)}`);
     setShowShare(false);
   }
 
   function shareEmail() {
     if (!post?.id) return;
-    const shareUrl = `${window.location.origin}/landing?postId=${post.id}`;
-    window.location.href = `mailto:?subject=Check this out&body=${encodeURIComponent(
-      shareUrl
-    )}`;
+    const url = `${window.location.origin}/landing?postId=${post.id}`;
+    window.location.href = `mailto:?subject=Check this out&body=${encodeURIComponent(url)}`;
     setShowShare(false);
   }
 
@@ -149,18 +150,22 @@ export default function PostModal({ onClose, postId }: Props) {
   return (
     <div className={styles.bg}>
       <div className={styles.box}>
-        <button className={styles.close} onClick={onClose}>✕</button>
+        <button className={styles.close} onClick={onClose}>
+          ✕
+        </button>
 
+        {/* AI BUTTON */}
+        <div className={styles.aiTopRight}>
+          {post?.image_url && <AiArtCritiqueButton image_url={post.image_url} />}
+        </div>
+
+        {/* MODAL INNER */}
         <div className={styles.inner}>
           {/* LEFT SIDE */}
           <div className={styles.left}>
-            <h2 className={styles.title}>
-              {loadingPost ? "Loading…" : post?.title}
-            </h2>
+            <h2 className={styles.title}>{loadingPost ? "Loading…" : post?.title}</h2>
 
-            <p className={styles.body}>
-              {loadingPost ? "Loading…" : post?.body}
-            </p>
+            <p className={styles.body}>{loadingPost ? "Loading…" : post?.body}</p>
 
             {/* ICON BUTTONS */}
             <div className={styles.icons}>
@@ -178,15 +183,14 @@ export default function PostModal({ onClose, postId }: Props) {
                 {saved ? "✓" : "＋"}
               </button>
 
-              <button className={styles.iconBtn} onClick={() => setShowShare(v => !v)}>
-                <Share2 size={22} strokeWidth={1.8} />
+              <button className={styles.iconBtn} onClick={() => setShowShare((v) => !v)}>
+                <Share2 size={22} />
               </button>
             </div>
 
             {/* SHARE MENU */}
             {showShare && (
               <div ref={shareRef} className={styles.shareMenu}>
-
                 <button className={styles.shareItem} onClick={copyShareLink}>
                   <Copy size={18} /> Copy link
                 </button>
@@ -214,7 +218,6 @@ export default function PostModal({ onClose, postId }: Props) {
                     <Send size={18} /> Share (device)
                   </button>
                 )}
-
               </div>
             )}
 
@@ -227,12 +230,10 @@ export default function PostModal({ onClose, postId }: Props) {
 
               <div className={styles.authorBox}>
                 <img
-                  src={post?.author?.avatar_url}
+                  src={post?.author?.avatar_url || DEFAULT_AVATAR}
                   className={styles.authorAvatar}
                 />
-                <span className={styles.authorName}>
-                  {post?.author?.name}
-                </span>
+                <span className={styles.authorName}>{post?.author?.name}</span>
               </div>
             </div>
 
@@ -264,37 +265,32 @@ export default function PostModal({ onClose, postId }: Props) {
               <button
                 type="button"
                 className={styles.emoji}
-                onClick={() => setShowEmojiPicker(v => !v)}
+                onClick={() => setShowEmojiPicker((v) => !v)}
               >
                 😊
               </button>
             </form>
 
-            {/* EMOJI PICKER */}
             {showEmojiPicker && (
               <div ref={emojiRef} className={styles.emojiPicker}>
-                {["😊", "😂", "😍", "🥰", "😎", "🔥", "👍"].map((em) => (
+                {EMOJIS.map((x) => (
                   <button
-                    key={em}
                     type="button"
+                    key={x}
                     className={styles.emojiItem}
-                    onClick={() => setCommentText(t => t + em)}
+                    onClick={() => setCommentText((t) => t + x)}
                   >
-                    {em}
+                    {x}
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* RIGHT SIDE (IMAGE) */}
+          {/* RIGHT SIDE */}
           <div className={styles.right}>
             {post?.image_url ? (
-              <img
-                src={post.image_url}
-                className={styles.image}
-                alt={post?.title || "Artwork"}
-              />
+              <img src={post.image_url} className={styles.image} />
             ) : (
               <div className={styles.noImage}>No image</div>
             )}

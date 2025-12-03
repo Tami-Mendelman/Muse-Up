@@ -3,29 +3,35 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
+let socketInstance: Socket | null = null;
+
 export function useSocket() {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    if (socket) return;
+    if (!socketInstance) {
+      socketInstance = io("http://localhost:4000", {
+        transports: ["websocket"],
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 500,
+      });
+      socketInstance.on("connect", () => {
+        console.log("CLIENT: connected to socket", socketInstance?.id);
+      });
 
-    const newSocket = io("http://localhost:4000", {
-      transports: ["websocket"],
-    });
+      socketInstance.on("connect_error", (err) => {
+        console.error("CLIENT: connect_error:", err.message);
+      });
 
-    setSocket(newSocket);
+      socketInstance.on("disconnect", () => {
+        console.log("CLIENT: disconnected");
+      });
+    }
 
-    newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id);
-    });
+    setSocket(socketInstance);
 
-    newSocket.on("disconnect", () => {
-      console.log("Socket disconnected");
-    });
-
-    return () => {
-      newSocket.disconnect();
-    };
+    return () => {};
   }, []);
 
   return socket;

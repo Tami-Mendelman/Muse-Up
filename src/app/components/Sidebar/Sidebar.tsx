@@ -11,6 +11,7 @@ import ArtistSearchDrawer from "../../../app/components/ArtistSearchDrawer/Artis
 import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
 import { getUserByUid, type User } from "../../../services/userService";
 import { removeLocalStorageUid } from "../../../lib/localStorage";
+import { RemoveTokenFromCookies } from "../../../services/logoutService";
 
 export default function Sidebar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -148,6 +149,7 @@ export default function Sidebar() {
         <button className={styles.btn} aria-label="Logout"
           onClick={() => {
             removeLocalStorageUid();
+            RemoveTokenFromCookies();
             router.push("/");
           }}
         >
