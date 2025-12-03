@@ -17,15 +17,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 8px;
-  gap: 8px;
+  padding: 8px 6px;          
+  gap: 6px;              
   z-index: 40;
   transition: width 0.25s ease, box-shadow 0.25s ease;
 }
 
-
 .open {
-  width: 120px;
+  width: 96px;            
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
@@ -40,14 +39,15 @@
   }
 }
 
+
 .avatar {
-  width: 72px;
-  height: 72px;
+  width: 60px;             
+  height: 60px;
   border-radius: 50%;
   background: #d9dcee;
   border: 2px solid #fff;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-  margin: 8px 0 10px;
+  margin: 6px 0 8px;        
   object-fit: cover;
   overflow: hidden;
 }
@@ -62,7 +62,7 @@
 .btn {
   all: unset;
   width: 100%;
-  height: 56px;
+  height: 48px;            
   border-radius: 14px;
   display: grid;
   place-items: center;
@@ -75,8 +75,8 @@
 }
 
 .icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;              
+  height: 24px;
   color: #1f2937;
 }
 
@@ -116,8 +116,64 @@
   animation-delay: calc(var(--stagger-step) * 6);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
+  :root {
+    --sidebar-space: 0px;
+  }
+
+  .root {
+    position: fixed;
+    inset: auto 0 0 0;       
+    width: 100%;
+    height: 64px;
+    flex-direction: row;     
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-left: none;
+    border-top: 1px solid #e6e8ef;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.06);
+    background-color: #ffffff !important;
+  }
   .open {
-    width: 64px;
+    width: 100%;
+    box-shadow: none;
+  }
+  .top,
+  .bottom {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    margin: 0 8px 0 0;
+  }
+
+  .nav {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 0;
+    width: auto;
+  }
+
+  .btn {
+    width: auto;
+    height: 44px;
+    border-radius: 999px;
+  }
+
+  .icon {
+    width: 22px;
+    height: 22px;
   }
 }
+

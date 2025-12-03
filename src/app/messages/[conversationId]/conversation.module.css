@@ -1,20 +1,21 @@
 .page {
-  min-height: calc(100vh - 80px);
-  padding: 24px 32px;
-  display: flex;    
+  height: 100vh;
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
 }
 .layout {
-  flex: 1;                  
-  background: #f5f5f7;
-  border-radius: 24px;
-  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.14);
+  flex: 1;
+  height: 100%;
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 300px minmax(0, 1fr);
+  background: #f5f5f7;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.14);
 }
-
-
-
 .sidebar {
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
@@ -48,28 +49,21 @@
 }
 
 .conversationItem {
+  width: 100%;
+  border: none;
+  background: transparent;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-radius: 18px;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: 16px;
   cursor: pointer;
-  width: 100%;
-  background: #ffffff;
-  border: 1px solid transparent;
-
-  transition:
-    background 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.12s ease;
+  transition: background 0.15s ease;
 }
 
 .conversationItem:hover {
-  background: #f8fafc;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  background: #f3f4f6;
 }
-
 
 .conversationItemActive {
   background: #e0f2fe;
@@ -77,14 +71,9 @@
   box-shadow: 0 4px 18px rgba(59, 130, 246, 0.18);
 }
 
-
 .conversationItemUnread {
-  background: #f0f9ff;
-  border: 1px solid #bfdbfe;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
-  transform: translateY(-2px);
+  background: #e8f0ff;
 }
-
 
 .conversationItemUnread .conversationName {
   font-weight: 700;
@@ -133,7 +122,6 @@
 .conversationTime {
   font-size: 11px;
   color: #9ca3af;
-  flex-shrink: 0;
 }
 
 .conversationPreview {
@@ -144,33 +132,52 @@
   text-overflow: ellipsis;
 }
 
-.emptyState {
-  font-size: 13px;
-  color: #9ca3af;
-  padding: 16px 10px;
+.conversationRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.deleteBtn {
+  background: transparent;
+  border: none;
+  color: #d12f1a;
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.deleteBtn:hover {
+  background: #ffe5e5;
+}
+
+.trashIcon {
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
 }
 .chatPane {
   display: flex;
   flex-direction: column;
   background: #e5e7eb;
-  height: 100%;     
-  min-height: 0;    
+  height: 100%;
+  min-height: 0;
 }
-
 .chatEmpty {
   margin: auto;
   text-align: center;
   color: #6b7280;
 }
-
 .chatEmpty h2 {
   margin-bottom: 4px;
 }
+
 .chatWindow {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  flex: 1;       
-  min-height: 0;  
 }
 
 .chatHeader {
@@ -216,8 +223,6 @@
   background: linear-gradient(180deg, #eef2f5 0%, #e3e9ef 100%);
 }
 
-
-
 .rowMe {
   display: flex;
   justify-content: flex-end;
@@ -235,63 +240,98 @@
   max-width: 70%;
   padding: 8px 10px 4px;
   border-radius: 16px;
-  font-size: 13px;
-  line-height: 1.4;
-  position: relative;
+  font-size: 12px;       
+  line-height: 1.32;   
 }
+
 .bubbleMe {
-  max-width: 70%;
   background: linear-gradient(135deg, #0d9488, #115e59);
   color: white;
   padding: 10px 14px;
   border-radius: 18px 18px 4px 18px;
   box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25);
-  font-size: 14px;
-  line-height: 1.45;
 }
 
-
 .bubbleOther {
-  max-width: 70%;
   background: #ffffff;
   color: #1e293b;
   padding: 10px 14px;
   border-radius: 18px 18px 18px 4px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  font-size: 14px;
-  line-height: 1.45;
 }
-
 
 .messageText {
   white-space: pre-wrap;
-  word-wrap: break-word;
+  word-break: break-word;
 }
+
 
 .messageTime {
-  font-size: 11px;
+  font-size: 10px;
   opacity: 0.65;
-  margin-top: 4px;
-  text-align: right;
 }
 
+.messageTimeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.messageActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;            
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+}
+.bubbleMe:hover .messageActions,
+.bubbleOther:hover .messageActions {
+  opacity: 1;
+  visibility: visible;
+}
+
+.messageActionBtn {
+  padding: 2px; 
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.messageActionBtn:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.messageActionDelete {
+  color: #b91c1c;
+}
+
+.editBadge {
+  margin-top: 2px;
+  font-size: 10px;
+  opacity: 0.7;
+}
 
 .inputRow {
   display: flex;
+  align-items: center; 
   gap: 8px;
   padding: 10px 14px;
   background: #f9fafb;
   border-top: 1px solid #e5e7eb;
 }
 
+
 .input {
   flex: 1;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-radius: 14px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
-  font-size: 14px;
-  transition: border 0.15s ease, box-shadow 0.15s ease;
+  font-size: 12px;      
 }
 
 .input:focus {
@@ -299,319 +339,66 @@
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2);
 }
 
-
-
 .sendButton {
-  padding: 12px 20px;
+  padding: 10px 16px;
   border-radius: 14px;
   border: none;
   background: #0f766e;
   color: white;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;    
   cursor: pointer;
-
-  transition:
-    background 0.15s ease,
-    transform 0.1s ease,
-    box-shadow 0.15s ease;
 }
-
-.sendButton:hover {
-  background: #0c615a;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.25);
-}
-
 
 .sendButtonDisabled {
   background: #9ca3af;
-  cursor: default;
-  transform: none;
 }
 
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    display: none;
-  }
-
-  .page {
-    padding: 0;
-    height: 100vh;
-  }
-
-  .chatPane {
-    border-radius: 0;
-  }
-}
-
-.emojiPicker {
-  position: absolute;
-  bottom: 52px;
-  left: 10px;
-  z-index: 40;
-}
-
-.emojiWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-right: 8px;
-}
-
-.iconButton {
-  width: 34px;
-  height: 34px;
+.cancelEditBtn {
+  padding: 8px 12px;
   border-radius: 999px;
   border: none;
-  outline: none;
+  background: #e5e7eb;
+  font-size: 12px;
   cursor: pointer;
+}
+
+.dateSeparator {
+  width: 100%;
+  text-align: center;
+
+  margin: 20px 0;
+  padding: 0;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  background: #fff7ed;
-  color: #f97316;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
-  transition:
-    background-color 0.15s ease,
-    transform 0.1s ease,
-    box-shadow 0.15s ease;
-  font-size: 18px;
-  padding: 0;
-}
-
-.iconButton:hover {
-  background: #ffedd5;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
-}
-
-.iconButton:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.16);
-}
-
-.emojiPicker {
-  position: absolute;
-  bottom: 46px;
-  left: 0;
-  z-index: 50;
-
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
-  border-radius: 16px;
-  overflow: hidden;
-  background: #ffffff;
-}
-.chatHeaderInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.deleteConversationBtn {
-  border: none;
-  background: #fee2e2;
-  color: #b91c1c;
-  padding: 6px 12px;
-  border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  color: #475569;
+
+  position: relative;
 }
 
-.deleteConversationBtn:hover {
-  background: #fecaca;
-  transform: translateY(-1px);
-}
-.deleteModalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+.dateSeparator::before,
+.dateSeparator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #cbd5e1;
+  margin: 0 12px;
 }
 
-.deleteModal {
-  background: #ffffff;
-  width: 320px;
-  padding: 22px;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  text-align: center;
-}
 
-.deleteModal h3 {
-  margin: 0 0 10px;
-  font-size: 18px;
-  font-weight: 700;
+.dateSeparator::before,
+.dateSeparator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #cbd5e1;
+  margin: 0 12px;
 }
-
-.deleteModal p {
-  margin-bottom: 20px;
-  font-size: 14px;
-  color: #374151;
-}
-
-.deleteModalActions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.cancelBtn {
-  padding: 8px 16px;
-  border-radius: 10px;
-  background: #e5e7eb;
-  border: none;
-  cursor: pointer;
-}
-
-.cancelBtn:hover {
-  background: #d1d5db;
-}
-
-.confirmDeleteBtn {
-  padding: 8px 16px;
-  border-radius: 10px;
-  background: #dc2626;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.confirmDeleteBtn:hover {
-  background: #b91c1c;
-}
-.conversationRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-}
-
-.deleteBtn {
-  background: transparent;
-  border: none;
-  color: #d11a2a;
-  padding: 6px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.15s ease;
-}
-
-.deleteBtn:hover {
-  background: #ffe5e5;
-}
-
-.trashIcon {
-  width: 18px;
-  height: 18px;
-  pointer-events: none;
-}
-.messageTimeRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-  margin-top: 2px;
-}
-
-.messageActions {
-  display: flex;
-  gap: 6px;
-}
-
-.messageActionBtn {
-  border: none;
-  background: transparent;
-  font-size: 11px;
-  cursor: pointer;
-  opacity: 0.8;
-}
-
-.messageActionBtn:hover {
-  opacity: 1;
-  text-decoration: underline;
-}
-
-.messageActionDelete {
-  color: #b91c1c;
-}
-
-.editBadge {
-  margin-top: 2px;
-  font-size: 10px;
-  opacity: 0.7;
-}
-.cancelEditBtn {
-  margin-left: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: none;
-  background: #e5e7eb;
-  font-size: 13px;
-  cursor: pointer;
-}
-.cancelEditBtn:hover {
-  background: #d1d5db;
-}
-.messageTimeRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-  margin-top: 2px;
-}
-.messageActions {
-  display: flex;
-  gap: 6px;
-}
-
-.messageActionBtn {
-  border: none;
-  background: transparent;
-  font-size: 11px;
-  cursor: pointer;
-  opacity: 0.8;
-}
-
-.messageActionBtn:hover {
-  opacity: 1;
-  text-decoration: underline;
-}
-.messageActionDelete {
-  color: #b91c1c;
-}
-
-.editBadge {
-  margin-top: 2px;
-  font-size: 10px;
-  opacity: 0.7;
-}
-.cancelEditBtn {
-  margin-left: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: none;
-  background: #e5e7eb;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.cancelEditBtn:hover {
-  background: #d1d5db;
-}
-
 .deleteModalOverlay {
   position: fixed;
   inset: 0;
@@ -622,7 +409,6 @@
   justify-content: center;
   z-index: 90;
 }
-
 .deleteModal {
   width: 100%;
   max-width: 380px;
@@ -658,14 +444,14 @@
   color: #4b5563;
   margin: 0 0 18px;
 }
-
 .deleteModalActions {
   display: flex;
   justify-content: center;
   gap: 10px;
 }
-
-.deleteModalButton {
+.deleteModalButton,
+.cancelBtn,
+.confirmDeleteBtn {
   min-width: 110px;
   padding: 9px 14px;
   border-radius: 999px;
@@ -680,29 +466,31 @@
     color 0.15s ease;
 }
 
-.deleteModalButtonConfirm {
+.deleteModalButtonConfirm,
+.confirmDeleteBtn {
   background: #ef4444;
   color: #ffffff;
   box-shadow: 0 6px 14px rgba(248, 113, 113, 0.45);
 }
 
-.deleteModalButtonConfirm:hover {
+.deleteModalButtonConfirm:hover,
+.confirmDeleteBtn:hover {
   background: #dc2626;
   transform: translateY(-1px);
   box-shadow: 0 10px 22px rgba(248, 113, 113, 0.6);
 }
-
-.deleteModalButtonCancel {
+.deleteModalButtonCancel,
+.cancelBtn {
   background: #e5e7eb;
   color: #111827;
 }
 
-.deleteModalButtonCancel:hover {
+.deleteModalButtonCancel:hover,
+.cancelBtn:hover {
   background: #d1d5db;
   transform: translateY(-1px);
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
 }
-
 @keyframes deleteModalIn {
   from {
     opacity: 0;
@@ -713,30 +501,50 @@
     transform: translateY(0);
   }
 }
+.emojiWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 
-.dateSeparator {
-  width: 100%;
-  text-align: center;
-
-  margin: 20px 0;
-  padding: 0;
-
+.iconButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  font-size: 13px;
-  font-weight: 600;
-  color: #475569;
-
-  position: relative;
+  cursor: pointer;
+  font-size: 20px;
 }
 
-.dateSeparator::before,
-.dateSeparator::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: #cbd5e1;
-  margin: 0 12px;
+.iconButton:hover {
+  background: #f3f4f6;
+}
+
+.emojiPicker {
+  position: absolute;
+  bottom: 44px;        
+  left: 0;             
+  z-index: 50;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+}
+@media (max-width: 750px) {
+  .layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar {
+    display: none !important;
+  }
+
+  .chatPane {
+    width: 100%;
+    height: 100%;
+  }
 }
