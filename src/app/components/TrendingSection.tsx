@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+
 import styles from "../landing/landingPage.module.css";
 import PostModal from "./PostModal/PostModal";
+import { getPostById } from "../../services/postService";
 
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
@@ -25,7 +29,22 @@ type Props = {
 };
 
 export default function TrendingSection({ trending }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const urlPostId = searchParams.get("postId");
+
+  // פתיחת מודאל ידני בלחיצה על פוסט
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+
+  // אם יש postId בכתובת — נשתמש ב-React Query כדי להביא את הפוסט
+  const postIdToOpen = selectedPostId ?? urlPostId;
+
+  const { data: openedPost, isLoading: loadingPost } = useQuery({
+    queryKey: ["post", postIdToOpen],
+    queryFn: () => getPostById(postIdToOpen!),
+    enabled: !!postIdToOpen,
+  });
 
   return (
     <>
@@ -34,14 +53,16 @@ export default function TrendingSection({ trending }: Props) {
 
         <div className={styles.trendingGrid}>
           {trending.map((p) => {
-            const postKey = `trending-${p._id || p.id || Math.random()}`;
             const postId = p._id || String(p.id || "");
 
             return (
               <div
-                key={postKey}
+                key={postId}
                 className={styles.artCard}
-                onClick={() => setSelectedPostId(postId)}
+                onClick={() => {
+                  router.push(`/landing?postId=${postId}`, { scroll: false });
+                  setSelectedPostId(postId);
+                }}
               >
                 <div className={styles.trendingThumb}>
                   <Image
@@ -76,8 +97,14 @@ export default function TrendingSection({ trending }: Props) {
         </div>
       </div>
 
-      {selectedPostId && (
-        <PostModal postId={selectedPostId} onClose={() => setSelectedPostId(null)} />
+      {(openedPost || loadingPost) && postIdToOpen && (
+        <PostModal
+          postId={postIdToOpen}
+          onClose={() => {
+            setSelectedPostId(null);
+            router.push("/landing", { scroll: false });
+          }}
+        />
       )}
     </>
   );

@@ -36,8 +36,8 @@ export default function PublicProfilePage() {
     data: posts = [],
     isLoading: loadingPosts,
   } = useQuery<PostCard[]>({
-    queryKey: ["publicPosts", user?._id],
-    queryFn: () => getUserPosts(user!._id),
+    queryKey: ["publicPosts", user?.firebase_uid],
+    queryFn: () => getUserPosts(user!.firebase_uid),
     enabled: !!user && activeTab === "posts",
   });
   const {
@@ -126,9 +126,8 @@ export default function PublicProfilePage() {
         ] as [TabKey, string][]).map(([key, label]) => (
           <button
             key={key}
-            className={`${styles.tab} ${
-              activeTab === key ? styles.tabActive : ""
-            }`}
+            className={`${styles.tab} ${activeTab === key ? styles.tabActive : ""
+              }`}
             onClick={() => setActiveTab(key)}
           >
             {label}
@@ -232,10 +231,10 @@ export default function PublicProfilePage() {
         )}
       </section>
       {selectedPostId && (
-       <PostModal
-  postId={String(selectedPostId)}
-  onClose={() => setSelectedPostId(null)}
-/>
+        <PostModal
+          postId={String(selectedPostId)}
+          onClose={() => setSelectedPostId(null)}
+        />
       )}
     </div>
   );

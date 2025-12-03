@@ -13,10 +13,6 @@ type ParamsCtx = {
 
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
-
-/* ---------------------------------------------------
-   GET /api/posts/[id]
---------------------------------------------------- */
 export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   try {
     // auth by token in cookie
@@ -30,7 +26,6 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
     await dbConnect();
 
-    // אפשר גם ObjectId וגם id מספרי
     const query = mongoose.isValidObjectId(id)
       ? { _id: id }
       : { id: Number(id) };
@@ -43,7 +38,6 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
 
     let author: any = null;
 
-    // 🔹 1) user_id הוא ObjectId → למצוא לפי _id
     if (post.user_id && mongoose.isValidObjectId(post.user_id)) {
       const user = await User.findById(post.user_id).lean().catch(() => null);
 
@@ -57,7 +51,6 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
       }
     }
 
-    // 🔹 2) אם עדיין אין author — user_id הוא בעצם firebase_uid
     if (!author && post.user_id) {
       const user = await User.findOne({ firebase_uid: post.user_id })
         .lean()
@@ -95,10 +88,6 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
     );
   }
 }
-
-/* ---------------------------------------------------
-   PATCH /api/posts/[id]
---------------------------------------------------- */
 export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
     // auth by token in cookie
