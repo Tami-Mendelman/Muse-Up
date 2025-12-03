@@ -1,4 +1,4 @@
-/* WRAPPER */
+
 .wrapper {
   max-width: 1050px;
   margin: 36px auto;
@@ -8,7 +8,6 @@
   box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
 }
 
-/* TITLES */
 .pageTitle {
   font-size: 32px;
   font-weight: 800;
@@ -22,7 +21,6 @@
   margin-bottom: 14px;
 }
 
-/* TWO-COLUMN LAYOUT */
 .formLayout {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
@@ -32,7 +30,6 @@
 .leftSide {}
 .rightSide {}
 
-/* ------------ PREVIEW CARD ------------ */
 .previewCard {
   background: #fefefe;
   border: 1px solid #e5e7eb;
@@ -74,8 +71,6 @@
   font-size: 15px;
   color: #111;
 }
-
-/* TAGS */
 .chipList {
   display: flex;
   flex-wrap: wrap;
@@ -92,14 +87,12 @@
   color: #3730a3;
 }
 
-/* SUPPORT TEXT */
 .supportText {
   margin-top: 10px;
   color: #6b7280;
   font-size: 13px;
 }
 
-/* ---------- UPLOAD BOX ---------- */
 .uploadBox {
   border: 2px dashed #c8cfdd;
   background: #f8fbff;
@@ -128,8 +121,6 @@
   font-size: 13px;
   margin-top: 4px;
 }
-
-/* INPUTS */
 .label {
   font-weight: 600;
   font-size: 14px;
@@ -147,7 +138,6 @@
   box-sizing: border-box;
 }
 
-/* RADIO */
 .radioBox {
   margin: 16px 0;
   display: flex;
@@ -161,8 +151,6 @@
   align-items: center;
   font-size: 14px;
 }
-
-/* MESSAGES */
 .error {
   background: #fee2e2;
   color: #b91c1c;
@@ -178,8 +166,6 @@
   border-radius: 10px;
   font-size: 14px;
 }
-
-/* ACTION BUTTONS */
 .actions {
   display: flex;
   gap: 12px;
@@ -208,10 +194,99 @@
 .submitBtn:disabled {
   opacity: 0.6;
 }
-
-/* RESPONSIVE */
 @media (max-width: 900px) {
   .formLayout {
     grid-template-columns: 1fr;
   }
+}
+.aiHelperWrapper {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aiHelperWrapper {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* סטייל בסיסי לכל הכפתורים של ה-AI */
+.aiHelperButton {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgba(37, 99, 235, 0.3);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    opacity 0.12s ease;
+}
+
+/* הכפתור הגדול למעלה – קצת יותר גדול ובולט */
+.aiHelperButtonMain {
+  padding: 10px 26px;
+  font-size: 15px;
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.38);
+}
+
+.aiHelperButton:disabled {
+  opacity: 0.7;
+  cursor: default;
+  box-shadow: none;
+}
+
+.aiHelperButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.4);
+}
+
+.aiHelperError {
+  font-size: 13px;
+  color: #b91c1c;
+}
+
+.aiHelperResult {
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 14px 16px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aiHelperBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aiHelperBlockHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.aiHelperBlockTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.aiHelperText {
+  font-size: 13px;
+  color: #1f2933;
+  white-space: pre-wrap;
 }

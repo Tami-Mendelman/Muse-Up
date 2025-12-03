@@ -1,10 +1,9 @@
 "use client";
-
 import { useRef, useState, useMemo } from "react";
 import styles from "./create.module.css";
-import { useFirebaseUid } from "../../hooks/useFirebaseUid"; // <-- כמו בפרופיל
+import { useFirebaseUid } from "../../hooks/useFirebaseUid";
+import CreatePostAiHelper from "./CreatePostAiHelper";
 type Visibility = "public" | "private";
-
 function PreviewCard({
   caption,
   image,
@@ -16,7 +15,6 @@ function PreviewCard({
 }) {
   return (
     <div className={styles.previewCard}>
-      {/* IMAGE */}
       <div className={styles.previewImageBox}>
         {image ? (
           <img src={image} className={styles.previewImage} />
@@ -26,13 +24,10 @@ function PreviewCard({
           </div>
         )}
       </div>
-
-      {/* TEXT */}
       <div className={styles.previewTextArea}>
         <div className={styles.previewCaption}>
           {caption || "Start typing your caption here…"}
         </div>
-
         {tags.length > 0 && (
           <ul className={styles.chipList}>
             {tags.map((t) => (
@@ -46,10 +41,8 @@ function PreviewCard({
     </div>
   );
 }
-
 export default function CreatePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const { uid } = useFirebaseUid();
@@ -61,41 +54,33 @@ export default function CreatePage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [dragOver, setDragOver] = useState(false);
-
   const tags = useMemo(() => {
     const base = tagsInput
       .split(/[,\s]+/)
       .map((t) => t.replace(/^#/, "").trim())
       .filter(Boolean);
-
     return Array.from(new Set(base)).slice(0, 5);
   }, [tagsInput]);
-
   function resetMessages() {
     setMsg(null);
   }
-
   function validate(f: File): string | null {
     const ok = ["image/jpeg", "image/png", "image/webp"];
     if (!ok.includes(f.type)) return "Supported formats: JPG, PNG, WEBP only.";
     if (f.size > 10 * 1024 * 1024) return "Max size is 10MB.";
     return null;
   }
-
   function handlePick() {
     fileInputRef.current?.click();
   }
-
   function handleFile(f: File | null) {
     if (!f) return;
     const err = validate(f);
     if (err) return setMsg({ type: "error", text: err });
-
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setMsg(null);
   }
-
   async function uploadToServer(f: File) {
     const fd = new FormData();
     fd.append("file", f);
@@ -103,11 +88,9 @@ export default function CreatePage() {
     const data = await res.json();
     return data.url;
   }
-
 async function onSubmit(e: React.FormEvent) {
   e.preventDefault();
   resetMessages();
-
   if (!uid) {
     setMsg({
       type: "error",
@@ -115,7 +98,6 @@ async function onSubmit(e: React.FormEvent) {
     });
     return;
   }
-
   try {
     if (!file)
       return setMsg({
@@ -127,11 +109,8 @@ async function onSubmit(e: React.FormEvent) {
         type: "error",
         text: "Title is required.",
       });
-
     setLoading(true);
-
     const imageUrl = await uploadToServer(file);
-
     const payload = {
       title,
       image_url: imageUrl,
@@ -141,18 +120,13 @@ async function onSubmit(e: React.FormEvent) {
       tags,
       visibility,
     };
-
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
     if (!res.ok) throw new Error("Failed to create post");
-
     setMsg({ type: "success", text: "Artwork published successfully!" });
-
-    // reset form...
     setFile(null);
     setPreview(null);
     setTitle("");
@@ -169,16 +143,12 @@ async function onSubmit(e: React.FormEvent) {
   return (
     <div className={styles.wrapper}>
       <h1 className={styles.pageTitle}>Create new post</h1>
-
       <form className={styles.formLayout} onSubmit={onSubmit}>
-        {/* LEFT – PREVIEW */}
         <section className={styles.leftSide}>
           <h2 className={styles.subTitle}>Artwork preview</h2>
           <PreviewCard caption={caption} image={preview} tags={tags} />
           <p className={styles.supportText}>Supported: JPG, PNG, WEBP up to 10MB</p>
         </section>
-
-        {/* RIGHT – FORM */}
         <section className={styles.rightSide}>
           <div
             className={`${styles.uploadBox} ${dragOver ? styles.uploadHover : ""}`}
@@ -208,11 +178,15 @@ async function onSubmit(e: React.FormEvent) {
           <label className={styles.label}>Caption
             <textarea className={styles.input} value={caption} onChange={(e) => setCaption(e.target.value)} />
           </label>
-
+<CreatePostAiHelper
+  caption={caption}
+  title={title}
+  onCaptionChange={setCaption}
+  onTitleChange={setTitle}
+/>
           <label className={styles.label}>Tags
             <input className={styles.input} value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
           </label>
-
           <label className={styles.label}>Category
             <select className={styles.input} value={category} onChange={(e) => setCategory(e.target.value)}>
               <option>Digital</option>
@@ -222,23 +196,19 @@ async function onSubmit(e: React.FormEvent) {
               <option>Watercolor</option>
             </select>
           </label>
-
           <div className={styles.radioBox}>
             <label className={styles.radio}>
               <input type="radio" checked={visibility === "public"} onChange={() => setVisibility("public")} />
               Public
             </label>
-
             <label className={styles.radio}>
               <input type="radio" checked={visibility === "private"} onChange={() => setVisibility("private")} />
               Private
             </label>
           </div>
-
           {msg && (
             <div className={msg.type === "error" ? styles.error : styles.success}>{msg.text}</div>
           )}
-
           <div className={styles.actions}>
             <button type="button" className={styles.cancelBtn}>Cancel</button>
             <button type="submit" className={styles.submitBtn} disabled={loading}>
