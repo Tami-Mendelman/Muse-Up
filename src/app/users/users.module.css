@@ -1,9 +1,8 @@
-
-
 .page {
   max-width: 1200px;
   margin: 0 auto;
   padding: 32px 24px 48px;
+  font-family: var(--font-main);
 }
 
 .title {
@@ -117,6 +116,7 @@
 }
 
 .statLabel {
+  font-family: var(--font-main);
   display: block;
   font-size: 0.68rem;
   text-transform: uppercase;

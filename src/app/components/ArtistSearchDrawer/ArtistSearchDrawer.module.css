@@ -1,10 +1,9 @@
-
 .overlay {
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
- right: calc(var(--sidebar-space, 88px) + 105px); 
+  right: calc(var(--sidebar-space, 88px) + 105px);
   display: flex;
   justify-content: flex-end;
   background: rgba(15, 23, 42, 0.18);
@@ -13,8 +12,8 @@
 }
 
 .drawer {
-    position: fixed;   
-  right: 1px;  
+  position: fixed;
+  right: 1px;
   width: 380px;
   max-width: 100%;
   background: #ffffff;
@@ -24,7 +23,7 @@
   box-shadow: -8px 0 30px rgba(15, 23, 42, 0.18);
   display: flex;
   flex-direction: column;
- 
+
 }
 
 .header {
@@ -37,6 +36,7 @@
 .closeBtn {
   border: none;
   background: transparent;
+  font-family: var(--font-main);
   font-size: 26px;
   cursor: pointer;
   line-height: 1;
@@ -51,6 +51,7 @@
 }
 
 .title {
+  font-family: var(--font-main);
   font-size: 18px;
   font-weight: 700;
   color: #020617;
@@ -58,6 +59,7 @@
 }
 
 .subtitle {
+  font-family: var(--font-main);
   font-size: 12px;
   color: #6b7280;
   margin: 0;
@@ -73,6 +75,7 @@
   border-radius: 999px;
   border: 1px solid #d1d5db;
   padding: 9px 14px;
+  font-family: var(--font-main);
   font-size: 14px;
   outline: none;
 }
@@ -90,20 +93,21 @@
 .filterBtn {
   flex: 1;
   border-radius: 999px;
-  border: 1px solid #bfdbfe; 
+  border: 1px solid #bfdbfe;
   padding: 6px 8px;
+  font-family: var(--font-main);
   font-size: 12px;
-  background: #eff6ff; 
+  background: #eff6ff;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .filterBtn:hover {
-  background: #dbeafe; 
+  background: #dbeafe;
 }
 
 .filterBtnActive {
-  background: #2563eb; 
+  background: #2563eb;
   color: #ffffff;
   border-color: #2563eb;
 }
@@ -113,6 +117,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-family: var(--font-main);
   font-size: 11px;
   color: #6b7280;
   margin-bottom: 4px;
@@ -121,10 +126,12 @@
 .resultsLabel {
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  font-family: var(--font-main);
   font-weight: 600;
 }
 
 .resultsCount {
+  font-family: var(--font-main);
   font-size: 11px;
 }
 
@@ -146,6 +153,7 @@
   background: #d1d5db;
   border-radius: 999px;
 }
+
 .item {
   display: flex;
   align-items: flex-start;
@@ -183,6 +191,7 @@
 }
 
 .name {
+  font-family: var(--font-main);
   font-size: 14px;
   font-weight: 600;
   color: #020617;
@@ -192,6 +201,7 @@
 }
 
 .meta {
+  font-family: var(--font-main);
   font-size: 11px;
   color: #6b7280;
   white-space: nowrap;
@@ -200,6 +210,7 @@
 }
 
 .location {
+  font-family: var(--font-main);
   font-size: 11px;
   color: #9ca3af;
 }
@@ -207,33 +218,37 @@
 
 .loading,
 .empty {
+  font-family: var(--font-main);
   font-size: 13px;
   color: #6b7280;
   padding: 8px 0;
 }
+
 .actionsRow {
   margin-top: 8px;
   display: flex;
   justify-content: flex-start;
 }
+
 .row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
+
 .infoShort {
   display: flex;
   flex-direction: column;
 }
+
 .topRow {
   display: flex;
   align-items: center;
-  justify-content: flex-start; 
-  gap: 16px;                   
+  justify-content: flex-start;
+  gap: 16px;
 }
 
 .topRow button {
   flex-shrink: 0;
 }
-

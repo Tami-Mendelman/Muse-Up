@@ -1,7 +1,7 @@
 .bg {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,7 +15,7 @@
   padding: 20px;
   border-radius: 12px;
   position: relative;
-  box-shadow: 0 30px 80px rgba(15,23,42,0.35);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
 }
 
 .inner {
@@ -35,7 +35,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0, 0, 0, 0.65);
   color: white;
   border: none;
   cursor: pointer;
@@ -136,6 +136,7 @@
 }
 
 .input {
+  font-family: var(--font-main);
   flex: 1;
   padding: 10px 14px;
   border-radius: 999px;
@@ -184,7 +185,7 @@
   padding: 8px;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 20px 60px rgba(15,23,42,0.2);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
@@ -196,6 +197,7 @@
   background: none;
   cursor: pointer;
 }
+
 .authorBox {
   display: flex;
   align-items: center;
@@ -214,6 +216,7 @@
   font-weight: 600;
   font-size: 15px;
 }
+
 /* SAVE BUTTON */
 .saved {
   color: #16a34a;
@@ -227,7 +230,7 @@
   padding: 8px;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
   display: flex;
   gap: 6px;
   animation: popIn .18s ease-out;
@@ -241,16 +244,24 @@
 }
 
 @keyframes popIn {
-  from { transform: scale(.7); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(.7);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
+
 .shareMenu {
   position: absolute;
   margin-top: 8px;
   padding: 10px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -276,6 +287,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

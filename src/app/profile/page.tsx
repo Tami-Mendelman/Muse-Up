@@ -1,5 +1,6 @@
 "use client";
 
+import "../globals.css";
 import { useState, ChangeEvent, FormEvent, MouseEvent } from "react";
 import styles from "./profile.module.css";
 import { useRouter } from "next/navigation";
@@ -693,7 +694,6 @@ export default function ProfilePage() {
 
       </section>
 
-      {/* ✨ פוסט מודאל */}
       {selectedPostId && (
         <PostModal
           postId={String(selectedPostId)}
@@ -701,7 +701,7 @@ export default function ProfilePage() {
         />
       )}
 
-      {/* 🟥 מודל מחיקה */}
+      {/* Cancel */}
       {deletePostId && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modal}>
@@ -727,7 +727,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* 🟦 קרופר */}
+      {/* Croper */}
       {avatarFileToCrop && (
         <AvatarCropper
           imageFile={avatarFileToCrop}

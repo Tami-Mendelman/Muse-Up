@@ -223,7 +223,7 @@ export default function OnboardingPage() {
               name="username"
               value={form.username}
               onChange={handleChange}
-              placeholder="your_username"
+              placeholder="your username"
               className={styles.input}
               required
             />

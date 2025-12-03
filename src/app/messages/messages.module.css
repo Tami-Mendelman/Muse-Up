@@ -3,6 +3,7 @@
   padding: 24px 32px;
   box-sizing: border-box;
   overflow: hidden;
+  font-family: var(--font-main);
 }
 
 .layout {
@@ -44,6 +45,7 @@
 .conversationsList::-webkit-scrollbar {
   width: 4px;
 }
+
 .conversationsList::-webkit-scrollbar-thumb {
   background: #d1d5db;
   border-radius: 999px;
@@ -158,6 +160,7 @@
   .page {
     padding: 0;
     height: 100vh;
+    font-family: var(--font-main);
   }
 
   .sidebar {
@@ -168,6 +171,7 @@
     display: none;
   }
 }
+
 .conversationRow {
   display: flex;
   align-items: center;
@@ -188,10 +192,11 @@
 .deleteBtn:hover {
   background: #ffe5e5;
 }
+
 .deleteModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -204,7 +209,7 @@
   width: 320px;
   padding: 22px;
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   text-align: center;
 }
 
