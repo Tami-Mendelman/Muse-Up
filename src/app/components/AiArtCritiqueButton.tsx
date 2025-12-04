@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import styles from "./AiArtCritiqueButton.module.css";
+import { getArtCritique } from "../../services/aiArtCritiqueService";
 type Props = {
   image_url: string;
 };
@@ -15,19 +16,8 @@ export default function AiArtCritiqueButton({ image_url }: Props) {
     setError(null);
     setOpen(true);
     try {
-      const res = await fetch("/api/ai-art-critique", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image_url,
-          language: "en", 
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || "Request failed");
-      }
-      setCritique(data.critique || "");
+      const critiqueText = await getArtCritique(image_url, "en");
+      setCritique(critiqueText);
     } catch (err: any) {
       setError(err?.message || "Failed to generate critique.");
     } finally {
@@ -52,7 +42,6 @@ export default function AiArtCritiqueButton({ image_url }: Props) {
   const { works, improve } = critique
     ? splitCritique(critique)
     : { works: "", improve: "" };
-
   return (
     <>
       <button
@@ -76,16 +65,19 @@ export default function AiArtCritiqueButton({ image_url }: Props) {
                 ✕
               </button>
             </div>
+
             <div className={styles.modalContent}>
               {loading && (
                 <p className={styles.loadingText}>Analyzing artwork…</p>
               )}
+
               {error && <p className={styles.errorText}>{error}</p>}
 
               {!loading && !error && critique && (
                 <>
                   <h3 className={styles.sectionTitle}>What works</h3>
                   <p className={styles.sectionText}>{works}</p>
+
                   <h3 className={styles.sectionTitle}>What could be improved</h3>
                   <p className={styles.sectionText}>{improve}</p>
                 </>

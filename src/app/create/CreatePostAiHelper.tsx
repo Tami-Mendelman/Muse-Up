@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import styles from "./create.module.css";
+import { getImprovedPostText } from "../../services/aiHelperService";
+
 
 type Props = {
   caption: string;
@@ -27,44 +29,28 @@ export default function CreatePostAiHelper({
   const [error, setError] = useState<string | null>(null);
 
   async function handleClick() {
-    if (loading) return;
+  if (loading) return;
 
-    if (!caption.trim()) {
-      setError(" Write a few words about the artwork first, and then I'll improve it for you");
-      setResult(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+  if (!caption.trim()) {
+    setError(" Write a few words about the artwork first, and then I'll improve it for you");
     setResult(null);
-
-    try {
-      const res = await fetch("/api/ai/post-helper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rawCaption: caption,
-          currentTitle: title,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || "Request failed");
-      }
-
-      setResult({
-        improvedDescription: data.improvedDescription,
-        suggestedTitle: data.suggestedTitle,
-        shortCaption: data.shortCaption,
-      });
-    } catch (err: any) {
-      setError(err?.message || "משהו השתבש עם ה-AI.");
-    } finally {
-      setLoading(false);
-    }
+    return;
   }
+
+  setLoading(true);
+  setError(null);
+  setResult(null);
+
+  try {
+    const data = await getImprovedPostText(caption, title);
+    setResult(data);
+  } catch (err: any) {
+    setError(err?.message || "משהו השתבש עם ה-AI.");
+  } finally {
+    setLoading(false);
+  }
+}
+
 
   function applyCaption() {
     if (result?.improvedDescription) {

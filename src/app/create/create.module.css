@@ -28,9 +28,8 @@
   gap: 32px;
 }
 
-.leftSide {}
-
-.rightSide {}
+/* .leftSide {}
+.rightSide {} */
 
 .previewCard {
   background: #fefefe;
@@ -64,8 +63,7 @@
   font-size: 15px;
 }
 
-.previewTextArea {}
-
+/* .previewTextArea {} */
 .previewCaption {
   background: #fafafa;
   border: 1px dashed #d1d5db;
