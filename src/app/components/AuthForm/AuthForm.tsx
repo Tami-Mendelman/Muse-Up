@@ -18,6 +18,7 @@ import getAuthErrorMessage from "../../../lib/authErrors";
 import { checkUserInDB } from "../../../lib/checkUserInDB";
 import { setLocalStorageUid } from "../../../lib/localStorage";
 import { addTokenToCookie } from "../../../services/loginService";
+import { getUserByEmail } from "../../../services/signin&upServoce";
 
 
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -79,8 +80,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         try {
             if (mode === "login") {
                 const firebaseUser = await signInWithEmailAndPassword(auth, email, password);
-                const res = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
-                const mongoUser = await res.json();
+                const mongoUser = await getUserByEmail(email);
 
                 if (!mongoUser) {
                     if (firebaseUser) {
@@ -100,10 +100,9 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 alert("Login successfully!");
             } else {
                 if (mode === "register") {
-                    const res = await fetch(`/api/users?email=${encodeURIComponent(email.trim())}`);
-                    console.log("Fetch existing user response status:", res.status);
-                    const userData = await res.json();
+                    const userData = await getUserByEmail(email.trim());
                     console.log("Existing user data:", userData);
+                    
                     if (userData !== null) {
                         setError("This email is already registered. Please log in instead.");
                         return;

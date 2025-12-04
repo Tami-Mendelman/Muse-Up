@@ -10,6 +10,16 @@ export type User = {
   following_count?: number;
 };
 
+export type FormUserPayload = {
+  firebase_uid: string;
+  name: string;
+  email: string;
+  username: string;
+  profil_url: string;
+  bio: string;
+  location: string;
+};
+
 export type UpdateUserPayload = {
   name: string;
   username: string;
@@ -47,6 +57,7 @@ export async function updateUserProfile(
 
   return res.json();
 }
+
 export async function getAllUsers() {
   const res = await fetch("/api/users");
 
@@ -57,3 +68,25 @@ export async function getAllUsers() {
   return res.json();
 }
 
+export async function addUser(payload: FormUserPayload): Promise<User> {
+  const res = await fetch("/api/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    let msg = "Failed to create user";
+
+    try {
+      const data = await res.json();
+      msg = data?.message || msg;
+    } catch { }
+
+    throw new Error(msg);
+  }
+
+  return res.json();
+}
