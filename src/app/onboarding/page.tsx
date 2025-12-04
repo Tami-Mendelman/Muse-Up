@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { auth } from "../../lib/firebase";
 import styles from "./onboarding.module.css";
 import AvatarCropper from "../components/CropImage/CropImage";
+import { uploadAvatar } from "../../services/uploadService";
+import { addUser } from "../../services/userService";
 
 type OnboardingProps = {
   name: string;
@@ -14,23 +16,6 @@ type OnboardingProps = {
   location: string;
   avatar_url: string;
 };
-
-async function uploadToServer(file: File): Promise<string> {
-  const fd = new FormData();
-  fd.append("file", file);
-
-  const res = await fetch("/api/uploads", {
-    method: "POST",
-    body: fd,
-  });
-
-  if (!res.ok) {
-    throw new Error(`Upload failed (${res.status})`);
-  }
-
-  const data = await res.json();
-  return data.url as string;
-}
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -84,7 +69,7 @@ export default function OnboardingPage() {
     setTempFile(null);
     try {
       setAvatarUploading(true);
-      const url = await uploadToServer(croppedFile);
+      const url = await uploadAvatar(croppedFile);
       setForm((prev) => ({ ...prev, avatar_url: url }));
     } finally {
       setAvatarUploading(false);
@@ -119,24 +104,15 @@ export default function OnboardingPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firebase_uid: user.uid,
-          name: trimmed.name,
-          email,
-          username: trimmed.username,
-          profil_url: avatarToSave,
-          bio: trimmed.bio,
-          location: trimmed.location,
-        }),
+      await addUser({
+        firebase_uid: user.uid,
+        name: trimmed.name,
+        email,
+        username: trimmed.username,
+        profil_url: avatarToSave,
+        bio: trimmed.bio,
+        location: trimmed.location,
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message);
-      }
 
       router.push("/landing");
     } catch (err: any) {
@@ -223,7 +199,7 @@ export default function OnboardingPage() {
               name="username"
               value={form.username}
               onChange={handleChange}
-              placeholder="your_username"
+              placeholder="your username"
               className={styles.input}
               required
             />

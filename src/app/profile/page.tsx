@@ -1,4 +1,7 @@
 "use client";
+
+import "../globals.css";
+import { useState, ChangeEvent, FormEvent, MouseEvent } from "react";
 import styles from "./profile.module.css";
 import AvatarCropper from "../components/CropImage/CropImage";
 import PostModal from "../components/PostModal/PostModal";
@@ -582,6 +585,7 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
+
       {selectedPostId && (
         <PostModal
           postId={String(selectedPostId)}

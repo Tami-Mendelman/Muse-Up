@@ -2,8 +2,9 @@
   max-width: 1100px;
   margin: 40px auto;
   padding: 0 24px 40px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-main);
 }
+
 .header {
   display: flex;
   align-items: center;
@@ -86,6 +87,7 @@
   font-size: 13px;
   color: #9ca3af;
 }
+
 .tabs {
   margin-top: 24px;
   display: flex;
@@ -93,6 +95,7 @@
 }
 
 .tab {
+  font-family: var(--font-main);
   flex: 1;
   padding: 10px 0;
   text-align: center;
@@ -113,6 +116,7 @@
   border-bottom-color: #2563eb;
   font-weight: 600;
 }
+
 .content {
   margin-top: 24px;
 }
@@ -173,6 +177,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .followersSection {
   display: flex;
   flex-direction: column;
@@ -240,6 +245,7 @@
   font-size: 12px;
   color: #9ca3af;
 }
+
 .editForm {
   margin-top: 24px;
   padding: 20px;
@@ -277,6 +283,7 @@
 }
 
 .editLabel {
+  font-family: var(--font-main);
   font-size: 13px;
   font-weight: 600;
   color: #4b5563;
@@ -287,6 +294,7 @@
   border-radius: 10px;
   border: 1px solid #d1d5db;
   padding: 8px 10px;
+  font-family: var(--font-main);
   font-size: 14px;
   background: #f9fafb;
 }
@@ -354,6 +362,7 @@
   font-size: 12px;
   color: #6b7280;
 }
+
 .editError {
   color: #b91c1c;
   background: #fee2e2;
@@ -381,6 +390,7 @@
   min-width: 120px;
   height: 38px;
   border-radius: 999px;
+  font-family: var(--font-main);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -405,10 +415,12 @@
 .editSecondaryBtn:hover {
   background: #f3f4f6;
 }
+
 @media (max-width: 768px) {
   .page {
     margin-top: 24px;
     padding: 0 16px 32px;
+    font-family: var(--font-main);
   }
 
   .header {
@@ -422,6 +434,7 @@
     height: 96px;
   }
 }
+
 .shareArtBtn {
   width: 200px;
   padding: 10px 16px;
@@ -430,6 +443,7 @@
   border-radius: 12px;
   background: linear-gradient(135deg, #4f46e5, #ec4899);
   color: #ffffff;
+  font-family: var(--font-main);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -441,6 +455,7 @@
   opacity: 0.9;
   transform: translateY(-1px);
 }
+
 .shareWrapper {
   width: 100%;
   display: flex;
@@ -471,10 +486,12 @@
 
 .sharePlus {
   display: block;
+  font-family: var(--font-main);
   font-size: 20px;
   font-weight: 700;
   line-height: 1;
 }
+
 .challengesGrid {
   margin-top: 24px;
   display: grid;
@@ -530,6 +547,7 @@
   box-shadow: none;
   transform: none;
 }
+
 .challengeImage {
   width: 100%;
   height: 180px;
@@ -538,6 +556,7 @@
   border-top-right-radius: 24px;
   margin-bottom: 12px;
 }
+
 .challengeActions {
   margin-top: 8px;
   display: flex;
@@ -564,6 +583,7 @@
   color: #4caf50;
   font-weight: 500;
 }
+
 .sectionHeader {
   display: flex;
   align-items: center;
@@ -575,6 +595,7 @@
   font-size: 22px;
   font-weight: 600;
 }
+
 .postCard {
   display: flex;
   flex-direction: column;
@@ -586,6 +607,7 @@
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
 }
+
 .postTitle {
   margin: 0;
   font-size: 17px;
@@ -595,10 +617,11 @@
   text-align: left;
 
   display: -webkit-box;
-  -webkit-line-clamp: 2; 
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
 .postCard {
   position: relative;
   background: #ffffff;
@@ -653,6 +676,7 @@
 .iconDelete {
   color: #d63031;
 }
+
 /* רקע כהה */
 .modalBackdrop {
   position: fixed;
@@ -680,6 +704,7 @@
     opacity: 0;
     transform: scale(0.85);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
