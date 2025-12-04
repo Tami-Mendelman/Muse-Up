@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+
 import { dbConnect } from "../../lib/mongoose";
 import UserModel from "../../models/User";
 import PostModel from "../../models/Post";
@@ -47,7 +49,7 @@ export default async function LandingPage() {
     body: 1,
     created_at: 1,
     user_id: 1,
-    user_uid: 1, // חשוב! פוסטים חדשים שומרים את זה
+    user_uid: 1,
   };
 
   const popular = await PostModel.find({}, baseSelect)
@@ -65,52 +67,42 @@ export default async function LandingPage() {
   );
 
   const trendingWithAuthors = await Promise.all(
-  trendingRaw.map(async (post: any) => {
-    let user = null;
+    trendingRaw.map(async (post: any) => {
+      let user = null;
 
-    // 1️⃣ אם יש user_uid — זה תמיד firebase_uid
-    if (post.user_uid) {
-      user = await UserModel.findOne({ firebase_uid: post.user_uid })
-        .lean()
-        .catch(() => null);
-    }
+      if (post.user_uid) {
+        user = await UserModel.findOne({ firebase_uid: post.user_uid })
+          .lean()
+          .catch(() => null);
+      } else if (mongoose.isValidObjectId(post.user_id)) {
+        user = await UserModel.findById(post.user_id).lean().catch(() => null);
+      } else if (typeof post.user_id === "string") {
+        user = await UserModel.findOne({ firebase_uid: post.user_id })
+          .lean()
+          .catch(() => null);
+      }
 
-    // 2️⃣ אם user_id הוא ObjectId אמיתי (24 תווים hex) — מחפשים לפי _id
-    else if (mongoose.isValidObjectId(post.user_id)) {
-      user = await UserModel.findById(post.user_id)
-        .lean()
-        .catch(() => null);
-    }
+      const author = user
+        ? {
+            name: user.name || "Unknown",
+            avatar_url:
+              user.avatar_url ||
+              user.profil_url ||
+              "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+            followers_count: user.followers_count ?? 0,
+          }
+        : {
+            name: "Unknown",
+            avatar_url:
+              "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
+            followers_count: 0,
+          };
 
-    // 3️⃣ אם user_id הוא מחרוזת ארוכה → כנראה firebase_uid מפוסטים ישנים
-    else if (typeof post.user_id === "string") {
-      user = await UserModel.findOne({ firebase_uid: post.user_id })
-        .lean()
-        .catch(() => null);
-    }
-
-    const author = user
-      ? {
-          name: user.name || "Unknown",
-          avatar_url:
-            user.avatar_url ||
-            user.profil_url ||
-            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
-          followers_count: user.followers_count ?? 0,
-        }
-      : {
-          name: "Unknown",
-          avatar_url:
-            "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
-          followers_count: 0,
-        };
-
-    return { ...post, author };
-  })
-);
+      return { ...post, author };
+    })
+  );
 
   const trending = trendingWithAuthors;
-
 
   return (
     <main className={styles.page}>
@@ -131,7 +123,11 @@ export default async function LandingPage() {
 
             <section className={styles.bottomLeft}>
               <div className={styles.card}>
-                <TrendingSection trending={trending} />
+                {/* ✨ פה הפתרון – עוטפים את ה־TrendingSection ב-Suspense */}
+                <Suspense fallback={<div className={styles.loadingBox}>Loading…</div>}>
+                  <TrendingSection trending={trending} />
+                </Suspense>
+
                 <Link href="/posts" className={styles.moreLink}>
                   See more posts →
                 </Link>

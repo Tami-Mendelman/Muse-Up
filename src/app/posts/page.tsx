@@ -13,7 +13,7 @@ export default function PostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // נטען את הפוסטים מהשרת
+  // load posts from API
   async function loadPosts() {
     setLoading(true);
     try {
