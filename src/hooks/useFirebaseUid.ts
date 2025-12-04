@@ -1,17 +1,14 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { getLocalStorageUid } from "../lib/localStorage";
-
+import { usePathname } from "next/navigation";
 export function useFirebaseUid() {
-  const [uid, setUid] = useState<string | undefined>(undefined);
+  const [uid, setUid] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-
+  const pathname = usePathname();
   useEffect(() => {
-    const value = getLocalStorageUid();
-    setUid(value);
+    const storedUid = localStorage.getItem("firebase_uid");
+    setUid(storedUid);
     setReady(true);
-  }, []);
-
+  }, [pathname]); 
   return { uid, ready };
 }
