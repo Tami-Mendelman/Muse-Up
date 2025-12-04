@@ -159,3 +159,8 @@
   transform: none;
   cursor: default;
 }
+.successMessage {
+  margin-top: 12px;
+  color: #2ecc71;
+  font-weight: 500;
+}
