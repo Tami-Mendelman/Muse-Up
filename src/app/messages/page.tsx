@@ -1,10 +1,9 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSocket } from "../../lib/useSocket";
+import { useQuery } from "@tanstack/react-query";
 import styles from "./messages.module.css";
-
 type Conversation = {
   _id: string;
   lastMessageText?: string;
@@ -18,44 +17,53 @@ type Conversation = {
     profil_url?: string;
   };
 };
-
 export default function MessagesPage() {
   const router = useRouter();
   const socket = useSocket();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [uid] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("firebase_uid");
+  });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
-  useEffect(() => {
-    if (!socket) return;
-    const uid = localStorage.getItem("firebase_uid");
-    if (!uid) {
-      setLoading(false);
-      return;
-    }
-    socket.emit(
-      "getConversations",
-      { userUid: uid },
-      (res: { ok: boolean; conversations?: any[]; error?: string }) => {
-        if (res?.ok && res.conversations) {
-          const mapped: Conversation[] = res.conversations.map((c: any) => ({
-            _id: c._id,
-            lastMessageText: c.lastMessageText,
-            lastMessageAt: c.lastMessageAt,
-            unread_count: c.unreadByUser?.[uid] || 0,
-            otherUser: c.otherUser,
-          }));
-          mapped.sort(
-            (a, b) =>
-              new Date(b.lastMessageAt || 0).getTime() -
-              new Date(a.lastMessageAt || 0).getTime()
-          );
-          setConversations(mapped);
-        }
-        setLoading(false);
-      }
-    );
-  }, [socket]);
+  const [conversationToDelete, setConversationToDelete] =
+    useState<string | null>(null);
+  const {
+    data: conversations = [],
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery<Conversation[]>({
+    queryKey: ["conversations", uid ?? "no-uid"],
+    queryFn: async () => {
+      if (!socket || !uid) return [];
+      return new Promise<Conversation[]>((resolve) => {
+        socket.emit(
+          "getConversations",
+          { userUid: uid },
+          (res: { ok: boolean; conversations?: any[] }) => {
+            if (!res?.ok || !res.conversations) {
+              return resolve([]);
+            }
+            const mapped: Conversation[] = res.conversations.map((c: any) => ({
+              _id: c._id,
+              lastMessageText: c.lastMessageText,
+              lastMessageAt: c.lastMessageAt,
+              unread_count: c.unreadByUser?.[uid] || 0,
+              otherUser: c.otherUser,
+            }));
+            mapped.sort(
+              (a, b) =>
+                new Date(b.lastMessageAt || 0).getTime() -
+                new Date(a.lastMessageAt || 0).getTime()
+            );
+            resolve(mapped);
+          }
+        );
+      });
+    },
+    enabled: !!socket && !!uid,
+  });
+  const isLoadingState = isLoading || isFetching;
   const handleSelectConversation = (id: string) => {
     router.push(`/messages/${id}`);
   };
@@ -64,17 +72,13 @@ export default function MessagesPage() {
     setShowDeleteModal(true);
   };
   const confirmDeleteConversation = () => {
-    if (!socket || !conversationToDelete) return;
-    const uid = localStorage.getItem("firebase_uid");
-    if (!uid) return;
+    if (!socket || !conversationToDelete || !uid) return;
     socket.emit(
       "deleteConversation",
       { conversationId: conversationToDelete, userUid: uid },
-      (res: { ok: boolean; error?: string }) => {
+      (res: { ok: boolean }) => {
         if (!res.ok) return;
-        setConversations((prev) =>
-          prev.filter((c) => c._id !== conversationToDelete)
-        );
+        refetch();
         setShowDeleteModal(false);
         setConversationToDelete(null);
       }
@@ -88,8 +92,10 @@ export default function MessagesPage() {
             <h1 className={styles.sidebarTitle}>Messages</h1>
           </header>
           <div className={styles.conversationsList}>
-            {loading && <p className={styles.emptyState}>Loading…</p>}
-            {!loading && conversations.length === 0 && (
+            {isLoadingState && (
+              <p className={styles.emptyState}>Loading…</p>
+            )}
+            {!isLoadingState && conversations.length === 0 && (
               <p className={styles.emptyState}>No conversations yet.</p>
             )}
             {conversations.map((c) => (
@@ -110,7 +116,6 @@ export default function MessagesPage() {
                       <span className={styles.conversationName}>
                         {c.otherUser?.name || c.otherUser?.username}
                       </span>
-
                       {c.lastMessageAt && (
                         <span className={styles.conversationTime}>
                           {new Date(c.lastMessageAt).toLocaleTimeString(
@@ -125,37 +130,34 @@ export default function MessagesPage() {
                     </div>
                   </div>
                 </button>
-
-             <button
-  className={styles.deleteBtn}
-  onClick={(e) => {
-    e.stopPropagation();
-    openDeleteModal(c._id);
-  }}
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={styles.trashIcon}
-  >
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6l-1 14H6L5 6" />
-    <path d="M10 11v6" />
-    <path d="M14 11v6" />
-    <path d="M9 6V4h6v2" />
-  </svg>
-</button>
-
+                <button
+                  className={styles.deleteBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDeleteModal(c._id);
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={styles.trashIcon}
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                    <path d="M9 6V4h6v2" />
+                  </svg>
+                </button>
               </div>
             ))}
           </div>
         </aside>
-
         <section className={styles.chatPane}>
           <div className={styles.chatEmpty}>
             <h2>Select a conversation</h2>
@@ -176,7 +178,6 @@ export default function MessagesPage() {
               >
                 Cancel
               </button>
-
               <button
                 className={styles.confirmDeleteBtn}
                 onClick={confirmDeleteConversation}

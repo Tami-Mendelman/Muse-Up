@@ -1,9 +1,11 @@
 "use client";
-
-import { useState } from "react";
 import Image from "next/image";
-import styles from "../landing/landingPage.module.css";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import PostModal from "./PostModal/PostModal";
+import { getPostById } from "../../services/postService";
+import styles from "../landing/landingPage.module.css";
 
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
@@ -20,12 +22,30 @@ type TrendingPost = {
   };
 };
 
-type Props = {
-  trending: TrendingPost[];
-};
+export default function TrendingSection({ trending }: { trending: TrendingPost[] }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-export default function TrendingSection({ trending }: Props) {
+  const postIdFromUrl = searchParams.get("postId");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+
+  const postIdToOpen = selectedPostId ?? postIdFromUrl;
+
+  const { data: openedPost, isLoading } = useQuery({
+    queryKey: ["post", postIdToOpen],
+    queryFn: () => getPostById(postIdToOpen!),
+    enabled: !!postIdToOpen,
+  });
+
+  function openModal(id: string) {
+    setSelectedPostId(id);
+    router.push(`/landing?postId=${id}`, { scroll: false });
+  }
+
+  function closeModal() {
+    setSelectedPostId(null);
+    router.push(`/landing`, { scroll: false });
+  }
 
   return (
     <>
@@ -34,14 +54,13 @@ export default function TrendingSection({ trending }: Props) {
 
         <div className={styles.trendingGrid}>
           {trending.map((p) => {
-            const postKey = `trending-${p._id || p.id || Math.random()}`;
-            const postId = p._id || String(p.id || "");
+            const postId = p._id || String(p.id);
 
             return (
               <div
-                key={postKey}
+                key={postId}
                 className={styles.artCard}
-                onClick={() => setSelectedPostId(postId)}
+                onClick={() => openModal(postId)}
               >
                 <div className={styles.trendingThumb}>
                   <Image
@@ -62,7 +81,6 @@ export default function TrendingSection({ trending }: Props) {
                   <img
                     src={p.author?.avatar_url || DEFAULT_AVATAR}
                     className={styles.authorAvatarTrending}
-                    alt={p.author?.name || "Unknown"}
                   />
                   <span className={styles.authorNameTrending}>
                     {p.author?.name || "Unknown"}
@@ -76,8 +94,8 @@ export default function TrendingSection({ trending }: Props) {
         </div>
       </div>
 
-      {selectedPostId && (
-        <PostModal postId={selectedPostId} onClose={() => setSelectedPostId(null)} />
+      {(openedPost || isLoading) && postIdToOpen && (
+        <PostModal postId={postIdToOpen} onClose={closeModal} />
       )}
     </>
   );

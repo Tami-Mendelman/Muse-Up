@@ -67,7 +67,6 @@
   line-height: 1.6;
 }
 
-/* ICONS */
 .icons {
   display: flex;
   gap: 16px;
@@ -163,7 +162,7 @@
   padding: 16px;
 }
 
-/* התמונה עצמה */
+/* IMAGE */
 .image {
   width: 100%;
   height: auto;
@@ -248,13 +247,13 @@
     transform: scale(.7);
     opacity: 0;
   }
-
   to {
     transform: scale(1);
-    opacity: 1;
+    opacity: 1);
   }
 }
 
+/* SHARE MENU */
 .shareMenu {
   position: absolute;
   margin-top: 8px;
@@ -291,9 +290,52 @@
     opacity: 0;
     transform: translateY(-4px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* AI CRITIQUE BOX */
+.aiCritiqueBox {
+  background: #ffffff;
+  padding: 24px 32px;
+  border-radius: 16px;
+  margin-top: 24px;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  text-align: center;
+}
+
+.aiCritiqueTitle {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #0f172a;
+}
+
+.aiCritiqueContent {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #1e293b;
+  text-align: left;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.aiCritiqueContent ul {
+  padding-left: 20px;
+}
+
+.aiCritiqueContent li {
+  margin-bottom: 12px;
+}
+
+.aiTopRight {
+  position: absolute;
+  top: 22px;
+  right: 80px;
+  z-index: 70;
 }

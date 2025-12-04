@@ -3,6 +3,7 @@ import User from "../models/User";
 import Post from "../models/Post";
 import styles from "./HomePage.module.css";
 import Link from "next/link";
+
 type UserCard = {
   _id: string;
   username: string;
@@ -10,38 +11,70 @@ type UserCard = {
   profil_url?: string;
   followers_count?: number;
   likes_received?: number;
+  firebase_uid?: string;
 };
-type PostCard = {
-  _id: string;
-  user_id: string;
-  image_url?: string;
-};
+
 async function getHomeData(): Promise<{
   users: UserCard[];
   artworkByUserId: Record<string, string>;
 }> {
   await dbConnect();
-  const users = (await User.find()
-    .sort({ followers_count: -1 })
-    .limit(8)
-    .lean()) as unknown as UserCard[];
-  const userIds = users.map((u) => String(u._id));
-  const posts = (await (Post as any)
-    .find({ user_id: { $in: userIds } })
+
+  // --- 1) מביאים את המשתמשים המובילים ---
+ const rawUsers = await User.find()
+  .sort({ followers_count: -1 })
+  .limit(8)
+  .lean();
+
+const users: UserCard[] = rawUsers.map((u: any) => ({
+  _id: String(u._id),
+  username: u.username,
+  name: u.name,
+  profil_url: u.profil_url,
+  followers_count: u.followers_count ?? 0,
+  firebase_uid: u.firebase_uid,
+}));
+
+
+  // מזהי Mongo ו־Firebase
+  const mongoIds = users.map((u) => String(u._id));
+  const firebaseIds = users
+    .map((u) => String(u.firebase_uid))
+    .filter(Boolean);
+
+  // --- 2) מביאים את הפוסטים של המשתמשים האלה ---
+  const posts = await Post.find({
+    user_id: { $in: [...mongoIds, ...firebaseIds] },
+  })
     .sort({ created_at: -1 })
-    .lean()) as PostCard[];
+    .lean();
+
+  // --- 3) התאמה בין פוסט -> משתמש ---
   const artworkByUserId: Record<string, string> = {};
+
   for (const post of posts) {
-    const uid = String(post.user_id);
-    if (!uid || !post.image_url) continue;
-    if (!artworkByUserId[uid]) {
-      artworkByUserId[uid] = post.image_url;
+    const pid = String(post.user_id);
+    if (!pid || !post.image_url) continue;
+
+    // מוצאים את המשתמש המתאים
+    const matchingUser = users.find(
+      (u) => String(u._id) === pid || String(u.firebase_uid) === pid
+    );
+
+    if (matchingUser) {
+      const key = String(matchingUser._id); // תמיד מציגים לפי mongoId
+      if (!artworkByUserId[key]) {
+        artworkByUserId[key] = post.image_url;
+      }
     }
   }
+
   return { users, artworkByUserId };
 }
+
 export default async function HomePage() {
   const { users, artworkByUserId } = await getHomeData();
+
   return (
     <main className={styles.root}>
       <section className={styles.left}>
@@ -50,13 +83,15 @@ export default async function HomePage() {
             <img
               src="../media/logo1.png"
               alt="MuseUp Logo"
-                className={styles.logoImg}
+              className={styles.logoImg}
             />
           </div>
+
           <div className={styles.centerTitle}>
             <h2>A social network for artists</h2>
             <p>and art lovers</p>
           </div>
+
           <nav className={styles.nav}>
             <Link href="/register" className={styles.navBtn}>
               Sign Up
@@ -69,6 +104,8 @@ export default async function HomePage() {
             </Link>
           </nav>
         </header>
+
+        {/* --- Artists cards --- */}
         <section className={styles.grid}>
           {users.map((u) => {
             const followers = Number(u.followers_count ?? 0).toLocaleString();
@@ -76,6 +113,7 @@ export default async function HomePage() {
             const userKey = String(u._id);
             const artworkSrc = artworkByUserId[userKey] || "";
             const avatarSrc = u.profil_url || "";
+
             return (
               <article key={u._id} className={styles.card}>
                 <div className={styles.artPreview}>
@@ -87,6 +125,7 @@ export default async function HomePage() {
                     />
                   )}
                 </div>
+
                 <div className={styles.artistCircle}>
                   {avatarSrc && (
                     <img
@@ -96,8 +135,13 @@ export default async function HomePage() {
                     />
                   )}
                 </div>
-                <div className={styles.artistName}>{u.name || u.username}</div>
+
+                <div className={styles.artistName}>
+                  {u.name || u.username}
+                </div>
+
                 <div className={styles.medium}>digital</div>
+
                 <div className={styles.statsLine}>
                   {followers} followers | {likes} likes
                 </div>
@@ -106,30 +150,31 @@ export default async function HomePage() {
           })}
         </section>
       </section>
-  <aside className={styles.right}>
-  <div className={styles.heroText}>
-    <h1 className={styles.heroTitle}>
-      Join the
-      <br />
-      MuseUp
-      <br />
-      community
-    </h1>
-    <ul className={styles.heroList}>
-      <li>Share your creations</li>
-      <li>Get inspired</li>
-      <li>Connect with other artists</li>
-    </ul>
-    <Link href="/register" className={styles.ctaBtn}>
-      Get Started
-    </Link>
-  </div>
-  <div className={styles.illustrationBox}>
-    <img src="../media/1.png" alt="Artist illustration" />
-  </div>
-</aside>
 
+      {/* --- Right Section --- */}
+      <aside className={styles.right}>
+        <div className={styles.heroText}>
+          <h1 className={styles.heroTitle}>
+            Join the <br />
+            MuseUp <br />
+            community
+          </h1>
 
+          <ul className={styles.heroList}>
+            <li>Share your creations</li>
+            <li>Get inspired</li>
+            <li>Connect with other artists</li>
+          </ul>
+
+          <Link href="/register" className={styles.ctaBtn}>
+            Get Started
+          </Link>
+        </div>
+
+        <div className={styles.illustrationBox}>
+          <img src="../media/1.png" alt="Artist illustration" />
+        </div>
+      </aside>
     </main>
   );
 }

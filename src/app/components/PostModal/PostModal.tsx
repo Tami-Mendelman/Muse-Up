@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef, type FormEvent, useCallback } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import styles from "./PostModal.module.css";
 
 import { savePost, unsavePost } from "../../../services/postService";
 import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
-import { Share2, Copy, Mail, Send, Link2, MessageCircle } from "lucide-react";
+
+import useModalUI from "../../../hooks/useModalUI";
+import { usePost } from "../../../hooks/usePost";
+import { useComments } from "../../../hooks/useComments";
+
+import { Share2, Copy, Mail, Send, MessageCircle } from "lucide-react";
+import AiArtCritiqueButton from "../../components/AiArtCritiqueButton";
+
+type Props = {
+  onClose: () => void;
+  postId: string;
+};
 
 type Comment = {
   id: number;
@@ -14,132 +25,64 @@ type Comment = {
   body: string;
 };
 
-type Props = {
-  onClose: () => void;
-  postId: string;
-};
-
-const EMOJIS = ["😊", "😂", "😍", "🥰", "😎", "🤯", "😢", "🙏", "❤️", "🔥", "👍", "👏"];
-const REACTIONS = ["😍", "🔥", "😂", "🥰", "👍"];
-
+const EMOJIS = ["😊", "😂", "😍", "🥰", "😎", "🔥", "👍"];
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
 
 export default function PostModal({ onClose, postId }: Props) {
   const { uid } = useFirebaseUid();
 
-  const [post, setPost] = useState<any>(null);
-  const [loadingPost, setLoadingPost] = useState(true);
+  /* ✨ React Query Data */
+  const { data: post, isLoading: loadingPost } = usePost(postId);
+  const { data: comments = [], isLoading: loadingComments } = useComments(postId);
 
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loadingComments, setLoadingComments] = useState(true);
-
+  /* ✨ Local UI State */
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
 
-  const [likes, setLikes] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [liking, setLiking] = useState(false);
+  const [likes, setLikes] = useState(post?.likes_count ?? 0);
+  const [savingLike, setSavingLike] = useState(false);
 
   const [saved, setSaved] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showReactions, setShowReactions] = useState(false);
   const [showShare, setShowShare] = useState(false);
 
-
+  /* ✨ Refs */
   const commentsRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const emojiRef = useRef<HTMLDivElement | null>(null);
+  const shareRef = useRef<HTMLDivElement | null>(null);
 
-  // Disable scroll under modal
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
+  /* ✨ UI Hook */
+  useModalUI({
+    autoFocusRef: inputRef,
+    emojiRef,
+    shareRef,
+    commentsRef,
+    scrollDeps: [comments.length],
+    onCloseEmoji: () => setShowEmojiPicker(false),
+    onCloseShare: () => setShowShare(false),
+  });
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  // Load post
-  const loadPost = useCallback(async () => {
-    setLoadingPost(true);
-    try {
-      const res = await fetch(`/api/posts/${postId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setPost(data);
-      setLikes(data.likes_count ?? 0);
-      console.log("📌 MODAL POST:", data);
-
-    } finally {
-      setLoadingPost(false);
-    }
-  }, [postId]);
-
-  useEffect(() => { loadPost(); }, [loadPost]);
-
-  // Load comments
-  const loadComments = useCallback(async () => {
-    setLoadingComments(true);
-    try {
-      const res = await fetch(`/api/comments?postId=${postId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setComments(Array.isArray(data) ? data : []);
-    } finally {
-      setLoadingComments(false);
-    }
-  }, [postId]);
-
-  useEffect(() => { loadComments(); }, [loadComments]);
-
-  // Restore Like & Save local-only state
-  useEffect(() => {
-    const likedArr: string[] = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    setLiked(likedArr.includes(postId));
-
-    // saved is now synced from server, but keep initial UI stable
-    const savedArr: string[] = JSON.parse(localStorage.getItem("savedPosts") || "[]");
-    setSaved(savedArr.includes(postId));
-  }, [postId]);
-
-  useEffect(() => {
-    commentsRef.current?.scrollTo({
-      top: commentsRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [comments.length]);
-
-  // Close emoji picker outside click
-  useEffect(() => {
-    function closePicker(e: MouseEvent) {
-      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
-        setShowEmojiPicker(false);
-      }
-    }
-    if (showEmojiPicker) document.addEventListener("mousedown", closePicker);
-    return () => document.removeEventListener("mousedown", closePicker);
-  }, [showEmojiPicker]);
+  /* --------------------------------------------- */
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!commentText.trim() || sending) return;
 
+    setSending(true);
+
     try {
-      setSending(true);
-      const res = await fetch("/api/comments", {
+      await fetch(`/api/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           post_id: postId,
-          user_id: "1",
+          user_id: uid,
           body: commentText,
         }),
       });
-      if (!res.ok) return;
-      const created = await res.json();
-      setComments((prev) => [...prev, created]);
+
       setCommentText("");
     } finally {
       setSending(false);
@@ -147,83 +90,84 @@ export default function PostModal({ onClose, postId }: Props) {
   }
 
   async function handleLike() {
-    if (liking) return;
+    if (savingLike || !post) return;
+
     const newLiked = !liked;
     const delta = newLiked ? 1 : -1;
+
     setLiked(newLiked);
     setLikes((prev) => prev + delta);
+    setSavingLike(true);
 
     try {
-      setLiking(true);
-      const res = await fetch(`/api/posts/${postId}`, {
+      await fetch(`/api/posts/${postId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ delta }),
       });
-      if (!res.ok) throw new Error();
-
-      const arr: string[] = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-      const updated = newLiked ? [...arr, postId] : arr.filter((x) => x !== postId);
-      localStorage.setItem("likedPosts", JSON.stringify(updated));
-    } catch {
-      setLiked(!newLiked);
-      setLikes((prev) => prev - delta);
     } finally {
-      setLiking(false);
+      setSavingLike(false);
     }
   }
 
-  // ⭐ UPDATED — SAVE USING MONGODB
   async function handleSave() {
     if (!uid || !post?.id) return;
-
     const newSaved = !saved;
     setSaved(newSaved);
 
     try {
-      if (newSaved) {
-        await savePost(uid, post.id);
-      } else {
-        await unsavePost(uid, post.id);
-      }
-    } catch (e) {
+      if (newSaved) await savePost(uid, post.id);
+      else await unsavePost(uid, post.id);
+    } catch {
       setSaved(!newSaved);
     }
   }
-  // ⭐ SHARE FUNCTION
-  function handleShare() {
+
+  /* SHARE ACTIONS */
+  function copyShareLink() {
     if (!post?.id) return;
-
-    const url = `${window.location.origin}/posts/${post.id}`;
-
-    if (navigator.share) {
-      navigator.share({
-        title: post.title,
-        text: "Check out this artwork!",
-        url,
-      }).catch(() => { });
-    } else {
-      navigator.clipboard.writeText(url);
-      alert("Link copied to clipboard!");
-    }
+    const url = `${window.location.origin}/landing?postId=${post.id}`;
+    navigator.clipboard.writeText(url);
+    setShowShare(false);
   }
+
+  function shareWhatsApp() {
+    if (!post?.id) return;
+    const url = `${window.location.origin}/landing?postId=${post.id}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(url)}`);
+    setShowShare(false);
+  }
+
+  function shareEmail() {
+    if (!post?.id) return;
+    const url = `${window.location.origin}/landing?postId=${post.id}`;
+    window.location.href = `mailto:?subject=Check this out&body=${encodeURIComponent(url)}`;
+    setShowShare(false);
+  }
+
+  /* --------------------------------------------- */
+
   return (
     <div className={styles.bg}>
       <div className={styles.box}>
-        <button className={styles.close} onClick={onClose}>✕</button>
+        <button className={styles.close} onClick={onClose}>
+          ✕
+        </button>
 
+        {/* AI BUTTON */}
+        <div className={styles.aiTopRight}>
+          {post?.image_url && <AiArtCritiqueButton image_url={post.image_url} />}
+        </div>
+
+        {/* MODAL INNER */}
         <div className={styles.inner}>
-          {/* LEFT */}
+          {/* LEFT SIDE */}
           <div className={styles.left}>
-            <h2 className={styles.title}>
-              {loadingPost ? "Loading…" : post?.title}
-            </h2>
+            <h2 className={styles.title}>{loadingPost ? "Loading…" : post?.title}</h2>
 
-            <p className={styles.body}>
-              {loadingPost ? "Loading…" : post?.body}
-            </p>
+            <p className={styles.body}>{loadingPost ? "Loading…" : post?.body}</p>
 
-            {/* ICONS */}
+            {/* ICON BUTTONS */}
             <div className={styles.icons}>
               <button
                 className={`${styles.iconBtn} ${liked ? styles.active : ""}`}
@@ -238,39 +182,24 @@ export default function PostModal({ onClose, postId }: Props) {
               >
                 {saved ? "✓" : "＋"}
               </button>
+
               <button className={styles.iconBtn} onClick={() => setShowShare((v) => !v)}>
-                <Share2 size={22} strokeWidth={1.8} />
+                <Share2 size={22} />
               </button>
             </div>
+
+            {/* SHARE MENU */}
             {showShare && (
-              <div className={styles.shareMenu}>
-                <button
-                  className={styles.shareItem}
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    setShowShare(false);
-                  }}
-                >
+              <div ref={shareRef} className={styles.shareMenu}>
+                <button className={styles.shareItem} onClick={copyShareLink}>
                   <Copy size={18} /> Copy link
                 </button>
 
-                <button
-                  className={styles.shareItem}
-                  onClick={() => {
-                    window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`);
-                    setShowShare(false);
-                  }}
-                >
+                <button className={styles.shareItem} onClick={shareWhatsApp}>
                   <MessageCircle size={18} /> WhatsApp
                 </button>
 
-                <button
-                  className={styles.shareItem}
-                  onClick={() => {
-                    window.location.href = `mailto:?subject=Check this out&body=${encodeURIComponent(window.location.href)}`;
-                    setShowShare(false);
-                  }}
-                >
+                <button className={styles.shareItem} onClick={shareEmail}>
                   <Mail size={18} /> Email
                 </button>
 
@@ -281,7 +210,7 @@ export default function PostModal({ onClose, postId }: Props) {
                       navigator.share({
                         title: post?.title,
                         text: post?.body,
-                        url: window.location.href,
+                        url: `${window.location.origin}/landing?postId=${post?.id}`,
                       });
                       setShowShare(false);
                     }}
@@ -289,20 +218,6 @@ export default function PostModal({ onClose, postId }: Props) {
                     <Send size={18} /> Share (device)
                   </button>
                 )}
-              </div>
-            )}
-            {/* REACTIONS MENU */}
-            {showReactions && (
-              <div className={styles.reactionsMenu}>
-                {REACTIONS.map((r) => (
-                  <button
-                    key={r}
-                    className={styles.reactionItem}
-                    onClick={() => setShowReactions(false)}
-                  >
-                    {r}
-                  </button>
-                ))}
               </div>
             )}
 
@@ -317,11 +232,8 @@ export default function PostModal({ onClose, postId }: Props) {
                 <img
                   src={post?.author?.avatar_url || DEFAULT_AVATAR}
                   className={styles.authorAvatar}
-                  alt={post?.author?.name || "Unknown"}
                 />
-                <span className={styles.authorName}>
-                  {post?.author?.name || "Unknown"}
-                </span>
+                <span className={styles.authorName}>{post?.author?.name}</span>
               </div>
             </div>
 
@@ -332,7 +244,7 @@ export default function PostModal({ onClose, postId }: Props) {
               ) : comments.length === 0 ? (
                 <p className={styles.muted}>No comments yet.</p>
               ) : (
-                comments.map((c) => (
+                comments.map((c: Comment) => (
                   <div key={c.id} className={styles.comment}>
                     {c.body}
                   </div>
@@ -375,14 +287,10 @@ export default function PostModal({ onClose, postId }: Props) {
             )}
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT SIDE */}
           <div className={styles.right}>
             {post?.image_url ? (
-              <img
-                src={post.image_url}
-                className={styles.image}
-                alt={post?.title || "Artwork"}
-              />
+              <img src={post.image_url} className={styles.image} />
             ) : (
               <div className={styles.noImage}>No image</div>
             )}
