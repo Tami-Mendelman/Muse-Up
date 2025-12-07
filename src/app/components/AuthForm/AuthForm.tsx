@@ -102,7 +102,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 if (mode === "register") {
                     const userData = await getUserByEmail(email.trim());
                     console.log("Existing user data:", userData);
-                    
+
                     if (userData !== null) {
                         setError("This email is already registered. Please log in instead.");
                         return;
@@ -194,8 +194,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 className={`${styles.box} ${mode === "register" ? styles.boxRegister : ""
                     }`}
             >
-                <img src="../" alt="Logo" className={styles.logo} />
-
+                <img src="/media/logo1.png" alt="Logo" className={styles.logo} />
                 <h2 className={styles.title}>
                     {mode === "login" ? "Log in" : "Sign up"}
                 </h2>
