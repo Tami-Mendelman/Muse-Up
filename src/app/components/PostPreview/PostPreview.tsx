@@ -15,12 +15,14 @@ export default function PostPreview({ imagePreview, caption, author = "You" }: P
           {caption || "Start typing your caption here…\n(what inspired you? materials? story?)"}
         </div>
 
+        {/* ACTIONS — הוחלפו לכפתורי btn-icon */}
         <div className={styles.actions}>
-          <span title="like">❤️</span>
-          <span title="save">➕</span>
-          <span title="upvote">👍</span>
+          <button className="btn-icon" title="like">❤️</button>
+          <button className="btn-icon" title="save">➕</button>
+          <button className="btn-icon" title="upvote">👍</button>
         </div>
 
+        {/* META */}
         <div className={styles.meta}>
           <span>8.5K followers</span>
           <span>|</span>
@@ -30,7 +32,8 @@ export default function PostPreview({ imagePreview, caption, author = "You" }: P
           <span className={styles.dot} />
         </div>
 
-        <button type="button" className={styles.commentBtn}>
+        {/* COMMENT BUTTON — כפתור רגיל → btn btn-outline */}
+        <button type="button" className="btn btn-outline">
           הוספת תגובה 🙂
         </button>
       </div>

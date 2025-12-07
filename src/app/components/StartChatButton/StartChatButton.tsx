@@ -3,7 +3,6 @@
 import { MouseEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSocket } from "../../../lib/useSocket";
-import styles from "./StartChatButton.module.css";
 
 type Props = {
   otherUserUid: string;
@@ -23,8 +22,6 @@ export default function StartChatButton({
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
 
-    console.log("[StartChatButton] click", { otherUserUid });
-
     if (!socket) {
       console.error("[StartChatButton] socket is not ready");
       return;
@@ -36,7 +33,6 @@ export default function StartChatButton({
       return;
     }
     if (currentUid === otherUserUid) {
-      console.warn("[StartChatButton] current user == otherUser, skipping");
       return;
     }
 
@@ -46,33 +42,23 @@ export default function StartChatButton({
       "startConversation",
       { currentUserUid: currentUid, otherUserUid },
       (res: any) => {
-        console.log("[StartChatButton] startConversation ack:", res);
         setLoading(false);
 
         if (!res || res.ok === false) {
-          console.error(
-            "[StartChatButton] startConversation error:",
-            res?.error || res
-          );
+          console.error("[StartChatButton] startConversation error:", res?.error);
           return;
         }
-        let conversationId: string | undefined;
 
-        if (res.conversation?._id) {
-          conversationId = res.conversation._id as string;
-        } else if (res.conversationId) {
-          conversationId = res.conversationId as string;
-        } else if (res._id) {
-          conversationId = res._id as string;
-        }
+        let conversationId =
+          res.conversation?._id ||
+          res.conversationId ||
+          res._id;
 
         if (!conversationId) {
-          console.error(
-            "[StartChatButton] no conversationId in response",
-            res
-          );
+          console.error("[StartChatButton] no conversationId in response");
           return;
         }
+
         if (onClose) {
           try {
             onClose();
@@ -80,10 +66,7 @@ export default function StartChatButton({
             console.error("[StartChatButton] onClose error:", err);
           }
         }
-        console.log(
-          "[StartChatButton] navigating to",
-          `/messages/${conversationId}`
-        );
+
         router.push(`/messages/${conversationId}`);
       }
     );
@@ -94,7 +77,7 @@ export default function StartChatButton({
       type="button"
       onClick={handleClick}
       disabled={loading}
-      className={styles.button}
+      className="btn btn-primary"
     >
       {loading ? "Opening..." : label || "Message"}
     </button>

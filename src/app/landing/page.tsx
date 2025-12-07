@@ -114,8 +114,10 @@ export default async function LandingPage() {
               <p className={styles.subtitle}>
                 Share your art, discover fresh ideas, and connect with creators like you.
               </p>
+
+              {/* 🔵 כפתור גלובלי חדש */}
               <div className={styles.actions}>
-                <Link href="/create" className={styles.primaryBtn}>
+                <Link href="/create" className="btn btn-primary">
                   Share your art
                 </Link>
               </div>
@@ -123,12 +125,12 @@ export default async function LandingPage() {
 
             <section className={styles.bottomLeft}>
               <div className={styles.card}>
-                {/* ✨ פה הפתרון – עוטפים את ה־TrendingSection ב-Suspense */}
                 <Suspense fallback={<div className={styles.loadingBox}>Loading…</div>}>
                   <TrendingSection trending={trending} />
                 </Suspense>
 
-                <Link href="/posts" className={styles.moreLink}>
+                {/* 🔵 לינק כפתור גלובלי */}
+                <Link href="/posts" className="btn btn-outline" style={{ marginTop: "12px" }}>
                   See more posts →
                 </Link>
               </div>
@@ -136,7 +138,9 @@ export default async function LandingPage() {
               <div className={styles.card}>
                 <h2 className={styles.cardTitle}>Artists to follow</h2>
                 <ArtistsToFollowClient artists={artists} />
-                <Link href="/users" className={styles.moreLink}>
+
+                {/* 🔵 לינק כפתור גלובלי */}
+                <Link href="/users" className="btn btn-outline" style={{ marginTop: "12px" }}>
                   See more artists →
                 </Link>
               </div>
@@ -163,7 +167,8 @@ export default async function LandingPage() {
               <div className={styles.challengeVisual} />
             </aside>
 
-            <Link href="/challenges" className={styles.moreLink}>
+            {/* 🔵 לינק כפתור גלובלי */}
+            <Link href="/challenges" className="btn btn-outline" style={{ marginTop: "12px" }}>
               See all challenges →
             </Link>
           </div>

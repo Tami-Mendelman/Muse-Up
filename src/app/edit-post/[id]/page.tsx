@@ -2,10 +2,12 @@
 import styles from "./editPost.module.css";
 import { useRouter, useParams } from "next/navigation";
 import { useEditPost } from "../../../hooks/useEditPost";
+
 export default function EditPostPage() {
   const router = useRouter();
   const params = useParams();
   const postId = params?.id as string;
+
   const {
     success,
     loading,
@@ -18,17 +20,18 @@ export default function EditPostPage() {
     handleImageChange,
     handleSave,
   } = useEditPost(postId);
+
   if (loading) return <div className={styles.container}>Loading…</div>;
+
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Edit Post</h1>
+
+      {/* IMAGE BOX */}
       <div className={styles.imageBox}>
-        <img
-          src={form.image_url}
-          alt="Post Image"
-          className={styles.imagePreview}
-        />
-        <button className={styles.changeImageBtn}>
+        <img src={form.image_url} alt="Post" className={styles.imagePreview} />
+
+        <button className="btn btn-outline" style={{ position: "relative" }}>
           Change Image
           <input
             type="file"
@@ -43,6 +46,8 @@ export default function EditPostPage() {
           />
         </button>
       </div>
+
+      {/* FORM */}
       <form className={styles.form} onSubmit={handleSave}>
         <div>
           <label className={styles.label}>Title</label>
@@ -53,6 +58,7 @@ export default function EditPostPage() {
             className={styles.input}
           />
         </div>
+
         <div>
           <label className={styles.label}>Body</label>
           <textarea
@@ -62,6 +68,7 @@ export default function EditPostPage() {
             className={styles.textarea}
           />
         </div>
+
         <div>
           <label className={styles.label}>Category</label>
           <input
@@ -71,14 +78,17 @@ export default function EditPostPage() {
             className={styles.input}
           />
         </div>
+
         <div>
           <label className={styles.label}>Tags</label>
+
           <div className={styles.tagsInput}>
             {form.tags.map((t, i) => (
               <span key={i} className={styles.tagChip}>
                 {t}
               </span>
             ))}
+
             <input
               className={styles.tagInputField}
               value={newTag}
@@ -93,6 +103,7 @@ export default function EditPostPage() {
             />
           </div>
         </div>
+
         <div>
           <label className={styles.label}>Visibility</label>
           <select
@@ -105,13 +116,25 @@ export default function EditPostPage() {
             <option value="private">Private</option>
           </select>
         </div>
-        <button type="submit" className={styles.saveBtn} disabled={saving}>
-          {saving ? "Saving…" : "Save changes"}
-        </button>
-        {success && (
-  <p className={styles.successMessage}>Post updated successfully!</p>
-)}
 
+        {/* GLOBAL BUTTONS */}
+        <div className={styles.actionsRow}>
+          <button
+            type="button"
+            className="btn btn-subtle"
+            onClick={() => router.back()}
+          >
+            Cancel
+          </button>
+
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+
+        {success && (
+          <p className={styles.successMessage}>Post updated successfully!</p>
+        )}
       </form>
     </div>
   );

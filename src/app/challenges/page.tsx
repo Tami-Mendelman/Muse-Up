@@ -1,4 +1,5 @@
 "use client";
+
 import {
   useEffect,
   useState,
@@ -9,6 +10,7 @@ import {
 import styles from "./challenges.module.css";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useFirebaseUid } from "../../hooks/useFirebaseUid";
+
 import { getChallenges } from "../../services/challengesService";
 import {
   getUserJoinedChallenges,
@@ -16,6 +18,8 @@ import {
   leaveChallenge,
   submitChallengeImage,
 } from "../../services/challengeSubmissionsService";
+
+
 export type Challenge = {
   _id: string;
   id: number;
@@ -26,6 +30,7 @@ export type Challenge = {
   start_date?: string;
   end_date?: string;
 };
+
 type ChallengeSubmission = {
   _id: string;
   challenge_id: number;
@@ -33,13 +38,18 @@ type ChallengeSubmission = {
   status?: string;
   image_url?: string | null;
 };
+
 type TabKey = "active" | "endingSoon" | "ended";
+
+
 export default function ChallengesPage() {
   const [tab, setTab] = useState<TabKey>("active");
   const [search, setSearch] = useState("");
   const [joinLoadingId, setJoinLoadingId] = useState<number | null>(null);
+
   const queryClient = useQueryClient();
   const { uid, ready: uidReady } = useFirebaseUid();
+
   const {
     data: challenges = [],
     isLoading: loadingChallenges,
@@ -48,22 +58,24 @@ export default function ChallengesPage() {
     queryKey: ["challenges"],
     queryFn: getChallenges,
   });
+
   const {
     data: joinedSubmissions = [],
-    isLoading: loadingJoined,
-    error: joinedError,
   } = useQuery<ChallengeSubmission[]>({
     queryKey: ["joinedChallenges", uid],
     queryFn: () => getUserJoinedChallenges(uid as string),
     enabled: uidReady && !!uid,
   });
-const { joinedIds, submittedIds } = useMemo(() => {
+
+  /* Build lists of joined + submitted */
+  const { joinedIds, submittedIds } = useMemo(() => {
     const joined: number[] = [];
     const submitted: number[] = [];
 
     (joinedSubmissions as ChallengeSubmission[]).forEach((s) => {
       if (typeof s.challenge_id === "number") {
         joined.push(s.challenge_id);
+
         if (
           (s.image_url && typeof s.image_url === "string") ||
           s.status === "submitted"
@@ -76,6 +88,7 @@ const { joinedIds, submittedIds } = useMemo(() => {
     return { joinedIds: joined, submittedIds: submitted };
   }, [joinedSubmissions]);
 
+  /* Mutations */
   const joinMutation = useMutation({
     mutationFn: (challengeId: number) =>
       joinChallenge(challengeId, uid as string),
@@ -84,6 +97,7 @@ const { joinedIds, submittedIds } = useMemo(() => {
       queryClient.invalidateQueries({
         queryKey: ["joinedChallenges", uid],
       });
+
     },
   });
 
@@ -112,13 +126,8 @@ const { joinedIds, submittedIds } = useMemo(() => {
     const mutation = isJoined ? leaveMutation : joinMutation;
 
     mutation.mutate(challengeId, {
-      onError: (err: any) => {
-        console.error(err);
-        alert(err?.message || "Failed to update challenge");
-      },
-      onSettled: () => {
-        setJoinLoadingId(null);
-      },
+      onError: (err: any) => alert(err?.message || "Failed to update challenge"),
+      onSettled: () => setJoinLoadingId(null),
     });
   }
 
@@ -137,25 +146,21 @@ const { joinedIds, submittedIds } = useMemo(() => {
 
       <div className={styles.tabs}>
         <button
-          className={`${styles.tab} ${
-            tab === "active" ? styles.tabActive : ""
-          }`}
+          className={`btn btn-secondary ${tab === "active" ? styles.tabActive : ""}`}
           onClick={() => setTab("active")}
         >
           Active
         </button>
+
         <button
-          className={`${styles.tab} ${
-            tab === "endingSoon" ? styles.tabActive : ""
-          }`}
+          className={`btn btn-secondary ${tab === "endingSoon" ? styles.tabActive : ""}`}
           onClick={() => setTab("endingSoon")}
         >
           Ending soon
         </button>
+
         <button
-          className={`${styles.tab} ${
-            tab === "ended" ? styles.tabActive : ""
-          }`}
+          className={`btn btn-secondary ${tab === "ended" ? styles.tabActive : ""}`}
           onClick={() => setTab("ended")}
         >
           Ended
@@ -218,20 +223,24 @@ function ChallengeCard({
 
   const queryClient = useQueryClient();
 
+  /* Countdown timer */
   useEffect(() => {
     if (!end) return;
 
     function update() {
       const now = Date.now();
       const diff = end.getTime() - now;
+
       if (diff <= 0) {
         setTimeLeft(null);
         return;
       }
+
       const totalSeconds = Math.floor(diff / 1000);
       const days = Math.floor(totalSeconds / 86400);
       const hours = Math.floor((totalSeconds % 86400) / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
+
       let text = "";
       if (days > 0) text = `${days}d ${hours}h`;
       else if (hours > 0) text = `${hours}h ${minutes}m`;
@@ -242,18 +251,15 @@ function ChallengeCard({
 
     update();
     const timerId = setInterval(update, 60000);
-
     return () => clearInterval(timerId);
-  }, [challenge.end_date, end]);
+  }, [end]);
 
   const isActive =
     challenge.status !== "ended" && (!end || end.getTime() > Date.now());
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      if (!userUid) {
-        throw new Error("You must be logged in to upload.");
-      }
+      if (!userUid) throw new Error("You must be logged in to upload.");
       await submitChallengeImage(challenge.id, userUid, file);
     },
     onSuccess: () => {
@@ -264,9 +270,7 @@ function ChallengeCard({
         });
       }
     },
-    onError: () => {
-      setUploadMessage("Upload failed, please try again.");
-    },
+    onError: () => setUploadMessage("Upload failed, please try again."),
   });
 
   const isUploading = uploadMutation.isPending;
@@ -309,10 +313,7 @@ function ChallengeCard({
 
         {(dateText || (isActive && timeLeft)) && (
           <div className={styles.cardMeta}>
-            {dateText && (
-              <p className={styles.cardDates}>{dateText}</p>
-            )}
-
+            {dateText && <p className={styles.cardDates}>{dateText}</p>}
             {isActive && timeLeft && (
               <span className={styles.cardTimer}>⏰ {timeLeft} left</span>
             )}
@@ -325,24 +326,24 @@ function ChallengeCard({
 
         {challenge.status !== "ended" && (
           <div className={styles.actionsRow}>
+            {/* JOIN / LEAVE */}
             <button
-              className={`${styles.joinButton} ${
-                isJoined ? styles.joinButtonJoined : ""
-              }`}
+              className={`btn ${isJoined ? "btn-outline" : "btn-primary"}`}
               onClick={onToggle}
               disabled={loading}
             >
               {loading
                 ? "Saving..."
                 : isJoined
-                ? "Leave Challenge"
-                : "Join Now"}
+                  ? "Leave Challenge"
+                  : "Join Now"}
             </button>
 
+            {/* UPLOAD */}
             {isJoined && !isSubmitted && (
               <>
                 <button
-                  className={styles.uploadButton}
+                  className="btn btn-primary"
                   onClick={handleUploadClick}
                   disabled={isUploading}
                 >
@@ -374,6 +375,7 @@ function ChallengeCard({
     </article>
   );
 }
+
 function filterByTabAndSearch(
   challenges: Challenge[],
   tab: TabKey,
@@ -395,26 +397,22 @@ function filterByTabAndSearch(
   const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
   if (tab === "active") {
-    return withDates.filter((c) => {
-      if (!c._start || !c._end) return false;
-      return c._start <= now && c._end >= now;
-    });
+    return withDates.filter(
+      (c) => c._start && c._end && c._start <= now && c._end >= now
+    );
   }
 
   if (tab === "endingSoon") {
     return withDates.filter((c) => {
       if (!c._start || !c._end) return false;
-      const diff = (c._end as Date).getTime() - now.getTime();
+      const diff = c._end.getTime() - now.getTime();
       const isActive = c._start <= now && c._end >= now;
       return isActive && diff <= WEEK_MS && diff >= 0;
     });
   }
 
   if (tab === "ended") {
-    return withDates.filter((c) => {
-      if (!c._end) return false;
-      return c._end < now;
-    });
+    return withDates.filter((c) => c._end && c._end < now);
   }
 
   return withDates;

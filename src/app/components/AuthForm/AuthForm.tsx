@@ -8,7 +8,6 @@ import {
     createUserWithEmailAndPassword,
     signInWithPopup,
     fetchSignInMethodsForEmail,
-    getAdditionalUserInfo,
     signOut,
 } from "firebase/auth";
 import Link from "next/link";
@@ -19,7 +18,6 @@ import { checkUserInDB } from "../../../lib/checkUserInDB";
 import { setLocalStorageUid } from "../../../lib/localStorage";
 import { addTokenToCookie } from "../../../services/loginService";
 import { getUserByEmail } from "../../../services/signin&upServoce";
-
 
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     const router = useRouter();
@@ -39,9 +37,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        // if (!value) return "";
         setEmail(value);
-
         if (!value) {
             setEmailError(null);
             return;
@@ -51,24 +47,15 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
     const validatePassword = (value: string): string[] => {
         const errors: string[] = [];
-
         if (!value) return [];
-
-        if (value.length < 6) {
-            errors.push("Password must be at least 6 characters.");
-        }
-        if (!/[A-Za-z]/.test(value)) {
-            errors.push("Password must contain at least one letter.");
-        }
-        if (!/[0-9]/.test(value)) {
-            errors.push("Password must contain at least one number.");
-        }
+        if (value.length < 6) errors.push("Password must be at least 6 characters.");
+        if (!/[A-Za-z]/.test(value)) errors.push("Password must contain at least one letter.");
+        if (!/[0-9]/.test(value)) errors.push("Password must contain at least one number.");
         return errors;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         const emailError = validateEmail(email);
         const passwordError = validatePassword(password);
 
@@ -90,7 +77,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         return;
                     }
                 }
-                // save token
+
                 const user = auth.currentUser;
                 const token = await user?.getIdToken();
                 await addTokenToCookie(token);
@@ -99,33 +86,27 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 router.push("/landing");
                 alert("Login successfully!");
             } else {
-                if (mode === "register") {
-                    const userData = await getUserByEmail(email.trim());
-                    console.log("Existing user data:", userData);
-                    
-                    if (userData !== null) {
-                        setError("This email is already registered. Please log in instead.");
-                        return;
-                    }
-                    const methods = await fetchSignInMethodsForEmail(auth, email);
-                    if (methods.length > 0) {
-                        setError("This email is already registered in Firebase. Please log in instead.");
-                        return;
-                    }
-
-                    const cred = await createUserWithEmailAndPassword(auth, email, password);
-                    console.log("CREATED FIREBASE USER:", cred.user);
-                    // await createUserWithEmailAndPassword(auth, email, password);
-
-                    // save token
-                    const user = auth.currentUser;
-                    const token = await user?.getIdToken();
-                    await addTokenToCookie(token);
-
-                    setLocalStorageUid(cred.user.uid);
-                    router.push("/onboarding");
-                    alert("register successfully!");
+                const userData = await getUserByEmail(email.trim());
+                if (userData !== null) {
+                    setError("This email is already registered. Please log in instead.");
+                    return;
                 }
+
+                const methods = await fetchSignInMethodsForEmail(auth, email);
+                if (methods.length > 0) {
+                    setError("This email is already registered in Firebase. Please log in instead.");
+                    return;
+                }
+
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+                const user = auth.currentUser;
+                const token = await user?.getIdToken();
+                await addTokenToCookie(token);
+
+                setLocalStorageUid(cred.user.uid);
+                router.push("/onboarding");
+                alert("register successfully!");
             }
         } catch (err: any) {
             const msg = getAuthErrorMessage(err, mode);
@@ -143,11 +124,9 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 await signOut(auth);
                 return;
             }
-            const email = user.email;
-            console.log("User email from Google:", email);
 
+            const email = user.email;
             const userExists = await checkUserInDB(email);
-            console.log("User exists in DB:", userExists);
 
             if (mode === "login") {
                 if (!userExists) {
@@ -156,11 +135,9 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     await signOut(auth);
                     return;
                 }
-                // save token
-                const user = auth.currentUser;
-                const token = await user?.getIdToken();
-                await addTokenToCookie(token);
 
+                const token = await user.getIdToken();
+                await addTokenToCookie(token);
                 setLocalStorageUid(user.uid);
                 router.push("/landing");
                 return;
@@ -173,32 +150,24 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     await signOut(auth);
                     return;
                 }
-                // save token
-                const user = auth.currentUser;
-                const token = await user?.getIdToken();
-                await addTokenToCookie(token);
 
+                const token = await user.getIdToken();
+                await addTokenToCookie(token);
                 setLocalStorageUid(user.uid);
                 router.push("/onboarding");
                 return;
             }
-        } catch (err: any) {
-            console.error("Google authentication failed:", err);
+        } catch {
             setError("Google authentication failed. Try again.");
         }
     };
 
     return (
         <div className={styles.container}>
-            <div
-                className={`${styles.box} ${mode === "register" ? styles.boxRegister : ""
-                    }`}
-            >
+            <div className={`${styles.box} ${mode === "register" ? styles.boxRegister : ""}`}>
                 <img src="../" alt="Logo" className={styles.logo} />
 
-                <h2 className={styles.title}>
-                    {mode === "login" ? "Log in" : "Sign up"}
-                </h2>
+                <h2 className={styles.title}>{mode === "login" ? "Log in" : "Sign up"}</h2>
 
                 <p className={styles.subtitle}>
                     {mode === "login"
@@ -208,12 +177,13 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
                 <form onSubmit={handleSubmit} className={styles.form}>
                     {error && <div className={styles.globalError}>{error}</div>}
+
                     {/* Email */}
                     <label className={styles.label}>
                         Email address
                         <div className={styles.inputWrapper}>
                             <span className={styles.inputIconLeft}>
-                                <Mail size={16} color="#000000ff" />
+                                <Mail size={16} />
                             </span>
 
                             <input
@@ -233,7 +203,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         Password
                         <div className={styles.inputWrapper}>
                             <span className={styles.inputIconLeft}>
-                                <Lock size={18} color="#000000ff" />
+                                <Lock size={18} />
                             </span>
 
                             <input
@@ -249,13 +219,13 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                                 required
                             />
 
+                            {/* NEW BUTTON STYLE */}
                             <button
                                 type="button"
                                 onClick={() => setShowPassword((s) => !s)}
-                                className={styles.iconButton}
-                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                className="btn-icon"
                             >
-                                {showPassword ? <EyeOff size={18} color="#6B7280" /> : <Eye size={18} color="#6B7280" />}
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
 
@@ -275,10 +245,12 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         </label>
                     )}
 
+                    {/* PRIMARY BUTTON */}
                     <button
                         type="submit"
-                        className={styles.primaryBtn}
-                        disabled={passwordErrors.length > 0 || !email || !password}                    >
+                        className="btn btn-primary"
+                        disabled={passwordErrors.length > 0 || !email || !password}
+                    >
                         {mode === "login" ? "Log in" : "Create Account"}
                     </button>
                 </form>
@@ -287,7 +259,8 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     <span>Or</span>
                 </div>
 
-                <button onClick={() => { handleGoogle(mode) }} className={styles.googleBtn}>
+                {/* GOOGLE BUTTON */}
+                <button onClick={() => handleGoogle(mode)} className="btn btn-outline">
                     <img
                         className={styles.googleIcon}
                         src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -301,21 +274,13 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 {mode === "register" && (
                     <p className={styles.terms}>
                         By creating an account, you agree to the{" "}
-                        <a href="#" className={styles.textLink}>
-                            Terms of Service
-                        </a>{" "}
-                        and{" "}
-                        <a href="#" className={styles.textLink}>
-                            Privacy Policy
-                        </a>
-                        .
+                        <a href="#" className={styles.textLink}>Terms of Service</a> and{" "}
+                        <a href="#" className={styles.textLink}>Privacy Policy</a>.
                     </p>
                 )}
 
                 <p className={styles.switch}>
-                    {mode === "login"
-                        ? "Don't have an account?"
-                        : "Already have an account?"}{" "}
+                    {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
                     <Link
                         href={mode === "login" ? "/register" : "/login"}
                         className={styles.textLink}
@@ -326,10 +291,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
 
                 {mode === "login" && (
                     <p className={styles.switch}>
-                        <Link
-                            href="/forget-password"
-                            className={styles.textLink}
-                        >
+                        <Link href="/forget-password" className={styles.textLink}>
                             Forget password?
                         </Link>
                     </p>

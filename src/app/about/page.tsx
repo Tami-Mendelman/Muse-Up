@@ -6,6 +6,7 @@ import styles from "./About.module.css";
 
 export default function AboutPage() {
   const illoRef = useRef<HTMLImageElement | null>(null);
+
   useEffect(() => {
     const el = illoRef.current;
     if (!el) return;
@@ -14,14 +15,18 @@ export default function AboutPage() {
       const y = Math.min(12, window.scrollY / 20);
       el.style.transform = `translateY(${y}px)`;
     };
+
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
     <div className={styles.panel}>
       <div className={styles.layout}>
+        
+        {/* LEFT SIDE */}
         <section className={styles.left}>
           <header className={`${styles.hero} ${styles.reveal}`} style={{ ["--d" as any]: "0ms" }}>
             <h1>who we are</h1>
@@ -33,17 +38,20 @@ export default function AboutPage() {
 
           <section className={styles.tasks}>
             <h2 className={styles.reveal} style={{ ["--d" as any]: "0ms" }}>Our tasks</h2>
+
             <ul className={styles.taskGrid}>
               <li className={`${styles.taskCard} ${styles.reveal}`} style={{ ["--d" as any]: "calc(var(--rev-gap) * 1)" }}>
                 <span className={`${styles.ico} ${styles.heart}`} aria-hidden>❤️</span>
                 <strong>Create Inspiration</strong>
                 <small>A place where every creator can share their work.</small>
               </li>
+
               <li className={`${styles.taskCard} ${styles.reveal}`} style={{ ["--d" as any]: "calc(var(--rev-gap) * 2)" }}>
                 <span className={`${styles.ico} ${styles.bolt}`} aria-hidden>⚡</span>
                 <strong>Building a community</strong>
                 <small>Artists from all over the world who support, learn and create together.</small>
               </li>
+
               <li className={`${styles.taskCard} ${styles.reveal}`} style={{ ["--d" as any]: "calc(var(--rev-gap) * 3)" }}>
                 <span className={`${styles.ico} ${styles.star}`} aria-hidden>⭐</span>
                 <strong>Grow</strong>
@@ -54,6 +62,7 @@ export default function AboutPage() {
 
           <section className={styles.team}>
             <h3 className={styles.reveal} style={{ ["--d" as any]: "calc(var(--rev-gap) * 4)" }}>The Team</h3>
+
             <ul className={styles.teamGrid}>
               <li className={styles.reveal} style={{ ["--d" as any]: "calc(var(--rev-gap) * 5)" }}>
                 <Image
@@ -66,6 +75,7 @@ export default function AboutPage() {
                 <b>Michal</b>
                 <small>The website developer</small>
               </li>
+
               <li className={styles.reveal} style={{ ["--d" as any]: "calc(var(--rev-gap) * 6)" }}>
                 <Image
                   src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1762865435/AR_0860_fz6yrv.jpg"
@@ -77,6 +87,7 @@ export default function AboutPage() {
                 <b>Tzipi</b>
                 <small>The website developer</small>
               </li>
+
               <li className={styles.reveal} style={{ ["--d" as any]: "calc(var(--rev-gap) * 7)" }}>
                 <Image
                   src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1762782134/IMG_4395_1_gmncyh.jpg"
@@ -94,8 +105,14 @@ export default function AboutPage() {
 
         <div className={styles.divider} aria-hidden />
 
+        {/* RIGHT SIDE */}
         <aside className={styles.right}>
-          <button className={`${styles.cta} ${styles.reveal}`} style={{ ["--d" as any]: "0ms" }}>
+          
+          {/* CHANGED BUTTON → now using global design system */}
+          <button
+            className={`btn btn-primary ${styles.reveal}`}
+            style={{ ["--d" as any]: "0ms" }}
+          >
             Sign Up
           </button>
 

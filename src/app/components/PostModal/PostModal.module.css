@@ -24,7 +24,8 @@
   height: 100%;
   border-radius: 16px;
   display: flex;
-  overflow: hidden;
+  overflow: visible;   /* <<< תוסיפי את זה */
+
 }
 
 /* CLOSE BUTTON */
@@ -249,13 +250,15 @@
   }
   to {
     transform: scale(1);
-    opacity: 1);
+    opacity: 1;
   }
 }
 
 /* SHARE MENU */
 .shareMenu {
-  position: absolute;
+  position: fixed;
+  top: 150px; /* או מה שמתאים */
+  left: 150px;
   margin-top: 8px;
   padding: 10px;
   background: #fff;
@@ -264,9 +267,11 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  z-index: 50;
+  z-index: 999999;
   animation: fadeIn 0.15s ease-out;
 }
+
+
 
 .shareItem {
   display: flex;

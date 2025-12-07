@@ -92,12 +92,13 @@ export default function ArtistSearchDrawer({
       <aside className={styles.drawer}>
         <header className={styles.header}>
           <button
-            className={styles.closeBtn}
+            className="btn-icon"
             onClick={onClose}
             aria-label="Close"
           >
             ✕
           </button>
+
           <div className={styles.headerText}>
             <h2 className={styles.title}>Discover artists</h2>
             <p className={styles.subtitle}>
@@ -118,27 +119,29 @@ export default function ArtistSearchDrawer({
         <div className={styles.filters}>
           <button
             type="button"
-            className={`${styles.filterBtn} ${
-              searchMode === "name" ? styles.filterBtnActive : ""
-            }`}
+            className={
+              searchMode === "name" ? "btn btn-primary" : "btn btn-outline"
+            }
             onClick={() => setSearchMode("name")}
           >
             Name
           </button>
+
           <button
             type="button"
-            className={`${styles.filterBtn} ${
-              searchMode === "country" ? styles.filterBtnActive : ""
-            }`}
+            className={
+              searchMode === "country" ? "btn btn-primary" : "btn btn-outline"
+            }
             onClick={() => setSearchMode("country")}
           >
             Country
           </button>
+
           <button
             type="button"
-            className={`${styles.filterBtn} ${
-              searchMode === "specialty" ? styles.filterBtnActive : ""
-            }`}
+            className={
+              searchMode === "specialty" ? "btn btn-primary" : "btn btn-outline"
+            }
             onClick={() => setSearchMode("specialty")}
           >
             Specialty
@@ -163,9 +166,7 @@ export default function ArtistSearchDrawer({
                 key={artist._id}
                 className={styles.item}
                 onClick={() => {
-                  if (onSelectArtist) {
-                    onSelectArtist(artist);
-                  }
+                  if (onSelectArtist) onSelectArtist(artist);
                   if (artist.firebase_uid) {
                     router.push(`/users/${artist.firebase_uid}`);
                   }
@@ -183,17 +184,20 @@ export default function ArtistSearchDrawer({
                   <div className={styles.name}>
                     {artist.name || artist.username}
                   </div>
+
                   <div className={styles.meta}>
                     {artist.bio
                       ? artist.bio.slice(0, 50) +
                         (artist.bio.length > 50 ? "…" : "")
                       : "Artist"}
                   </div>
+
                   {artist.location && (
                     <div className={styles.location}>
                       {artist.location}
                     </div>
                   )}
+
                   <div
                     className={styles.actionsRow}
                     onClick={(e) => e.stopPropagation()}

@@ -2,7 +2,6 @@ import { PostCard } from "./postService";
 
 export async function getSavedPostIds(uid: string): Promise<number[]> {
   const res = await fetch(`/api/users/${uid}/saved-posts`);
-  // עכשיו ה-API תמיד מחזיר 200, אז אפשר לא לזרוק:
   if (!res.ok) {
     console.error("Failed to fetch saved post IDs, status:", res.status);
     return [];
@@ -24,4 +23,28 @@ export async function getSavedPosts(uid: string): Promise<PostCard[]> {
   );
 
   return posts.filter(Boolean) as PostCard[];
+}
+
+export async function savePost(uid: string, postId: number) {
+  const res = await fetch(`/api/users/${uid}/saved-posts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ postId }),
+  });
+
+  if (!res.ok) throw new Error("Failed to save post");
+
+  return res.json();
+}
+
+export async function unsavePost(uid: string, postId: number) {
+  const res = await fetch(`/api/users/${uid}/saved-posts`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ postId }),
+  });
+
+  if (!res.ok) throw new Error("Failed to unsave post");
+
+  return res.json();
 }

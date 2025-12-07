@@ -1,3 +1,7 @@
+/* ============================
+   CREATE PAGE — FIXED LAYOUT
+============================ */
+
 .wrapper {
   max-width: 1050px;
   margin: 36px auto;
@@ -5,6 +9,10 @@
   background: #fff;
   border-radius: 22px;
   box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+
+  display: flex;               /* NEW */
+  flex-direction: column;      /* NEW */
+  min-height: 100vh;           /* NEW */
 }
 
 .pageTitle {
@@ -15,22 +23,17 @@
   font-family: var(--font-main);
 }
 
-.subTitle {
-  font-family: var(--font-main);
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 14px;
-}
-
+/* MAIN GRID */
 .formLayout {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 32px;
+  align-items: start;
+
+  height: 100%;                 /* NEW */
 }
 
-/* .leftSide {}
-.rightSide {} */
-
+/* LEFT SIDE PREVIEW CARD */
 .previewCard {
   background: #fefefe;
   border: 1px solid #e5e7eb;
@@ -63,7 +66,6 @@
   font-size: 15px;
 }
 
-/* .previewTextArea {} */
 .previewCaption {
   background: #fafafa;
   border: 1px dashed #d1d5db;
@@ -97,6 +99,13 @@
   color: #6b7280;
   font-family: var(--font-main);
   font-size: 13px;
+}
+
+/* RIGHT SIDE FORM */
+.rightSide {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .uploadBox {
@@ -182,10 +191,11 @@
   font-size: 14px;
 }
 
+/* FIXED ACTIONS AT BOTTOM */
 .actions {
   display: flex;
   gap: 12px;
-  margin-top: 18px;
+  margin-top: auto;              /* ⭐ now works */
 }
 
 .cancelBtn {
@@ -213,17 +223,14 @@
   opacity: 0.6;
 }
 
-/* --- RESPONSIVE --- */
+/* MOBILE */
 @media (max-width: 900px) {
   .formLayout {
     grid-template-columns: 1fr;
   }
 }
 
-/* ---------------------------
-   AI HELPER (מהגוונינג של main)
----------------------------- */
-
+/* AI HELPER */
 .aiHelperWrapper {
   margin-top: 8px;
   margin-bottom: 12px;
@@ -250,12 +257,6 @@
   padding: 10px 26px;
   font-size: 15px;
   box-shadow: 0 8px 22px rgba(37, 99, 235, 0.38);
-}
-
-.aiHelperButton:disabled {
-  opacity: 0.7;
-  cursor: default;
-  box-shadow: none;
 }
 
 .aiHelperButton:hover:not(:disabled) {

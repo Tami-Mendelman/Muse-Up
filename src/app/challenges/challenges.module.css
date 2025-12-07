@@ -58,15 +58,9 @@
 }
 
 .tabActive::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 3px;
-  border-radius: 999px;
-  background-color: #1f6feb;
+  display: none !important;
 }
+
 
 
 .cardsGrid {
