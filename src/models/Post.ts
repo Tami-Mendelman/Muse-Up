@@ -12,6 +12,7 @@ export interface IPost extends Document {
   status: string;
   likes_count: number;
   comments_count: number;
+  liked_by: string[];           // ⭐ חדש
   created_at?: Date;
   updated_at?: Date;
 }
@@ -29,6 +30,8 @@ const PostSchema = new Schema<IPost>(
     status: { type: String, default: "active" },
     likes_count: { type: Number, default: 0 },
     comments_count: { type: Number, default: 0 },
+
+    liked_by: { type: [String], default: [] },   // ⭐ חדש — חובה
   },
   {
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },

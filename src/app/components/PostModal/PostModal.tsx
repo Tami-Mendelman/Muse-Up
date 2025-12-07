@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useRef, type FormEvent } from "react";
+import {
+  useState,
+  useRef,
+  type FormEvent,
+} from "react";
 import styles from "./PostModal.module.css";
 
 import { useFirebaseUid } from "../../../hooks/useFirebaseUid";
@@ -39,8 +43,8 @@ export default function PostModal({ onClose, postId }: Props) {
     usePostActions(postId, post?.id);
 
   const [commentText, setCommentText] = useState("");
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(post?.likes_count ?? 0);
+  const [liked, setLiked] = useState<boolean | null>(null);
+  const [likes, setLikes] = useState<number | null>(null);
   const [saved, setSaved] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -60,6 +64,16 @@ export default function PostModal({ onClose, postId }: Props) {
     onCloseShare: () => setShowShare(false),
   });
 
+  /* -------------------------------------------------------
+     INITIALIZE LIKE STATE (no useEffect)
+     Runs ONCE when post arrives & local state is null
+  -------------------------------------------------------- */
+  if (post && uid && liked === null && likes === null) {
+    const initialLiked = post.liked_by?.includes(uid) ?? false;
+    setLiked(initialLiked);
+    setLikes(post.likes_count ?? 0);
+  }
+
   /* ADD COMMENT */
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -75,20 +89,23 @@ export default function PostModal({ onClose, postId }: Props) {
 
   /* LIKE */
   function handleLike() {
-    if (!post) return;
+    if (!uid || !post || liked === null || likes === null) return;
 
     const newLiked = !liked;
-    const delta = newLiked ? 1 : -1;
-
     setLiked(newLiked);
-    setLikes((prev) => prev + delta);
+    setLikes((prev) => (prev ?? 0) + (newLiked ? 1 : -1));
 
-    toggleLikeMutation.mutate(delta, {
-      onError: () => {
-        setLiked(!newLiked);
-        setLikes((prev) => prev - delta);
-      },
-    });
+    const action = newLiked ? "like" : "unlike";
+
+    toggleLikeMutation.mutate(
+      { action },
+      {
+        onError: () => {
+          setLiked(!newLiked);
+          setLikes((prev) => (prev ?? 0) + (newLiked ? -1 : 1));
+        },
+      }
+    );
   }
 
   /* SAVE / UNSAVE */
@@ -137,7 +154,7 @@ export default function PostModal({ onClose, postId }: Props) {
     <div className={styles.bg}>
       <div className={styles.box}>
         
-        {/* CLOSE BUTTON → עכשיו btn-icon */}
+        {/* CLOSE BUTTON */}
         <button className={`btn-icon ${styles.close}`} onClick={onClose}>
           ✕
         </button>
@@ -149,7 +166,7 @@ export default function PostModal({ onClose, postId }: Props) {
 
         <div className={styles.inner}>
           
-          {/* LEFT */}
+          {/* LEFT SIDE */}
           <div className={styles.left}>
             <h2 className={styles.title}>{loadingPost ? "Loading…" : post?.title}</h2>
             <p className={styles.body}>{loadingPost ? "Loading…" : post?.body}</p>
@@ -157,7 +174,7 @@ export default function PostModal({ onClose, postId }: Props) {
             {/* ICON ACTIONS */}
             <div className={styles.icons}>
               
-              {/* LIKE — נשאר icon-only */}
+              {/* LIKE BUTTON */}
               <button
                 className={`${styles.iconBtn} ${liked ? styles.active : ""}`}
                 onClick={handleLike}
@@ -165,7 +182,7 @@ export default function PostModal({ onClose, postId }: Props) {
                 {liked ? "❤️" : "♡"}
               </button>
 
-              {/* SAVE — icon-only */}
+              {/* SAVE BUTTON */}
               <button
                 className={`${styles.iconBtn} ${saved ? styles.saved : ""}`}
                 onClick={handleSave}
@@ -173,7 +190,7 @@ export default function PostModal({ onClose, postId }: Props) {
                 {saved ? "✓" : "＋"}
               </button>
 
-              {/* SHARE — עכשיו btn-icon */}
+              {/* SHARE */}
               <button
                 className={`btn-icon ${styles.iconBtn}`}
                 onClick={() => setShowShare((v) => !v)}
@@ -219,7 +236,7 @@ export default function PostModal({ onClose, postId }: Props) {
             <div className={styles.meta}>
               <span>{post?.author?.followers_count ?? 0} followers</span>
               <span className={styles.sep}>|</span>
-              <span>{likes} likes</span>
+              <span>{likes ?? 0} likes</span>
               <span className={styles.sep}>|</span>
 
               <div className={styles.authorBox}>
@@ -256,7 +273,6 @@ export default function PostModal({ onClose, postId }: Props) {
                 onChange={(e) => setCommentText(e.target.value)}
               />
 
-              {/* EMOJI BUTTON → btn-icon */}
               <button
                 type="button"
                 className={`btn-icon ${styles.emoji}`}

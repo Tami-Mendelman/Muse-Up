@@ -8,11 +8,9 @@ import { verifyToken } from "../../../../lib/auth";
 type ParamsCtx = {
   params: Promise<{ id: string }>;
 };
-
-export async function GET(_req: NextRequest, ctx: ParamsCtx) {
+export async function GET(req: NextRequest, ctx: ParamsCtx) {
   try {
-    // auth by token in cookie
-    const token = _req.cookies.get("token")?.value;
+    const token = req.cookies.get("token")?.value;
     const user = await verifyToken(token || "");
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -22,7 +20,10 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
     const numericId = Number(id);
 
     if (Number.isNaN(numericId)) {
-      return NextResponse.json({ message: "Invalid id" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Invalid comment id" },
+        { status: 400 }
+      );
     }
 
     await dbConnect();
@@ -32,10 +33,14 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
       .lean();
 
     if (!comment) {
-      return NextResponse.json({ message: "Comment not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Comment not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(comment, { status: 200 });
+
   } catch (err: any) {
     console.error("GET /api/comments/[id] error:", err);
     return NextResponse.json(
@@ -45,10 +50,12 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   }
 }
 
-export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
+/* -----------------------------------------
+   DELETE /api/comments/[id]
+------------------------------------------ */
+export async function DELETE(req: NextRequest, ctx: ParamsCtx) {
   try {
-    // auth by token in cookie
-    const token = _req.cookies.get("token")?.value;
+    const token = req.cookies.get("token")?.value;
     const user = await verifyToken(token || "");
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -58,7 +65,10 @@ export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
     const numericId = Number(id);
 
     if (Number.isNaN(numericId)) {
-      return NextResponse.json({ message: "Invalid id" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Invalid comment id" },
+        { status: 400 }
+      );
     }
 
     await dbConnect();
@@ -67,10 +77,17 @@ export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
       .findOneAndDelete({ id: numericId });
 
     if (!deleted) {
-      return NextResponse.json({ message: "Comment not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Comment not found" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ message: "Comment deleted" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Comment deleted successfully" },
+      { status: 200 }
+    );
+
   } catch (err: any) {
     console.error("DELETE /api/comments/[id] error:", err);
     return NextResponse.json(

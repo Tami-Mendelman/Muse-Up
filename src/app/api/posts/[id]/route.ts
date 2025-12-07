@@ -13,9 +13,12 @@ type ParamsCtx = {
 
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
+
+/* ============================
+    GET POST
+============================ */
 export async function GET(_req: NextRequest, ctx: ParamsCtx) {
   try {
-    // auth by token in cookie
     const token = _req.cookies.get("token")?.value;
     const user = await verifyToken(token || "");
     if (!user) {
@@ -30,7 +33,7 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
       ? { _id: id }
       : { id: Number(id) };
 
-    const post = await (Post as any).findOne(query).lean();
+    const post = await Post.findOne(query).lean();
 
     if (!post) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
@@ -39,29 +42,29 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
     let author: any = null;
 
     if (post.user_id && mongoose.isValidObjectId(post.user_id)) {
-      const user = await User.findById(post.user_id).lean().catch(() => null);
+      const userData = await User.findById(post.user_id).lean().catch(() => null);
 
-      if (user) {
+      if (userData) {
         author = {
-          name: user.name || "Unknown",
-          username: user.username || "",
-          followers_count: user.followers_count ?? 0,
-          avatar_url: user.avatar_url || user.profil_url || DEFAULT_AVATAR,
+          name: userData.name || "Unknown",
+          username: userData.username || "",
+          followers_count: userData.followers_count ?? 0,
+          avatar_url: userData.avatar_url || userData.profil_url || DEFAULT_AVATAR,
         };
       }
     }
 
     if (!author && post.user_id) {
-      const user = await User.findOne({ firebase_uid: post.user_id })
+      const userData = await User.findOne({ firebase_uid: post.user_id })
         .lean()
         .catch(() => null);
 
-      if (user) {
+      if (userData) {
         author = {
-          name: user.name || "Unknown",
-          username: user.username || "",
-          followers_count: user.followers_count ?? 0,
-          avatar_url: user.avatar_url || user.profil_url || DEFAULT_AVATAR,
+          name: userData.name || "Unknown",
+          username: userData.username || "",
+          followers_count: userData.followers_count ?? 0,
+          avatar_url: userData.avatar_url || userData.profil_url || DEFAULT_AVATAR,
         };
       }
     }
@@ -88,9 +91,12 @@ export async function GET(_req: NextRequest, ctx: ParamsCtx) {
     );
   }
 }
+
+/* ============================
+    PATCH POST (LIKE + UPDATE)
+============================ */
 export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   try {
-    // auth by token in cookie
     const token = req.cookies.get("token")?.value;
     const user = await verifyToken(token || "");
     if (!user) {
@@ -98,34 +104,58 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
     }
 
     const { id } = await ctx.params;
+    const body = await req.json().catch(() => ({}));
 
     await dbConnect();
 
-    const isObjectId = mongoose.isValidObjectId(id);
-    const query = isObjectId ? { _id: id } : { id: Number(id) };
+    const query = mongoose.isValidObjectId(id)
+      ? { _id: id }
+      : { id: Number(id) };
 
-    const body = await req.json().catch(() => ({}));
+    // ===============================
+    //     LIKE SYSTEM (TOGGLE)
+    // ===============================
+    const { action } = body; // "like" or "unlike"
+    const uid = user.uid;
 
-    if (body.delta !== undefined) {
-      const delta =
-        typeof body.delta === "number" && !Number.isNaN(body.delta)
-          ? body.delta
-          : 1;
-
-      const updatedLikes = await (Post as any)
-        .findOneAndUpdate(query, { $inc: { likes_count: delta } }, { new: true })
-        .lean();
-
-      if (!updatedLikes) {
+    if (action === "like" || action === "unlike") {
+      const post: any = await Post.findOne(query);
+      if (!post) {
         return NextResponse.json({ message: "Post not found" }, { status: 404 });
       }
 
-      return NextResponse.json(
-        { likes_count: updatedLikes.likes_count },
-        { status: 200 }
-      );
+      // LIKE
+      if (action === "like") {
+        if (!post.liked_by.includes(uid)) {
+          post.liked_by.push(uid);
+          post.likes_count += 1;
+          await post.save();
+        }
+
+        return NextResponse.json(
+          { liked: true, likes_count: post.likes_count },
+          { status: 200 }
+        );
+      }
+
+      // UNLIKE
+      if (action === "unlike") {
+        if (post.liked_by.includes(uid)) {
+          post.liked_by = post.liked_by.filter((x: string) => x !== uid);
+          post.likes_count -= 1;
+          await post.save();
+        }
+
+        return NextResponse.json(
+          { liked: false, likes_count: post.likes_count },
+          { status: 200 }
+        );
+      }
     }
 
+    // ===============================
+    //     NORMAL POST UPDATE
+    // ===============================
     const allowed = [
       "title",
       "body",
@@ -141,9 +171,9 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
       if (body[key] !== undefined) updateData[key] = body[key];
     }
 
-    const updatedPost = await (Post as any)
-      .findOneAndUpdate(query, updateData, { new: true })
-      .lean();
+    const updatedPost = await Post.findOneAndUpdate(query, updateData, {
+      new: true,
+    }).lean();
 
     if (!updatedPost) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
@@ -159,13 +189,11 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
   }
 }
 
-
-/* ---------------------------------------------------
-   DELETE /api/posts/[id]
---------------------------------------------------- */
+/* ============================
+    DELETE POST
+============================ */
 export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
   try {
-    // auth by token in cookie
     const token = _req.cookies.get("token")?.value;
     const user = await verifyToken(token || "");
     if (!user) {
@@ -176,10 +204,11 @@ export async function DELETE(_req: NextRequest, ctx: ParamsCtx) {
 
     await dbConnect();
 
-    const isObjectId = mongoose.isValidObjectId(id);
-    const query = isObjectId ? { _id: id } : { id: Number(id) };
+    const query = mongoose.isValidObjectId(id)
+      ? { _id: id }
+      : { id: Number(id) };
 
-    const deleted = await (Post as any).findOneAndDelete(query).lean();
+    const deleted = await Post.findOneAndDelete(query).lean();
 
     if (!deleted) {
       return NextResponse.json({ message: "Post not found" }, { status: 404 });

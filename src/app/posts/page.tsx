@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { dbConnect } from "../../lib/mongoose";
-import PostModel from "../../models/Post";
-import UserModel from "../../models/User";
 import styles from "./posts.module.css";
 import PostModal from "../components/PostModal/PostModal";
 
@@ -13,12 +10,13 @@ export default function PostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // load posts from API
+  // Load posts from API
   async function loadPosts() {
     setLoading(true);
     try {
       const res = await fetch("/api/posts");
       if (!res.ok) throw new Error("Failed to fetch posts");
+
       const data = await res.json();
       setPosts(data);
     } catch (err) {
@@ -28,9 +26,16 @@ export default function PostsPage() {
     }
   }
 
+  // Load on first render
   useState(() => {
     loadPosts();
   });
+
+  // Close modal → refresh posts
+  function handleCloseModal() {
+    setSelectedPostId(null);
+    loadPosts(); // ← refresh list so likes update
+  }
 
   if (loading) {
     return <div className={styles.page}>Loading posts...</div>;
@@ -45,7 +50,7 @@ export default function PostsPage() {
           <div
             key={p._id}
             className={styles.card}
-            onClick={() => setSelectedPostId(p._id)} // ✅ עכשיו הוא string
+            onClick={() => setSelectedPostId(String(p.id))}
           >
             <div className={styles.imageWrap}>
               <Image
@@ -82,10 +87,11 @@ export default function PostsPage() {
         ))}
       </div>
 
+      {/* POST MODAL */}
       {selectedPostId && (
         <PostModal
-          postId={selectedPostId} // ✅ תואם לשינוי שלך
-          onClose={() => setSelectedPostId(null)}
+          postId={selectedPostId}
+          onClose={handleCloseModal} // ← correct handler
         />
       )}
     </main>

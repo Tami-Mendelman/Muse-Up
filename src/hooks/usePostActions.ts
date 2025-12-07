@@ -16,14 +16,13 @@ export function usePostActions(postId: string, postNumericId?: number) {
   });
 
   const toggleLikeMutation = useMutation({
-    mutationFn: (delta: 1 | -1) =>
-      toggleLike(postId, delta),
+  mutationFn: ({ action }: { action: "like" | "unlike" }) =>
+    toggleLike(postId, action),
 
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["post", postId] });
-    },
-  });
-
+  onSuccess: () => {
+    qc.invalidateQueries({ queryKey: ["post", postId] });
+  },
+});
   const toggleSaveMutation = useMutation({
     mutationFn: ({
       userId,

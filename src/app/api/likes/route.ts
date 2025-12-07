@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const userIdParam = searchParams.get("userId");
 
     const filter: any = {};
-    if (postIdParam) filter.post_id = Number(postIdParam);
+    if (postIdParam) filter.post_id = postIdParam; // as string
     if (userIdParam) filter.user_id = Number(userIdParam);
 
     const likes = await (Like as any).find(filter).lean();

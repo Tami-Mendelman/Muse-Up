@@ -7,7 +7,7 @@ import { verifyToken } from "../../../lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
-    // auth by token in cookie
+    // auth by token
     const token = req.cookies.get("token")?.value;
     const user = await verifyToken(token || "");
     if (!user) {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     const filter: any = {};
     if (postIdParam) {
-      filter.post_id = Number(postIdParam);
+      filter.post_id = postIdParam;  // ← ← לא Number!!
     }
 
     const comments = await (Comment as any).find(filter).lean();
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    // auth by token in cookie
+    // auth
     const token = req.cookies.get("token")?.value;
     const user = await verifyToken(token || "");
     if (!user) {
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // get last id
     const lastComment = await (Comment as any)
       .findOne()
       .sort({ id: -1 })
@@ -64,7 +65,12 @@ export async function POST(req: NextRequest) {
     const nextId = (lastComment?.id ?? 0) + 1;
 
     const newComment = await (Comment as any)
-      .create({ id: nextId, post_id, user_id, body })
+      .create({
+        id: nextId,
+        post_id,   // ← ← string
+        user_id,   // ← ← string
+        body,
+      })
       .then((doc: any) => doc.toObject());
 
     return NextResponse.json(newComment, { status: 201 });
@@ -76,4 +82,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

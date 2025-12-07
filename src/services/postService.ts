@@ -129,15 +129,21 @@ export async function addComment(postId: string, userId: string, body: string) {
   }
 }
 
-export async function toggleLike(postId: string, delta: number) {
+export async function toggleLike(
+  postId: string,
+  action: "like" | "unlike"
+) {
   const res = await fetch(`/api/posts/${postId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ delta }),
+    body: JSON.stringify({ action }),
   });
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
     throw new Error(data?.error || "Failed to update like");
   }
+
+  return res.json();
 }
+
