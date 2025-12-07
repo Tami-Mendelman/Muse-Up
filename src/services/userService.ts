@@ -1,3 +1,5 @@
+import { getBaseUrl } from "../lib/baseUrl";
+
 export type User = {
   _id: string;
   firebase_uid: string;
@@ -28,24 +30,21 @@ export type UpdateUserPayload = {
   profil_url: string;
 };
 
+const base = getBaseUrl();
+
 export async function getUserByUid(uid: string): Promise<User> {
-  const res = await fetch(`/api/users/${uid}`);
-  if (!res.ok) {
-    throw new Error("User not found");
-  }
+  const res = await fetch(`${base}/api/users/${uid}`);
+  if (!res.ok) throw new Error("User not found");
   return res.json();
 }
-
 
 export async function updateUserProfile(
   firebaseUid: string,
   payload: UpdateUserPayload
 ): Promise<User> {
-  const res = await fetch(`/api/users/${firebaseUid}`, {
+  const res = await fetch(`${base}/api/users/${firebaseUid}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
@@ -59,32 +58,24 @@ export async function updateUserProfile(
 }
 
 export async function getAllUsers() {
-  const res = await fetch("/api/users");
-
-  if (!res.ok) {
-    throw new Error("Failed to load users");
-  }
-
+  const res = await fetch(`${base}/api/users`);
+  if (!res.ok) throw new Error("Failed to load users");
   return res.json();
 }
 
 export async function addUser(payload: FormUserPayload): Promise<User> {
-  const res = await fetch("/api/users", {
+  const res = await fetch(`${base}/api/users`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
     let msg = "Failed to create user";
-
     try {
       const data = await res.json();
       msg = data?.message || msg;
-    } catch { }
-
+    } catch {}
     throw new Error(msg);
   }
 
