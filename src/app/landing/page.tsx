@@ -1,174 +1,60 @@
-import Image from "next/image";
-import Link from "next/link";
-import { Suspense } from "react";
-
 import { dbConnect } from "../../lib/mongoose";
-import UserModel from "../../models/User";
 import PostModel from "../../models/Post";
-import TrendingSection from "../components/TrendingSection";
-import ArtistsToFollowClient, { SimpleArtist } from "./ArtistsToFollowClient";
-import styles from "./landingPage.module.css";
-import mongoose from "mongoose";
-
-export default async function LandingPage() {
+import User from "../../models/User";
+import LandingClient from "./LandingClient";
+export type Story = {
+  id: string;
+  label: string;
+  avatar?: string;
+  isYou?: boolean;
+  userUid?: string; 
+};
+export type LandingPost = {
+  id: string;
+  image: string;
+  likes: number;
+  author: string;
+  avatar?: string;
+  userUid: string; 
+};
+async function getLandingData(): Promise<{
+  stories: Story[];
+  posts: LandingPost[];
+}> {
   await dbConnect();
-
-  // 🟣 ARTISTS LIST
-  const artistsFromDb = await UserModel.find(
-    {},
-    {
-      _id: 0,
-      firebase_uid: 1,
-      username: 1,
-      name: 1,
-      artType: 1,
-      profil_url: 1,
-      avatar_url: 1,
-    }
-  )
-    .sort({ followers_count: -1 })
-    .limit(6)
-    .lean<any[]>();
-
-  const artists: SimpleArtist[] = artistsFromDb.map((a) => ({
-    firebase_uid: a.firebase_uid,
-    username: a.username,
-    name: a.name,
-    artType: a.artType,
-    profil_url: a.profil_url,
-    avatar_url: a.avatar_url,
-  }));
-
-  // 🟣 POSTS FETCH
-  const baseSelect = {
-    _id: 0,
-    id: 1,
-    title: 1,
-    image_url: 1,
-    likes_count: 1,
-    body: 1,
-    created_at: 1,
-    user_id: 1,
-    user_uid: 1,
-  };
-
-  const popular = await PostModel.find({}, baseSelect)
-    .sort({ likes_count: -1 })
-    .limit(2)
-    .lean();
-
-  const latest = await PostModel.find({}, baseSelect)
+  const rawPosts = await PostModel.find({
+    status: "active",
+    visibility: "public",
+  })
     .sort({ created_at: -1 })
-    .limit(2)
+    .limit(10)
     .lean();
-
-  const trendingRaw = [...popular, ...latest].filter(
-    (p, i, arr) => i === arr.findIndex((x) => x.id === p.id)
-  );
-
-  const trendingWithAuthors = await Promise.all(
-    trendingRaw.map(async (post: any) => {
-      let user = null;
-
-      if (post.user_uid) {
-        user = await UserModel.findOne({ firebase_uid: post.user_uid })
-          .lean()
-          .catch(() => null);
-      } else if (mongoose.isValidObjectId(post.user_id)) {
-        user = await UserModel.findById(post.user_id).lean().catch(() => null);
-      } else if (typeof post.user_id === "string") {
-        user = await UserModel.findOne({ firebase_uid: post.user_id })
-          .lean()
-          .catch(() => null);
-      }
-
-      const author = user
-        ? {
-            name: user.name || "Unknown",
-            avatar_url:
-              user.avatar_url ||
-              user.profil_url ||
-              "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
-            followers_count: user.followers_count ?? 0,
-          }
-        : {
-            name: "Unknown",
-            avatar_url:
-              "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png",
-            followers_count: 0,
-          };
-
-      return { ...post, author };
-    })
-  );
-
-  const trending = trendingWithAuthors;
-
-  return (
-    <main className={styles.page}>
-      <div className={styles.container}>
-        <div className={styles.mainGrid}>
-          <div className={styles.leftCol}>
-            <section className={styles.hero}>
-              <h1 className={styles.title}>Welcome back to your creative world.</h1>
-              <p className={styles.subtitle}>
-                Share your art, discover fresh ideas, and connect with creators like you.
-              </p>
-              <div className={styles.actions}>
-                <Link href="/create" className={styles.primaryBtn}>
-                  Share your art
-                </Link>
-              </div>
-            </section>
-
-            <section className={styles.bottomLeft}>
-              <div className={styles.card}>
-                {/* ✨ פה הפתרון – עוטפים את ה־TrendingSection ב-Suspense */}
-                <Suspense fallback={<div className={styles.loadingBox}>Loading…</div>}>
-                  <TrendingSection trending={trending} />
-                </Suspense>
-
-                <Link href="/posts" className={styles.moreLink}>
-                  See more posts →
-                </Link>
-              </div>
-
-              <div className={styles.card}>
-                <h2 className={styles.cardTitle}>Artists to follow</h2>
-                <ArtistsToFollowClient artists={artists} />
-                <Link href="/users" className={styles.moreLink}>
-                  See more artists →
-                </Link>
-              </div>
-            </section>
-          </div>
-
-          <div className={styles.rightCol}>
-            <div className={styles.heroImageCard}>
-              <Image
-                src="https://res.cloudinary.com/dhxxlwa6n/image/upload/v1762947874/image_2_xs7epz.png"
-                alt="MuseUp colorful artwork"
-                width={520}
-                height={420}
-                className={styles.heroImg}
-                priority
-              />
-            </div>
-
-            <aside className={styles.challengeCard}>
-              <div className={styles.challengeContent}>
-                <h3 className={styles.challengeTitle}>Weekly Challenge: “Light & Shadow”</h3>
-                <p className={styles.challengeText}>Post one artwork exploring contrast.</p>
-              </div>
-              <div className={styles.challengeVisual} />
-            </aside>
-
-            <Link href="/challenges" className={styles.moreLink}>
-              See all challenges →
-            </Link>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+  const allUsers = await User.find({}).sort({ created_at: -1 }).lean();
+  const userMap = new Map<string, (typeof allUsers)[number]>();
+  allUsers.forEach((u) => userMap.set(u.firebase_uid, u));
+  const posts: LandingPost[] = rawPosts.map((p: any) => {
+    const user = userMap.get(p.user_id);
+    return {
+      id: p._id.toString(),
+      image: p.image_url,
+      likes: p.likes_count ?? 0,
+      author: user?.username || user?.name || "Unknown",
+      avatar: user?.profil_url,
+      userUid: p.user_id, 
+    };
+  });
+  const stories: Story[] = [
+    { id: "you", label: "You", isYou: true },
+    ...allUsers.map((u) => ({
+      id: u._id.toString(),
+      label: u.username || u.name,
+      avatar: u.profil_url,
+      userUid: u.firebase_uid,
+    })),
+  ];
+  return { stories, posts };
+}
+export default async function LandingPage() {
+  const { stories, posts } = await getLandingData();
+  return <LandingClient stories={stories} posts={posts} />;
 }
