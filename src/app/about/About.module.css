@@ -155,3 +155,81 @@
   .illustration{ margin-top: 0 }
   .taskGrid, .teamGrid{ grid-template-columns: 1fr }
 }
+@media (max-width: 768px) {
+  .panel {
+    margin: 0;
+    border-radius: 0;
+    padding: 20px 14px;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .hero h1 {
+    font-size: 26px;
+    line-height: 1.25;
+  }
+
+  .hero p {
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 0 2px;
+  }
+
+  .tasks h2 {
+    font-size: 20px;
+  }
+
+  .taskGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .taskCard strong {
+    font-size: 15px;
+  }
+
+  .taskCard small {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .team h3 {
+    font-size: 18px;
+  }
+
+  .teamGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .right {
+    padding: 0;
+  }
+
+  .cta {
+    position: static;
+    width: 100%;
+    margin: 0 0 16px;
+  }
+
+  .illustration {
+    width: 100%;
+    height: auto;
+    margin-top: 0;
+  }
+
+  .stats h4 {
+    font-size: 18px;
+  }
+
+  .stats li {
+    font-size: 14px;
+  }
+}
