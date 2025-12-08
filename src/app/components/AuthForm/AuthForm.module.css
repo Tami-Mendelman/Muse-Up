@@ -1,31 +1,33 @@
 .container {
+    width: 100%;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     background: #f3f4f6;
     padding: 32px;
+    box-sizing: border-box;
     font-family: var(--font-main);
 }
 
 .box {
     position: relative;
-    width: 420px;
+    width: 100%;
     background: #ffffff;
     border-radius: 20px;
     padding: 36px 36px 28px;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
     border: 2px solid #e5e7eb;
     box-sizing: border-box;
+    max-width: 420px;
 }
 
 .logo {
     position: absolute;
     top: 18px;
     right: 30px;
-    width: 69px;
+    width: 70px;
     height: auto;
-    object-fit: contain;
 }
 
 .title {
@@ -215,4 +217,16 @@
     border-radius: 8px;
     font-size: 0.9rem;
     margin-bottom: 16px;
+}
+
+@media (min-width: 600px) {
+    .box {
+        max-width: 600px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .box {
+        max-width: 400px;
+    }
 }

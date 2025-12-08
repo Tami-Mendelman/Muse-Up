@@ -1,40 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { getBaseUrl } from "../../lib/baseUrl";
 import styles from "./posts.module.css";
 import PostModal from "../components/PostModal/PostModal";
+
+const base = getBaseUrl();
 
 export default function PostsPage() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load posts from API
   async function loadPosts() {
     setLoading(true);
     try {
-      const res = await fetch("/api/posts");
+      const res = await fetch(`${base}/api/posts`);
       if (!res.ok) throw new Error("Failed to fetch posts");
 
       const data = await res.json();
       setPosts(data);
-    } catch (err) {
-      console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
-  // Load on first render
-  useState(() => {
+  useEffect(() => {
     loadPosts();
-  });
+  }, []);
 
-  // Close modal → refresh posts
   function handleCloseModal() {
     setSelectedPostId(null);
-    loadPosts(); // ← refresh list so likes update
+    loadPosts(); // refresh posts after like/save
   }
 
   if (loading) {
@@ -50,7 +48,7 @@ export default function PostsPage() {
           <div
             key={p._id}
             className={styles.card}
-            onClick={() => setSelectedPostId(String(p.id))}
+            onClick={() => setSelectedPostId(p._id)} // correct ID
           >
             <div className={styles.imageWrap}>
               <Image
@@ -87,12 +85,8 @@ export default function PostsPage() {
         ))}
       </div>
 
-      {/* POST MODAL */}
       {selectedPostId && (
-        <PostModal
-          postId={selectedPostId}
-          onClose={handleCloseModal} // ← correct handler
-        />
+        <PostModal postId={selectedPostId} onClose={handleCloseModal} />
       )}
     </main>
   );

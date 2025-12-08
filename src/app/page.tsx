@@ -21,19 +21,19 @@ async function getHomeData(): Promise<{
   await dbConnect();
 
   // --- 1) מביאים את המשתמשים המובילים ---
- const rawUsers = await User.find()
-  .sort({ followers_count: -1 })
-  .limit(8)
-  .lean();
+  const rawUsers = await User.find()
+    .sort({ followers_count: -1 })
+    .limit(8)
+    .lean();
 
-const users: UserCard[] = rawUsers.map((u: any) => ({
-  _id: String(u._id),
-  username: u.username,
-  name: u.name,
-  profil_url: u.profil_url,
-  followers_count: u.followers_count ?? 0,
-  firebase_uid: u.firebase_uid,
-}));
+  const users: UserCard[] = rawUsers.map((u: any) => ({
+    _id: String(u._id),
+    username: u.username,
+    name: u.name,
+    profil_url: u.profil_url,
+    followers_count: u.followers_count ?? 0,
+    firebase_uid: u.firebase_uid,
+  }));
 
 
   // מזהי Mongo ו־Firebase
@@ -80,11 +80,7 @@ export default async function HomePage() {
       <section className={styles.left}>
         <header className={styles.header}>
           <div className={styles.logoArea}>
-            <img
-              src="../media/logo1.png"
-              alt="MuseUp Logo"
-              className={styles.logoImg}
-            />
+            <img src="../media/logo1.png" alt="MuseUp Logo" className={styles.logoImg} />
           </div>
 
           <div className={styles.centerTitle}>
@@ -92,17 +88,13 @@ export default async function HomePage() {
             <p>and art lovers</p>
           </div>
 
-          <nav className={styles.nav}>
-            <Link href="/register" className={styles.navBtn}>
-              Sign Up
-            </Link>
-            <Link href="/login" className={styles.navBtn}>
-              Login
-            </Link>
-            <Link href="/about" className={styles.navBtn}>
-              About
-            </Link>
-          </nav>
+          <div className={styles.rightMenu}>
+            <nav className={styles.linkList}>
+              <Link href="/register" className={styles.linkItem}>Sign Up</Link>
+              <Link href="/login" className={styles.linkItem}>Login</Link>
+              <Link href="/about" className={styles.linkItem}>About</Link>
+            </nav>
+          </div>
         </header>
 
         {/* --- Artists cards --- */}
@@ -127,13 +119,15 @@ export default async function HomePage() {
                 </div>
 
                 <div className={styles.artistCircle}>
-                  {avatarSrc && (
-                    <img
-                      src={avatarSrc}
-                      alt={`${u.username} avatar`}
-                      className={styles.avatar}
-                    />
-                  )}
+                  <div className={styles.artistCircleInner}>
+                    {avatarSrc && (
+                      <img
+                        src={avatarSrc}
+                        alt={`${u.username} avatar`}
+                        className={styles.avatar}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className={styles.artistName}>
@@ -150,31 +144,6 @@ export default async function HomePage() {
           })}
         </section>
       </section>
-
-      {/* --- Right Section --- */}
-      <aside className={styles.right}>
-        <div className={styles.heroText}>
-          <h1 className={styles.heroTitle}>
-            Join the <br />
-            MuseUp <br />
-            community
-          </h1>
-
-          <ul className={styles.heroList}>
-            <li>Share your creations</li>
-            <li>Get inspired</li>
-            <li>Connect with other artists</li>
-          </ul>
-
-          <Link href="/register" className={styles.ctaBtn}>
-            Get Started
-          </Link>
-        </div>
-
-        <div className={styles.illustrationBox}>
-          <img src="../media/1.png" alt="Artist illustration" />
-        </div>
-      </aside>
     </main>
   );
 }
