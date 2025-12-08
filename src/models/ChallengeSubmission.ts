@@ -1,22 +1,24 @@
 import { Schema, model, models } from "mongoose";
-const challengeSubmissionSchema = new Schema(
+const ChallengeSubmissionSchema = new Schema(
   {
-    id: { type: Number, required: true, unique: true },
-    challenge_id: { type: Number, required: true },
-    user_id: { type: Number, required: true }, 
-    post_id: { type: Number, default: null },
-    status: { type: String, default: "joined" },
-    image_url: { type: String, default: null },
+    challenge_id: {
+      type: Number,
+      required: true,
+    },
+    user_id: {
+      type: String,
+      required: true,
+    },
+    image_url: {
+      type: String,
+    },
   },
   {
-    collection: "challenge_submissions",
-    timestamps: false,
-    versionKey: false,
+    timestamps: true,
   }
 );
-
 const ChallengeSubmission =
   models.ChallengeSubmission ||
-  model("ChallengeSubmission", challengeSubmissionSchema);
+  model("ChallengeSubmission", ChallengeSubmissionSchema);
 
 export default ChallengeSubmission;
