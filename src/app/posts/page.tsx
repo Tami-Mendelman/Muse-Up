@@ -1,36 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { dbConnect } from "../../lib/mongoose";
-import PostModel from "../../models/Post";
-import UserModel from "../../models/User";
+import { getBaseUrl } from "../../lib/baseUrl";
 import styles from "./posts.module.css";
 import PostModal from "../components/PostModal/PostModal";
+
+const base = getBaseUrl();
 
 export default function PostsPage() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // load posts from API
   async function loadPosts() {
     setLoading(true);
     try {
-      const res = await fetch("/api/posts");
+      const res = await fetch(`${base}/api/posts`);
       if (!res.ok) throw new Error("Failed to fetch posts");
       const data = await res.json();
       setPosts(data);
-    } catch (err) {
-      console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
-  useState(() => {
+  useEffect(() => {
     loadPosts();
-  });
+  }, []);
 
   if (loading) {
     return <div className={styles.page}>Loading posts...</div>;
@@ -45,7 +42,7 @@ export default function PostsPage() {
           <div
             key={p._id}
             className={styles.card}
-            onClick={() => setSelectedPostId(p._id)} // ✅ עכשיו הוא string
+            onClick={() => setSelectedPostId(p._id)}
           >
             <div className={styles.imageWrap}>
               <Image
@@ -83,10 +80,7 @@ export default function PostsPage() {
       </div>
 
       {selectedPostId && (
-        <PostModal
-          postId={selectedPostId} // ✅ תואם לשינוי שלך
-          onClose={() => setSelectedPostId(null)}
-        />
+        <PostModal postId={selectedPostId} onClose={() => setSelectedPostId(null)} />
       )}
     </main>
   );
