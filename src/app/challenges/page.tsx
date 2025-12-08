@@ -16,6 +16,7 @@ import {
   leaveChallenge,
   submitChallengeImage,
 } from "../../services/challengeSubmissionsService";
+
 export type Challenge = {
   _id: string;
   id: number;
@@ -25,7 +26,9 @@ export type Challenge = {
   status?: string;
   start_date?: string;
   end_date?: string;
+  
 };
+
 type ChallengeSubmission = {
   _id: string;
   challenge_id: number;
@@ -33,13 +36,20 @@ type ChallengeSubmission = {
   status?: string;
   image_url?: string | null;
 };
+
 type TabKey = "active" | "endingSoon" | "ended";
+
 export default function ChallengesPage() {
   const [tab, setTab] = useState<TabKey>("active");
   const [search, setSearch] = useState("");
   const [joinLoadingId, setJoinLoadingId] = useState<number | null>(null);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(
+    null
+  );
+
   const queryClient = useQueryClient();
   const { uid, ready: uidReady } = useFirebaseUid();
+
   const {
     data: challenges = [],
     isLoading: loadingChallenges,
@@ -48,6 +58,7 @@ export default function ChallengesPage() {
     queryKey: ["challenges"],
     queryFn: getChallenges,
   });
+
   const {
     data: joinedSubmissions = [],
     isLoading: loadingJoined,
@@ -57,7 +68,8 @@ export default function ChallengesPage() {
     queryFn: () => getUserJoinedChallenges(uid as string),
     enabled: uidReady && !!uid,
   });
-const { joinedIds, submittedIds } = useMemo(() => {
+
+  const { joinedIds, submittedIds } = useMemo(() => {
     const joined: number[] = [];
     const submitted: number[] = [];
 
@@ -122,68 +134,123 @@ const { joinedIds, submittedIds } = useMemo(() => {
     });
   }
 
+  const modalStart = selectedChallenge?.start_date
+    ? new Date(selectedChallenge.start_date)
+    : null;
+  const modalEnd = selectedChallenge?.end_date
+    ? new Date(selectedChallenge.end_date)
+    : null;
+  const modalDates =
+    modalStart && modalEnd
+      ? `${formatDate(modalStart)} – ${formatDate(modalEnd)}`
+      : "";
+
   return (
-    <div className={styles.page}>
-      <div className={styles.headerRow}>
-        <h1 className={styles.title}>Art Challenges</h1>
+    <>
+      <div className={styles.page}>
+        <div className={styles.headerRow}>
+          <h1 className={styles.title}>Art Challenges</h1>
 
-        <input
-          className={styles.search}
-          placeholder="Search challenges by name"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+          <input
+            className={styles.search}
+            placeholder="Search challenges by name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className={styles.tabs}>
+          <button
+            className={`${styles.tab} ${
+              tab === "active" ? styles.tabActive : ""
+            }`}
+            onClick={() => setTab("active")}
+          >
+            Active
+          </button>
+          <button
+            className={`${styles.tab} ${
+              tab === "endingSoon" ? styles.tabActive : ""
+            }`}
+            onClick={() => setTab("endingSoon")}
+          >
+            Ending soon
+          </button>
+          <button
+            className={`${styles.tab} ${
+              tab === "ended" ? styles.tabActive : ""
+            }`}
+            onClick={() => setTab("ended")}
+          >
+            Ended
+          </button>
+        </div>
+
+        {loadingChallenges ? (
+          <p className={styles.infoText}>Loading challenges…</p>
+        ) : challengesError ? (
+          <p className={styles.infoText}>Failed to load challenges.</p>
+        ) : filtered.length === 0 ? (
+          <p className={styles.infoText}>No challenges found.</p>
+        ) : (
+          <div className={styles.cardsGrid}>
+            {filtered.map((ch) => (
+              <ChallengeCard
+                key={ch._id}
+                challenge={ch}
+                isJoined={joinedIds.includes(ch.id)}
+                isSubmitted={submittedIds.includes(ch.id)}
+                loading={joinLoadingId === ch.id}
+                onToggle={() => handleToggleJoin(ch.id)}
+                userUid={uid ?? null}
+                onOpen={() => setSelectedChallenge(ch)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${
-            tab === "active" ? styles.tabActive : ""
-          }`}
-          onClick={() => setTab("active")}
+      {selectedChallenge && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setSelectedChallenge(null)}
         >
-          Active
-        </button>
-        <button
-          className={`${styles.tab} ${
-            tab === "endingSoon" ? styles.tabActive : ""
-          }`}
-          onClick={() => setTab("endingSoon")}
-        >
-          Ending soon
-        </button>
-        <button
-          className={`${styles.tab} ${
-            tab === "ended" ? styles.tabActive : ""
-          }`}
-          onClick={() => setTab("ended")}
-        >
-          Ended
-        </button>
-      </div>
+          <div
+            className={styles.modal}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {selectedChallenge.picture_url && (
+              <img
+                src={selectedChallenge.picture_url}
+                alt={selectedChallenge.title}
+                className={styles.modalImage}
+              />
+            )}
 
-      {loadingChallenges ? (
-        <p className={styles.infoText}>Loading challenges…</p>
-      ) : challengesError ? (
-        <p className={styles.infoText}>Failed to load challenges.</p>
-      ) : filtered.length === 0 ? (
-        <p className={styles.infoText}>No challenges found.</p>
-      ) : (
-        <div className={styles.cardsGrid}>
-          {filtered.map((ch) => (
-            <ChallengeCard
-              key={ch._id}
-              challenge={ch}
-              isJoined={joinedIds.includes(ch.id)}
-              isSubmitted={submittedIds.includes(ch.id)}
-              loading={joinLoadingId === ch.id}
-              onToggle={() => handleToggleJoin(ch.id)}
-              userUid={uid ?? null}
-            />
-          ))}
+            <h2 className={styles.modalTitle}>{selectedChallenge.title}</h2>
+
+            {modalDates && (
+              <p className={styles.modalDates}>{modalDates}</p>
+            )}
+
+            {selectedChallenge.description && (
+              <p className={styles.modalDescription}>
+                {selectedChallenge.description}
+              </p>
+            )}
+
+            <button
+              className={styles.modalClose}
+              onClick={() => setSelectedChallenge(null)}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -194,6 +261,7 @@ type CardProps = {
   loading: boolean;
   onToggle: () => void;
   userUid: string | null;
+  onOpen: () => void;
 };
 
 function ChallengeCard({
@@ -203,6 +271,7 @@ function ChallengeCard({
   loading,
   onToggle,
   userUid,
+  onOpen,
 }: CardProps) {
   const start = challenge.start_date ? new Date(challenge.start_date) : null;
   const end = challenge.end_date ? new Date(challenge.end_date) : null;
@@ -271,7 +340,8 @@ function ChallengeCard({
 
   const isUploading = uploadMutation.isPending;
 
-  function handleUploadClick() {
+  function handleUploadClick(e: React.MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation();
     if (fileInputRef.current && !isUploading) {
       fileInputRef.current.click();
     }
@@ -293,7 +363,7 @@ function ChallengeCard({
   }
 
   return (
-    <article className={styles.card}>
+    <article className={styles.card} onClick={onOpen}>
       {challenge.picture_url && (
         <div className={styles.imageWrapper}>
           <img
@@ -329,7 +399,10 @@ function ChallengeCard({
               className={`${styles.joinButton} ${
                 isJoined ? styles.joinButtonJoined : ""
               }`}
-              onClick={onToggle}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle();
+              }}
               disabled={loading}
             >
               {loading
@@ -374,6 +447,7 @@ function ChallengeCard({
     </article>
   );
 }
+
 function filterByTabAndSearch(
   challenges: Challenge[],
   tab: TabKey,

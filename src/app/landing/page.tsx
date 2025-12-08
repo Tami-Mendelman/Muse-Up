@@ -27,7 +27,7 @@ async function getLandingData(): Promise<{
     visibility: "public",
   })
     .sort({ created_at: -1 })
-    .limit(10)
+    .limit(30)
     .lean();
   const allUsers = await User.find({}).sort({ created_at: -1 }).lean();
   const userMap = new Map<string, (typeof allUsers)[number]>();
