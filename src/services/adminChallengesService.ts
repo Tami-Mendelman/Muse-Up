@@ -117,3 +117,16 @@ export async function uploadChallengeImage(file: File): Promise<string> {
   }
   return imageUrl as string;
 }
+export async function deleteAdminChallenge(
+  challengeId: string
+): Promise<void> {
+  const res = await fetch(`/api/admin/challenges?id=${challengeId}`, {
+    method: "DELETE",
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data?.message || "Failed to delete challenge");
+  }
+}

@@ -96,3 +96,46 @@ const challenge = await (Challenge as any).create({
     );
   }
 }
+export async function DELETE(req: NextRequest) {
+  try {
+    await dbConnect();
+    const idParam = req.nextUrl.searchParams.get("id");
+    if (!idParam) {
+      return NextResponse.json(
+        { message: "Missing id query parameter" },
+        { status: 400 }
+      );
+    }
+    const numericId = Number(idParam);
+    const isNumeric = !Number.isNaN(numericId);
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(idParam);
+    let filter: any = null;
+    if (isMongoId) {
+      filter = { _id: idParam };
+    } else if (isNumeric) {
+      filter = { id: numericId };
+    } else {
+      return NextResponse.json(
+        { message: "Invalid id parameter" },
+        { status: 400 }
+      );
+    }
+
+    const result = await Challenge.deleteOne(filter);
+
+    if (!result || result.deletedCount === 0) {
+      return NextResponse.json(
+        { message: "Challenge not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err: any) {
+    console.error("DELETE /api/admin/challenges error:", err);
+    return NextResponse.json(
+      { message: "Failed to delete challenge", details: err.message },
+      { status: 500 }
+    );
+  }
+}

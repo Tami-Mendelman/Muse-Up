@@ -17,6 +17,7 @@ import {
   getChallengeSubmissions,
   updateAdminWinners,
   uploadChallengeImage,
+  deleteAdminChallenge,
 } from "../../.././services/adminChallengesService";
 
 function formatDate(dateStr: string | undefined) {
@@ -85,6 +86,27 @@ export default function AdminChallengesPage() {
       setWinners([]);
     },
   });
+const deleteMutation = useMutation({
+  mutationFn: deleteAdminChallenge,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["adminChallenges"] });
+  },
+  onError: (error: any) => {
+    alert(error?.message || "Failed to delete challenge");
+  },
+});
+
+
+const handleDeleteChallenge = (ch: Challenge) => {
+  if (
+    !window.confirm(
+      `למחוק את האתגר "${ch.title}"? הפעולה בלתי הפיכה.`
+    )
+  ) {
+    return;
+  }
+  deleteMutation.mutate(String(ch.id));
+};                           
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -352,14 +374,24 @@ export default function AdminChallengesPage() {
               )}
 
               <div className={styles.cardActions}>
-                <button
-                  type="button"
-                  className={styles.outlineButtonActive}
-                  onClick={() => openWinnersModal(ch)}
-                >
-                  ניהול זוכים
-                </button>
-              </div>
+      <button
+        type="button"
+        className={styles.outlineButtonActive}
+        onClick={() => openWinnersModal(ch)}
+      >
+        ניהול זוכים
+      </button>
+
+      <button
+        type="button"
+        className={styles.dangerButton}
+        onClick={() => handleDeleteChallenge(ch)}
+        disabled={deleteMutation.isPending}
+      >
+        מחיקת אתגר
+      </button>
+    </div>
+
             </div>
           ))}
         </div>

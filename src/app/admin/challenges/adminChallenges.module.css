@@ -468,3 +468,23 @@
   border-radius: 12px;
   border: 1px solid #e5e7eb;
 }
+.dangerButton {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #dc2626;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.05s ease;
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.dangerButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
