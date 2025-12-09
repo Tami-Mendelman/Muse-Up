@@ -5,24 +5,15 @@ import { useEffect, useState } from "react";
 import { auth } from "../../lib/firebase";
 import styles from "./forget-password.module.css";
 import { Mail } from "lucide-react";
-
 import { onAuthStateChanged } from "firebase/auth";
+import { getUserByEmail } from "../../services/signin&upServoce";
 
 export default function ForgetPasswordPage() {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, () => {
-      console.log("AUTH READY");
-    });
-
-    return () => unsub();
-  }, []);
-
+  
   const validateEmail = (value: string): string | null => {
     if (!value) return "Email is required.";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -49,25 +40,17 @@ export default function ForgetPasswordPage() {
 
     try {
       const emailTrimmed = email.trim().toLowerCase();
-      // console.log(222, "Checking providers for email:", auth, emailTrimmed);
-      fetchSignInMethodsForEmail(auth, emailTrimmed).then(result => {
-        console.log(222, "Fetched providers:", result);
-        return result;
-        
-      })
+      const user = await getUserByEmail(emailTrimmed);
 
-      // if (providers.length === 0) {
-      //   console.log("auth currentUser:", auth.currentUser.providerData[0].providerId);
-      //   setError("No account found for this email.");
-      //   return;
-      // }
+      if (!user) {
+        setError("No account found for this email.");
+        return;
+      }
 
-      // if (!providers.includes("password")) {
-      //   setError(
-      //     `This account is connected via ${providers.join(", ")}. Please log in using that provider.`
-      //   );
-      //   return;
-      // }
+      if (user.provider === "google") {
+        setError("This account is connected via google. Please log in using that provider.");
+        return;
+      }
 
       await sendPasswordResetEmail(auth, emailTrimmed);
       setMessage("We sent you an email to reset your password.");
@@ -81,7 +64,7 @@ export default function ForgetPasswordPage() {
   return (
     <div className={styles.authContainer}>
       <div className={styles.authCard}>
-        <img src="/logo.png" alt="Logo" className={styles.authLogo} />
+        <img src="../../../../media/logo1.png" alt="Logo" className={styles.authLogo} />
 
         <h2>Forgot password?</h2>
         <p>Enter your email and we'll send you a link to reset your password.</p>
@@ -120,7 +103,3 @@ export default function ForgetPasswordPage() {
     </div>
   );
 }
-function res(value: string[]): string[] | PromiseLike<string[]> {
-  throw new Error("Function not implemented.");
-}
-

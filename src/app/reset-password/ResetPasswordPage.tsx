@@ -6,14 +6,18 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 import { auth } from "../../lib/firebase";
 import { confirmPasswordReset } from "firebase/auth";
 import { useSearchParams } from "next/navigation";
+import { set } from "mongoose";
 
 export default function ResetPasswordPage() {
 
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [passwordError, setPasswordError] = useState<string[]>([]);
+
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [confirmPasswordError, setConfirmPasswordError] = useState<string[]>([]);
+    const [message, setMessage] = useState("");
     const searchParams = useSearchParams();
     const oobCode = searchParams.get("oobCode");
 
@@ -54,7 +58,10 @@ export default function ResetPasswordPage() {
 
         try {
             await confirmPasswordReset(auth, oobCode, password);
-            alert("Password updated successfully!");
+            setMessage("Password updated successfully!");
+            setPassword("");
+            setConfirmPassword("");
+            window.location.href = "/login";
         } catch (err: any) {
             console.error(err);
             alert(err.message || "Error updating password");
@@ -64,7 +71,7 @@ export default function ResetPasswordPage() {
     return (
         <div className={styles.authContainer}>
             <div className={styles.authCard}>
-                <img src="/logo.png" alt="Logo" className={styles.authLogo} />
+                <img src="../../../../media/logo1.png" alt="Logo" className={styles.authLogo} />
 
                 <h2>New password</h2>
                 <p>Your new password must be different from previously used one, and must have at least 6 characters.</p>
@@ -119,7 +126,7 @@ export default function ResetPasswordPage() {
                             </span>
 
                             <input
-                                type={showPassword ? "text" : "password"}
+                                type={showConfirmPassword ? "text" : "password"}
                                 placeholder="••••••"
                                 value={confirmPassword}
                                 onChange={(e) => {
@@ -137,11 +144,11 @@ export default function ResetPasswordPage() {
 
                             <button
                                 type="button"
-                                onClick={() => setShowPassword((s) => !s)}
+                                onClick={() => setShowConfirmPassword((s) => !s)}
                                 className={styles.iconButton}
-                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                             >
-                                {showPassword ? <EyeOff size={18} color="#6B7280" /> : <Eye size={18} color="#6B7280" />}
+                                {showConfirmPassword ? <EyeOff size={18} color="#6B7280" /> : <Eye size={18} color="#6B7280" />}
                             </button>
                         </div>
 
@@ -154,12 +161,11 @@ export default function ResetPasswordPage() {
                         )}
                     </label>
 
-                    <button className={styles.submitButton}
-                    >
+                    <button className={styles.submitButton}>
                         Reset Password
                     </button>
                 </form>
-
+                <div>{message}</div>
                 <a href="/login" className={styles.backLink}>
                     Go back to Sign In
                 </a>
