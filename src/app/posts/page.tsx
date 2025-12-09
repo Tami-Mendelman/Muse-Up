@@ -14,11 +14,9 @@ export default function PostsPage() {
   const [loading, setLoading] = useState(true);
 
   async function loadPosts() {
-    setLoading(true);
     try {
       const res = await fetch(`${base}/api/posts`);
       if (!res.ok) throw new Error("Failed to fetch posts");
-
       const data = await res.json();
       setPosts(data);
     } finally {
@@ -30,9 +28,17 @@ export default function PostsPage() {
     loadPosts();
   }, []);
 
-  function handleCloseModal() {
-    setSelectedPostId(null);
-    loadPosts(); // refresh posts after like/save
+  // עדכון לייקים ברשימה לפי הפוסט המעודכן שחזר מהמודל
+  function handlePostUpdate(updatedPost: any) {
+    if (!updatedPost?._id) return;
+
+    setPosts((prev) =>
+      prev.map((p) =>
+        p._id === updatedPost._id
+          ? { ...p, likes_count: updatedPost.likes_count }
+          : p
+      )
+    );
   }
 
   if (loading) {
@@ -48,7 +54,7 @@ export default function PostsPage() {
           <div
             key={p._id}
             className={styles.card}
-            onClick={() => setSelectedPostId(p._id)} // correct ID
+            onClick={() => setSelectedPostId(p._id)}
           >
             <div className={styles.imageWrap}>
               <Image
@@ -86,7 +92,11 @@ export default function PostsPage() {
       </div>
 
       {selectedPostId && (
-        <PostModal postId={selectedPostId} onClose={handleCloseModal} />
+        <PostModal
+          postId={selectedPostId}
+          onClose={() => setSelectedPostId(null)}
+          onPostUpdate={handlePostUpdate}
+        />
       )}
     </main>
   );

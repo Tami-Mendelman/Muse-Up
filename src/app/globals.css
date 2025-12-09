@@ -122,6 +122,17 @@ body {
 *:focus {
   -webkit-focus-ring-color: transparent !important;
 }
+@media (max-width: 900px) {
+  .layout-container-is-root {
+    padding-right: 0 !important;
+  }
+
+  .layout-main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+}
 
 
 

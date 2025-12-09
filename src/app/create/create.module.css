@@ -1,39 +1,47 @@
 /* ============================
-   CREATE PAGE — FIXED LAYOUT
+   CREATE PAGE — MAIN WRAPPER
 ============================ */
 
 .wrapper {
   max-width: 1050px;
-  margin: 36px auto;
-  padding: 28px;
+  margin: 24px auto;
+  padding: 24px;
   background: #fff;
   border-radius: 22px;
   box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
 
-  display: flex;               /* NEW */
-  flex-direction: column;      /* NEW */
-  min-height: 100vh;           /* NEW */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
+
+/* ============================
+          PAGE TITLE
+============================ */
 
 .pageTitle {
   font-size: 32px;
   font-weight: 800;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   text-align: center;
   font-family: var(--font-main);
 }
 
-/* MAIN GRID */
+/* ============================
+          GRID LAYOUT
+============================ */
+
 .formLayout {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 32px;
-  align-items: start;
-
-  height: 100%;                 /* NEW */
+  align-items: flex-start;
 }
 
-/* LEFT SIDE PREVIEW CARD */
+/* ============================
+     LEFT SIDE — PREVIEW
+============================ */
+
 .previewCard {
   background: #fefefe;
   border: 1px solid #e5e7eb;
@@ -45,6 +53,7 @@
   gap: 14px;
 }
 
+/* IMAGE BOX */
 .previewImageBox {
   height: 300px;
   background: #f4f5f6;
@@ -66,6 +75,7 @@
   font-size: 15px;
 }
 
+/* CAPTION */
 .previewCaption {
   background: #fafafa;
   border: 1px dashed #d1d5db;
@@ -77,11 +87,11 @@
   color: #111;
 }
 
+/* TAG CHIPS */
 .chipList {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 10px;
 }
 
 .chipItem {
@@ -95,19 +105,21 @@
 }
 
 .supportText {
-  margin-top: 10px;
+  margin-top: 6px;
   color: #6b7280;
-  font-family: var(--font-main);
   font-size: 13px;
 }
 
-/* RIGHT SIDE FORM */
+/* ============================
+     RIGHT SIDE — FORM
+============================ */
+
 .rightSide {
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
+/* UPLOAD BOX */
 .uploadBox {
   border: 2px dashed #c8cfdd;
   background: #f8fbff;
@@ -139,12 +151,13 @@
   margin-top: 4px;
 }
 
+/* FORM INPUTS */
+
 .label {
   font-family: var(--font-main);
   font-weight: 600;
   font-size: 14px;
-  margin: 16px 0 6px;
-  display: block;
+  margin: 14px 0 6px;
 }
 
 .input {
@@ -155,8 +168,9 @@
   background: #fff;
   font-family: var(--font-main);
   font-size: 15px;
-  box-sizing: border-box;
 }
+
+/* RADIO GROUP */
 
 .radioBox {
   margin: 16px 0;
@@ -173,12 +187,13 @@
   font-size: 14px;
 }
 
+/* STATUS MESSAGES */
+
 .error {
   background: #fee2e2;
   color: #b91c1c;
   padding: 8px 12px;
   border-radius: 10px;
-  font-family: var(--font-main);
   font-size: 14px;
 }
 
@@ -187,15 +202,17 @@
   color: #166534;
   padding: 8px 12px;
   border-radius: 10px;
-  font-family: var(--font-main);
   font-size: 14px;
 }
 
-/* FIXED ACTIONS AT BOTTOM */
+/* ============================
+     ACTION BUTTONS
+============================ */
+
 .actions {
   display: flex;
   gap: 12px;
-  margin-top: auto;              /* ⭐ now works */
+  margin-top: auto;
 }
 
 .cancelBtn {
@@ -223,14 +240,10 @@
   opacity: 0.6;
 }
 
-/* MOBILE */
-@media (max-width: 900px) {
-  .formLayout {
-    grid-template-columns: 1fr;
-  }
-}
+/* ============================
+        AI HELPER
+============================ */
 
-/* AI HELPER */
 .aiHelperWrapper {
   margin-top: 8px;
   margin-bottom: 12px;
@@ -247,21 +260,13 @@
   font-size: 13px;
   font-weight: 600;
   background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  color: #ffffff;
+  color: white;
   cursor: pointer;
-  box-shadow: 0 5px 14px rgba(37, 99, 235, 0.3);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
 
 .aiHelperButtonMain {
   padding: 10px 26px;
   font-size: 15px;
-  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.38);
-}
-
-.aiHelperButton:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.4);
 }
 
 .aiHelperError {
@@ -279,26 +284,98 @@
   gap: 14px;
 }
 
-.aiHelperBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* ============================
+     RESPONSIVE — TABLET & MOBILE
+============================ */
+
+@media (max-width: 900px) {
+
+  .wrapper {
+    margin: 12px auto;
+    padding: 18px;
+    border-radius: 18px;
+    max-width: 94%;
+  }
+
+  .pageTitle {
+    font-size: 26px;
+    margin-bottom: 18px;
+  }
+
+  .formLayout {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  .previewImageBox {
+    height: 240px;
+  }
+
+  .uploadBox {
+    padding: 18px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .submitBtn,
+  .cancelBtn {
+    width: 100%;
+    text-align: center;
+  }
 }
 
-.aiHelperBlockHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+/* ============================
+     SMALL PHONES
+============================ */
 
-.aiHelperBlockTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: #0f172a;
-}
+@media (max-width: 480px) {
 
-.aiHelperText {
-  font-size: 13px;
-  color: #1f2933;
-  white-space: pre-wrap;
+  .wrapper {
+    padding: 14px;
+    margin: 8px;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+
+  .previewImageBox {
+    height: 200px;
+  }
+
+  .previewCaption {
+    min-height: 100px;
+  }
+
+  .submitBtn {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+}
+@media (max-width: 900px) {
+  body, html {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* מבטל סטיות של layout חיצוני */
+  .page {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  /* מבטל sidebar אם קיים */
+  .sidebar {
+    display: none !important;
+    width: 0 !important;
+  }
+
+  /* מבטל כל ריווח מה-layout הראשי */
+  .layout {
+    grid-template-columns: 1fr !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 }

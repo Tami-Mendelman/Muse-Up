@@ -20,6 +20,8 @@ import AiArtCritiqueButton from "../../components/AiArtCritiqueButton";
 type Props = {
   onClose: () => void;
   postId: string;
+  /** פוסט מעודכן אחרי לייק/אנלייק – יעודכן ברשימות בחוץ */
+  onPostUpdate?: (updatedPost: any) => void;
 };
 
 type Comment = {
@@ -33,7 +35,7 @@ const EMOJIS = ["😊", "😂", "😍", "🥰", "😎", "🔥", "👍"];
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/dhxxlwa6n/image/upload/v1763292698/ChatGPT_Image_Nov_16_2025_01_25_54_PM_ndrcsr.png";
 
-export default function PostModal({ onClose, postId }: Props) {
+export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
   const { uid } = useFirebaseUid();
 
   const { data: post, isLoading: loadingPost } = usePost(postId);
@@ -65,8 +67,7 @@ export default function PostModal({ onClose, postId }: Props) {
   });
 
   /* -------------------------------------------------------
-     INITIALIZE LIKE STATE (no useEffect)
-     Runs ONCE when post arrives & local state is null
+     INITIALIZE LIKE STATE (פעם ראשונה שהפוסט נטען)
   -------------------------------------------------------- */
   if (post && uid && liked === null && likes === null) {
     const initialLiked = post.liked_by?.includes(uid) ?? false;
@@ -92,6 +93,8 @@ export default function PostModal({ onClose, postId }: Props) {
     if (!uid || !post || liked === null || likes === null) return;
 
     const newLiked = !liked;
+
+    // עדכון מיידי ב־UI
     setLiked(newLiked);
     setLikes((prev) => (prev ?? 0) + (newLiked ? 1 : -1));
 
@@ -100,7 +103,24 @@ export default function PostModal({ onClose, postId }: Props) {
     toggleLikeMutation.mutate(
       { action },
       {
+        onSuccess: (updatedPostFromServer: any) => {
+          // אם השרת החזיר likes_count מעודכן – נעדכן ממנו
+          if (typeof updatedPostFromServer?.likes_count === "number") {
+            setLikes(updatedPostFromServer.likes_count);
+          }
+
+          // אם השרת החזיר liked_by – נעדכן לפי זה
+          if (Array.isArray(updatedPostFromServer?.liked_by) && uid) {
+            setLiked(updatedPostFromServer.liked_by.includes(uid));
+          }
+
+          // נעדכן גם את הרשימות החיצוניות (Landing / Posts)
+          if (onPostUpdate) {
+            onPostUpdate(updatedPostFromServer);
+          }
+        },
         onError: () => {
+          // החזרה למצב הקודם במקרה של שגיאה
           setLiked(!newLiked);
           setLikes((prev) => (prev ?? 0) + (newLiked ? -1 : 1));
         },
@@ -153,7 +173,6 @@ export default function PostModal({ onClose, postId }: Props) {
   return (
     <div className={styles.bg}>
       <div className={styles.box}>
-        
         {/* CLOSE BUTTON */}
         <button className={`btn-icon ${styles.close}`} onClick={onClose}>
           ✕
@@ -165,15 +184,17 @@ export default function PostModal({ onClose, postId }: Props) {
         </div>
 
         <div className={styles.inner}>
-          
           {/* LEFT SIDE */}
           <div className={styles.left}>
-            <h2 className={styles.title}>{loadingPost ? "Loading…" : post?.title}</h2>
-            <p className={styles.body}>{loadingPost ? "Loading…" : post?.body}</p>
+            <h2 className={styles.title}>
+              {loadingPost ? "Loading…" : post?.title}
+            </h2>
+            <p className={styles.body}>
+              {loadingPost ? "Loading…" : post?.body}
+            </p>
 
             {/* ICON ACTIONS */}
             <div className={styles.icons}>
-              
               {/* LIKE BUTTON */}
               <button
                 className={`${styles.iconBtn} ${liked ? styles.active : ""}`}
@@ -306,7 +327,6 @@ export default function PostModal({ onClose, postId }: Props) {
               <div className={styles.noImage}>No image</div>
             )}
           </div>
-
         </div>
       </div>
     </div>

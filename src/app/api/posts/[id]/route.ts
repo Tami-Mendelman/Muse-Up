@@ -124,16 +124,22 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
         return NextResponse.json({ message: "Post not found" }, { status: 404 });
       }
 
+      // נוודא שיש שדה liked_by
+      if (!Array.isArray(post.liked_by)) {
+        post.liked_by = [];
+      }
+
       // LIKE
       if (action === "like") {
         if (!post.liked_by.includes(uid)) {
           post.liked_by.push(uid);
-          post.likes_count += 1;
+          post.likes_count = (post.likes_count ?? 0) + 1;
           await post.save();
         }
 
+        const plain = post.toObject ? post.toObject() : post;
         return NextResponse.json(
-          { liked: true, likes_count: post.likes_count },
+          { ...plain, liked: true },
           { status: 200 }
         );
       }
@@ -142,12 +148,13 @@ export async function PATCH(req: NextRequest, ctx: ParamsCtx) {
       if (action === "unlike") {
         if (post.liked_by.includes(uid)) {
           post.liked_by = post.liked_by.filter((x: string) => x !== uid);
-          post.likes_count -= 1;
+          post.likes_count = Math.max(0, (post.likes_count ?? 0) - 1);
           await post.save();
         }
 
+        const plain = post.toObject ? post.toObject() : post;
         return NextResponse.json(
-          { liked: false, likes_count: post.likes_count },
+          { ...plain, liked: false },
           { status: 200 }
         );
       }
