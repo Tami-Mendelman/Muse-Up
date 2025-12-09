@@ -7,147 +7,17 @@ import {
 } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styles from "./adminChallenges.module.css";
-type Challenge = {
-  _id: string;
-  id: number;
-  title: string;
-  description?: string;
-  picture_url?: string;
-  status: string;
-  start_date: string;
-  end_date: string;
-  winners_published?: boolean;
-};
-type NewChallengePayload = {
-  title: string;
-  description: string;
-  picture_url: string;
-  start_date: string; 
-  end_date: string; 
-};
-type Submission = {
-  _id: string;
-  challenge_id: number;
-  user_id: string; 
-  image_url?: string;
-  createdAt?: string;
-  user?: {
-    firebase_uid: string;
-    username?: string;
-    name?: string;
-    profil_url?: string;
-  } | null;
-};
-type WinnerPayload = {
-  user_id: string;
-  submission_id: string;
-  place: 1 | 2 | 3;
-};
-async function fetchAdminChallenges(): Promise<Challenge[]> {
-  const res = await fetch("/api/admin/challenges", {
-    method: "GET",
-    cache: "no-store",
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data?.message || "Failed to load admin challenges");
-  }
-  return data;
-}
-
-async function createAdminChallenge(
-  payload: NewChallengePayload
-): Promise<Challenge> {
-  const res = await fetch("/api/admin/challenges", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data?.message || "Failed to create challenge");
-  }
-
-  return data;
-}
-
-async function fetchChallengeSubmissions(
-  challengeId: number
-): Promise<Submission[]> {
-  const res = await fetch(
-    `/api/admin/challenges/${challengeId}/submissions`,
-    {
-      method: "GET",
-      cache: "no-store",
-    }
-  );
-
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data?.message || "Failed to load submissions");
-  }
-
-  return data;
-}
-
-async function updateWinners(params: {
-  challengeId: number;
-  winners: WinnerPayload[];
-  publish: boolean;
-}): Promise<Challenge> {
-  const res = await fetch(`/api/admin/challenges/${params.challengeId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      winners: params.winners,
-      publish: params.publish,
-      status: "ended",
-    }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data?.message || "Failed to update winners");
-  }
-
-  return data;
-}
-
-async function uploadImage(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  // אם בראוט הקיים שלך הנתיב הוא אחר (למשל /api/image-upload),
-  // תחליפי כאן את "/api/upload" ל־URL שבו את כבר משתמשת בפרויקט.
-  const res = await fetch("/api/uploads", {
-    method: "POST",
-    body: formData,
-  });
-
-  const data: any = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data?.message || "Failed to upload image");
-  }
-
-  // תומך גם ב-response שמחזיר { url: "..." } וגם { secure_url: "..." }
-  const imageUrl = data.url || data.secure_url;
-
-  if (!imageUrl) {
-    throw new Error("Upload response missing url");
-  }
-
-  return imageUrl as string;
-}
-
+import {
+  AdminChallenge as Challenge,
+  NewAdminChallengePayload as NewChallengePayload,
+  AdminSubmission as Submission,
+  AdminWinnerPayload as WinnerPayload,
+  getAdminChallenges,
+  createAdminChallengeApi,
+  getChallengeSubmissions,
+  updateAdminWinners,
+  uploadChallengeImage,
+} from "../../.././services/adminChallengesService";
 
 function formatDate(dateStr: string | undefined) {
   if (!dateStr) return "";
@@ -159,9 +29,6 @@ function formatDate(dateStr: string | undefined) {
     day: "2-digit",
   });
 }
-
-// ===== main page =====
-
 export default function AdminChallengesPage() {
   const queryClient = useQueryClient();
 
@@ -173,29 +40,24 @@ export default function AdminChallengesPage() {
     start_date: "",
     end_date: "",
   });
-
   const [selectedChallenge, setSelectedChallenge] =
     useState<Challenge | null>(null);
   const [isWinnersOpen, setIsWinnersOpen] = useState(false);
   const [winners, setWinners] = useState<WinnerPayload[]>([]);
-
-  // state לתמונה
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   const {
     data: challenges,
     isLoading,
     error,
   } = useQuery<Challenge[], Error>({
     queryKey: ["adminChallenges"],
-    queryFn: fetchAdminChallenges,
+    queryFn: getAdminChallenges,
   });
-
   const createMutation = useMutation({
-    mutationFn: createAdminChallenge,
+    mutationFn: createAdminChallengeApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminChallenges"] });
       setForm({
@@ -210,9 +72,8 @@ export default function AdminChallengesPage() {
       setIsFormOpen(false);
     },
   });
-
   const winnersMutation = useMutation({
-    mutationFn: updateWinners,
+    mutationFn: updateAdminWinners,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminChallenges"] });
       if (selectedChallenge) {
@@ -224,7 +85,6 @@ export default function AdminChallengesPage() {
       setWinners([]);
     },
   });
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -234,23 +94,15 @@ export default function AdminChallengesPage() {
       [name]: value,
     }));
   };
-
-  // בחירת קובץ תמונה מהמחשב
   const handleImageFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setImageError(null);
     try {
       setImageUploading(true);
-
-      // אופציונלי: תצוגה מוקדמת מהקובץ עצמו
       const localPreview = URL.createObjectURL(file);
       setImagePreview(localPreview);
-
-      const url = await uploadImage(file);
-
-      // אחרי שהעלינו לענן – נשמור את ה־URL האמיתי בטופס
+      const url = await uploadChallengeImage(file);
       setForm((prev) => ({
         ...prev,
         picture_url: url,
@@ -262,34 +114,28 @@ export default function AdminChallengesPage() {
       setForm((prev) => ({ ...prev, picture_url: "" }));
     } finally {
       setImageUploading(false);
-      // כדי שאפשר יהיה לבחור שוב את אותו קובץ
       e.target.value = "";
     }
   };
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.start_date || !form.end_date) {
       alert("חובה למלא לפחות שם אתגר, תאריך התחלה ותאריך סיום");
       return;
     }
-
     createMutation.mutate(form);
   };
-
   const openWinnersModal = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
     setWinners([]);
     setIsWinnersOpen(true);
   };
-
   const closeWinnersModal = () => {
     if (winnersMutation.isPending) return;
     setIsWinnersOpen(false);
     setSelectedChallenge(null);
     setWinners([]);
   };
-
   const selectPlace = (submission: Submission, place: 1 | 2 | 3) => {
     setWinners((prev) => {
       const filtered = prev.filter(
@@ -305,17 +151,13 @@ export default function AdminChallengesPage() {
       ];
     });
   };
-
   const isSelected = (submissionId: string, place: 1 | 2 | 3) =>
     winners.some((w) => w.submission_id === submissionId && w.place === place);
-
   const renderError = () => {
     if (!error) return null;
-
     const msg = error.message || "";
     const isUnauthorized =
       msg.toLowerCase().includes("unauthorized") || msg.includes("403");
-
     if (isUnauthorized) {
       return (
         <div className={styles.errorBox}>
@@ -324,7 +166,6 @@ export default function AdminChallengesPage() {
         </div>
       );
     }
-
     return (
       <div className={styles.errorBox}>
         <p>אירעה שגיאה בטעינת האתגרים.</p>
@@ -332,7 +173,6 @@ export default function AdminChallengesPage() {
       </div>
     );
   };
-
   return (
     <div className={styles.page}>
       <div className={styles.headerRow}>
@@ -342,7 +182,6 @@ export default function AdminChallengesPage() {
             כאן את יכולה ליצור אתגרים חדשים, ולעקוב אחרי מצב האתגרים הקיימים.
           </p>
         </div>
-
         <button
           type="button"
           className={styles.primaryButton}
@@ -351,11 +190,9 @@ export default function AdminChallengesPage() {
           {isFormOpen ? "סגירת טופס יצירה" : "צור אתגר חדש"}
         </button>
       </div>
-
       {isFormOpen && (
         <form className={styles.formCard} onSubmit={handleSubmit}>
           <h2 className={styles.formTitle}>אתגר חדש</h2>
-
           <div className={styles.formRow}>
             <label className={styles.label}>
               שם האתגר
@@ -369,7 +206,6 @@ export default function AdminChallengesPage() {
               />
             </label>
           </div>
-
           <div className={styles.formRow}>
             <label className={styles.label}>
               תיאור
@@ -382,8 +218,6 @@ export default function AdminChallengesPage() {
               />
             </label>
           </div>
-
-          {/* העלאת תמונה מהמחשב במקום כתובת URL */}
           <div className={styles.formRow}>
             <label className={styles.label}>
               תמונה לאתגר (אופציונלי)
@@ -413,7 +247,6 @@ export default function AdminChallengesPage() {
                   </span>
                 )}
               </div>
-
               {(imagePreview || form.picture_url) && (
                 <div className={styles.imagePreviewWrapper}>
                   <img
@@ -423,13 +256,11 @@ export default function AdminChallengesPage() {
                   />
                 </div>
               )}
-
               {imageError && (
                 <div className={styles.errorText}>{imageError}</div>
               )}
             </label>
           </div>
-
           <div className={styles.formRowGrid}>
             <label className={styles.label}>
               תאריך התחלה
@@ -441,7 +272,6 @@ export default function AdminChallengesPage() {
                 className={styles.input}
               />
             </label>
-
             <label className={styles.label}>
               תאריך סיום
               <input
@@ -453,7 +283,6 @@ export default function AdminChallengesPage() {
               />
             </label>
           </div>
-
           <div className={styles.formActions}>
             <button
               type="button"
@@ -471,7 +300,6 @@ export default function AdminChallengesPage() {
               {createMutation.isPending ? "שומרת..." : "שמור אתגר"}
             </button>
           </div>
-
           {createMutation.error && (
             <div className={styles.errorText}>
               {(createMutation.error as Error).message}
@@ -479,13 +307,10 @@ export default function AdminChallengesPage() {
           )}
         </form>
       )}
-
       {isLoading && !error && (
         <div className={styles.loading}>טוען אתגרים…</div>
       )}
-
       {renderError()}
-
       {!isLoading && !error && challenges && (
         <div className={styles.list}>
           {challenges.length === 0 && (
@@ -493,7 +318,6 @@ export default function AdminChallengesPage() {
               עדיין לא יצרת אתגרים. לחצי על &quot;צור אתגר חדש&quot; כדי להתחיל.
             </div>
           )}
-
           {challenges.map((ch) => (
             <div key={ch._id} className={styles.card}>
               <div className={styles.cardHeader}>
@@ -554,9 +378,6 @@ export default function AdminChallengesPage() {
     </div>
   );
 }
-
-// ===== Winners modal stays כמו שהיה =====
-
 type WinnersModalProps = {
   challenge: Challenge;
   onClose: () => void;
@@ -573,7 +394,6 @@ type WinnersModalProps = {
     }) => void;
   };
 };
-
 function WinnersModal({
   challenge,
   onClose,
@@ -584,22 +404,19 @@ function WinnersModal({
 }: WinnersModalProps) {
   const { data, isLoading, error } = useQuery<Submission[], Error>({
     queryKey: ["adminChallengeSubmissions", challenge.id],
-    queryFn: () => fetchChallengeSubmissions(challenge.id),
+    queryFn: () => getChallengeSubmissions(challenge.id),
   });
-
   const handleSave = () => {
     if (!winners || winners.length === 0) {
       alert("בחרי לפחות זוכה אחד לפני השמירה.");
       return;
     }
-
     winnersMutation.mutate({
       challengeId: challenge.id,
       winners,
       publish: true,
     });
   };
-
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
