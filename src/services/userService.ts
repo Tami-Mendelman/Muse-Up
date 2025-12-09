@@ -10,6 +10,7 @@ export type User = {
   location?: string;
   followers_count?: number;
   following_count?: number;
+  role?: string;
 };
 
 export type FormUserPayload = {

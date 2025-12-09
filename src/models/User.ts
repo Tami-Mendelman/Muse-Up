@@ -53,6 +53,7 @@ const UserSchema = new Schema<IUser>(
     },
     role: {
       type: String,
+       enum: ["artist", "admin"], 
       default: "artist",
     },
     followers_count: {

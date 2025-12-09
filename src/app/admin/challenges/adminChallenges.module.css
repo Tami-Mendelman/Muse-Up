@@ -1,0 +1,543 @@
+.page {
+  padding: 32px 40px;
+  font-family: var(--font-main);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.primaryButton {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.primaryButton:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.secondaryButton {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.formCard {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
+}
+
+.formTitle {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.formRow {
+  margin-bottom: 16px;
+}
+
+.formRowGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #374151;
+  gap: 4px;
+}
+
+.input,
+.textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-family: var(--font-main);
+  font-size: 14px;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb22;
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.formActions {
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.errorText {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #b91c1c;
+}
+
+.loading {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.errorBox {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.emptyState {
+  font-size: 14px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 16px;
+  border: 1px dashed #d1d5db;
+  padding: 18px 20px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cardId {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-right: 6px;
+}
+
+.cardStatus {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 2px 0 0;
+}
+
+.cardStatus span {
+  font-weight: 500;
+}
+
+.publishedBadge {
+  font-size: 12px;
+  color: #15803d;
+  margin-inline-start: 6px;
+}
+
+.cardImage {
+  width: 96px;
+  height: 70px;
+  border-radius: 16px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.cardDates {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.cardDescription {
+  font-size: 14px;
+  color: #374151;
+}
+
+.cardActions {
+  margin-top: 4px;
+}
+
+.outlineButton {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px dashed #9ca3af;
+  background: #f9fafb;
+  font-size: 13px;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* רספונסיבי */
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px;
+  }
+
+  .headerRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .formRowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardHeader {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+
+  .cardImage {
+    width: 100%;
+    height: 160px;
+  }
+}
+/* ===== מודאל ניהול זוכים ===== */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 24px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modalSubtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.modalCloseBtn {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.submissionsList {
+  padding: 12px 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.submissionCard {
+  display: flex;
+  gap: 14px;
+  padding: 10px 10px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.submissionImage {
+  width: 120px;
+  height: 90px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.submissionInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.submissionUser {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.submissionAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.submissionUserName {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.submissionButtons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.placeButton {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: #e5e7eb;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.placeButtonSelected {
+  color: #ffffff;
+}
+
+.place1 {
+  background: #f97316;
+  border-color: #ea580c;
+}
+
+.place2 {
+  background: #4b5563;
+  border-color: #374151;
+}
+
+.place3 {
+  background: #6b21a8;
+  border-color: #5b21b6;
+}
+
+.placeButton:not(.placeButtonSelected):hover {
+  filter: brightness(0.97);
+}
+
+.modalActions {
+  padding: 12px 20px 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* כפתור ניהול זוכים פעיל */
+.outlineButtonActive {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #2563eb;
+  background: #eff6ff;
+  font-size: 13px;
+  color: #1d4ed8;
+  cursor: pointer;
+}
+
+.outlineButtonActive:hover {
+  background: #dbeafe;
+}
+
+/* רספונסיבי למודאל */
+@media (max-width: 768px) {
+  .modal {
+    max-width: 100%;
+    margin: 0 10px;
+  }
+
+  .submissionCard {
+    flex-direction: column;
+  }
+
+  .submissionImage {
+    width: 100%;
+    height: 180px;
+  }
+}
+.imageUploadRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.uploadHint {
+  font-size: 12px;
+  color: #059669;
+}
+
+.imagePreviewWrapper {
+  margin-top: 10px;
+}
+
+.imagePreview {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+.dangerButton {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #dc2626;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.05s ease;
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.dangerButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirmModal {
+  background: #fff;
+  padding: 32px;
+  border-radius: 16px;
+  width: 380px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.confirmTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.confirmText {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirmCancel {
+  background: #e5e7eb;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.confirmDelete {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+}

@@ -16,6 +16,7 @@ import {
   leaveChallenge,
   submitChallengeImage,
 } from "../../services/challengeSubmissionsService";
+import { getUserByUid } from "../../services/userService";
 
 export type Challenge = {
   _id: string;
@@ -26,7 +27,18 @@ export type Challenge = {
   status?: string;
   start_date?: string;
   end_date?: string;
-  
+  winners_published?: boolean;
+  winners?: {
+    user_id: string;
+    submission_id: string;
+    place: number;
+    user?: {
+      firebase_uid: string;
+      username?: string;
+      name?: string;
+      profil_url?: string;
+    } | null;
+  }[];
 };
 
 type ChallengeSubmission = {
@@ -43,12 +55,18 @@ export default function ChallengesPage() {
   const [tab, setTab] = useState<TabKey>("active");
   const [search, setSearch] = useState("");
   const [joinLoadingId, setJoinLoadingId] = useState<number | null>(null);
-  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(
-    null
-  );
+  const [selectedChallenge, setSelectedChallenge] =
+    useState<Challenge | null>(null);
 
   const queryClient = useQueryClient();
   const { uid, ready: uidReady } = useFirebaseUid();
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser", uid],
+    queryFn: () => getUserByUid(uid as string),
+    enabled: uidReady && !!uid,
+  });
+
+  const isAdmin = currentUser?.role === "admin";
 
   const {
     data: challenges = [],
@@ -117,12 +135,9 @@ export default function ChallengesPage() {
       alert("You must be logged in.");
       return;
     }
-
     const isJoined = joinedIds.includes(challengeId);
     setJoinLoadingId(challengeId);
-
     const mutation = isJoined ? leaveMutation : joinMutation;
-
     mutation.mutate(challengeId, {
       onError: (err: any) => {
         console.error(err);
@@ -151,12 +166,28 @@ export default function ChallengesPage() {
         <div className={styles.headerRow}>
           <h1 className={styles.title}>Art Challenges</h1>
 
-          <input
-            className={styles.search}
-            placeholder="Search challenges by name"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div
+            style={{ display: "flex", gap: "12px", alignItems: "center" }}
+          >
+            <input
+              className={styles.search}
+              placeholder="Search challenges by name"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            {isAdmin && (
+              <button
+                type="button"
+                className={styles.adminButton}
+                onClick={() => {
+                  window.location.href = "/admin/challenges";
+                }}
+              >
+                Challenge management
+              </button>
+            )}
+          </div>
         </div>
 
         <div className={styles.tabs}>
@@ -240,6 +271,49 @@ export default function ChallengesPage() {
                 {selectedChallenge.description}
               </p>
             )}
+            {selectedChallenge.winners_published &&
+              selectedChallenge.winners &&
+              selectedChallenge.winners.length > 0 && (
+                <div className={styles.modalWinners}>
+                  <h3 className={styles.modalWinnersTitle}>Winners</h3>
+                  <ul className={styles.modalWinnersList}>
+                    {selectedChallenge.winners
+                      .slice()
+                      .sort((a, b) => a.place - b.place)
+                      .map((w) => {
+                        const displayName =
+                          w.user?.username ||
+                          w.user?.name ||
+                          w.user?.firebase_uid ||
+                          w.user_id;
+
+                        return (
+                          <li
+                            key={w.submission_id}
+                            className={styles.modalWinnerItem}
+                          >
+                            <span className={styles.modalWinnerPlace}>
+                              Place {w.place}
+                            </span>
+
+                            <div className={styles.modalWinnerUserBox}>
+                              {w.user?.profil_url && (
+                                <img
+                                  src={w.user.profil_url}
+                                  alt={displayName}
+                                  className={styles.modalWinnerAvatar}
+                                />
+                              )}
+                              <span className={styles.modalWinnerUser}>
+                                {displayName}
+                              </span>
+                            </div>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                </div>
+              )}
 
             <button
               className={styles.modalClose}
@@ -393,6 +467,14 @@ function ChallengeCard({
           <p className={styles.cardDescription}>{challenge.description}</p>
         )}
 
+        {challenge.winners_published &&
+          challenge.winners &&
+          challenge.winners.length > 0 && (
+            <div className={styles.cardWinnersBadge}>
+              Winners announced
+            </div>
+          )}
+
         {challenge.status !== "ended" && (
           <div className={styles.actionsRow}>
             <button
@@ -471,23 +553,44 @@ function filterByTabAndSearch(
   if (tab === "active") {
     return withDates.filter((c) => {
       if (!c._start || !c._end) return false;
-      return c._start <= now && c._end >= now;
+
+      const started = c._start <= now;
+      const notEndedByTime = c._end >= now;
+      const notEndedByStatus = c.status !== "ended";
+      const noWinners = !c.winners_published;
+
+      return started && notEndedByTime && notEndedByStatus && noWinners;
     });
   }
 
   if (tab === "endingSoon") {
     return withDates.filter((c) => {
       if (!c._start || !c._end) return false;
+
       const diff = (c._end as Date).getTime() - now.getTime();
-      const isActive = c._start <= now && c._end >= now;
-      return isActive && diff <= WEEK_MS && diff >= 0;
+      const isActiveByTime = c._start <= now && c._end >= now;
+      const notEndedByStatus = c.status !== "ended";
+      const noWinners = !c.winners_published;
+
+      return (
+        isActiveByTime &&
+        notEndedByStatus &&
+        noWinners &&
+        diff <= WEEK_MS &&
+        diff >= 0
+      );
     });
   }
 
   if (tab === "ended") {
     return withDates.filter((c) => {
       if (!c._end) return false;
-      return c._end < now;
+
+      const endedByTime = c._end < now;
+      const endedByStatus = c.status === "ended";
+      const hasWinners = !!c.winners_published;
+
+      return endedByTime || endedByStatus || hasWinners;
     });
   }
 
