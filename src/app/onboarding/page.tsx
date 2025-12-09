@@ -90,8 +90,13 @@ export default function OnboardingPage() {
       bio: form.bio.trim(),
     };
 
-    if (!trimmed.name || !trimmed.username || !trimmed.location || !trimmed.bio)
+    const provider = user.providerData[0]?.providerId === "google.com"
+      ? "google"
+      : "password";
+    console.log("Using provider:", provider);
+    if (!trimmed.name || !trimmed.username || !trimmed.location || !trimmed.bio) {
       return setError("All fields are required.");
+    }
 
     const email = form.email || user.email || "";
     const googleAvatar = user.photoURL;
@@ -112,6 +117,7 @@ export default function OnboardingPage() {
         profil_url: avatarToSave,
         bio: trimmed.bio,
         location: trimmed.location,
+        provider: provider,
       });
 
       router.push("/landing");
