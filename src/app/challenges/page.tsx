@@ -82,8 +82,6 @@ export default function ChallengesPage() {
 
   const {
     data: joinedSubmissions = [],
-    isLoading: loadingJoined,
-    error: joinedError,
   } = useQuery<ChallengeSubmission[]>({
     queryKey: ["joinedChallenges", uid],
     queryFn: () => getUserJoinedChallenges(uid as string),
@@ -131,7 +129,7 @@ export default function ChallengesPage() {
     },
   });
 
-  // === כמות משתתפות לאתגר שנבחר במודל ===
+  // === כמות משתתפים לאתגר שנבחר במודל ===
   const {
     data: participantsCount = 0,
     isLoading: loadingParticipants,
@@ -171,6 +169,48 @@ export default function ChallengesPage() {
         setJoinLoadingId(null);
       },
     });
+  }
+
+  function handleShare(challenge: Challenge | null) {
+    if (!challenge) return;
+    if (typeof window === "undefined") return;
+
+    const url = `${window.location.origin}/challenges?challengeId=${challenge.id}`;
+    const text = `Join the "${challenge.title}" art challenge on MuseUp!`;
+
+    if (typeof navigator !== "undefined") {
+      const nav: any = navigator;
+
+      // נסיון עם Web Share API (בעיקר מובייל)
+      if (nav.share) {
+        nav
+          .share({
+            title: challenge.title,
+            text,
+            url,
+          })
+          .catch((err: any) => {
+            console.error("Share failed", err);
+          });
+        return;
+      }
+
+      // נסיון עם clipboard
+      if (nav.clipboard && nav.clipboard.writeText) {
+        nav.clipboard
+          .writeText(url)
+          .then(() => {
+            alert("Link copied to clipboard");
+          })
+          .catch(() => {
+            window.prompt("Copy this link:", url);
+          });
+        return;
+      }
+    }
+
+    // fallback אחרון
+    window.prompt("Copy this link:", url);
   }
 
   const modalStart = selectedChallenge?.start_date
@@ -292,7 +332,7 @@ export default function ChallengesPage() {
               <p className={styles.modalDates}>{modalDates}</p>
             )}
 
-            {/* שורה חדשה – כמות משתתפים */}
+            {/* כמות משתתפים */}
             <p className={styles.modalParticipants}>
               {loadingParticipants
                 ? "Loading participants…"
@@ -304,6 +344,7 @@ export default function ChallengesPage() {
                 {selectedChallenge.description}
               </p>
             )}
+
             {selectedChallenge.winners_published &&
               selectedChallenge.winners &&
               selectedChallenge.winners.length > 0 && (
@@ -350,12 +391,22 @@ export default function ChallengesPage() {
                 </div>
               )}
 
-            <button
-              className={styles.modalClose}
-              onClick={() => setSelectedChallenge(null)}
-            >
-              Close
-            </button>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalShare}
+                type="button"
+                onClick={() => handleShare(selectedChallenge)}
+              >
+                Share challenge
+              </button>
+
+              <button
+                className={styles.modalClose}
+                onClick={() => setSelectedChallenge(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

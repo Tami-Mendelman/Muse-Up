@@ -431,3 +431,33 @@
   margin-bottom: 12px;
   font-weight: 500;
 }
+.modalParticipants {
+  font-size: 14px;
+  color: #111827;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+/* שורת הכפתורים בתחתית המודאל */
+.modalActions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* כפתור שיתוף */
+.modalShare {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #111827;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modalShare:hover {
+  background: #e5e7eb;
+}
