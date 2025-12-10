@@ -2,17 +2,17 @@
     width: 100%;
     min-height: 100vh;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: flex-start;
+    padding: 24px 16px 40px;
     background: #f3f4f6;
-    padding: 32px;
     box-sizing: border-box;
     font-family: var(--font-main);
 }
 
 .box {
     position: relative;
-    width: 100%;
+    width: clamp(320px, 90%, 460px);
     background: #ffffff;
     border-radius: 20px;
     padding: 36px 36px 28px;
@@ -31,7 +31,7 @@
 }
 
 .title {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 800;
     color: #0f172a;
     margin: 2px 0 8px;
@@ -219,14 +219,17 @@
     margin-bottom: 16px;
 }
 
-@media (min-width: 600px) {
-    .box {
-        max-width: 600px;
+@media (max-width: 480px) {
+    .container {
+        padding-top: 40px;
+        align-items: flex-start;
     }
-}
 
-@media (min-width: 1024px) {
     .box {
-        max-width: 400px;
+        margin-top: 20px;
+    }
+
+    .title {
+        font-size: 22px;
     }
 }

@@ -9,24 +9,26 @@ import { useFirebaseUid } from "../hooks/useFirebaseUid";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isRoot = pathname === "/";
 
   const { uid, ready } = useFirebaseUid();
   const isLoggedIn = ready && !!uid;
+
+  const authRoutes = ["/", "/login", "/register", "/forget-password", "/reset-password", "/about"];
+  const isAuthRoute = authRoutes.includes(pathname);
 
   return (
     <html lang="en">
       <body className="layout-body">
         <ReactQueryProvider>
-          {!isRoot && isLoggedIn && <Sidebar />}
+          {!isAuthRoute && isLoggedIn && <Sidebar />}
 
-          {!isRoot ? (
+          {!isAuthRoute ? (
             <div className="layout-container-is-root">
               <main className="layout-main">{children}</main>
               <Footer />
             </div>
           ) : (
-            <main className="layout-main-root">{children}</main>
+            <main className="auth-page">{children}</main>
           )}
         </ReactQueryProvider>
       </body>

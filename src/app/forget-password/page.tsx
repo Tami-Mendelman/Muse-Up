@@ -13,7 +13,7 @@ export default function ForgetPasswordPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  
+
   const validateEmail = (value: string): string | null => {
     if (!value) return "Email is required.";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,8 +66,8 @@ export default function ForgetPasswordPage() {
       <div className={styles.authCard}>
         <img src="../../../../media/logo1.png" alt="Logo" className={styles.authLogo} />
 
-        <h2>Forgot password?</h2>
-        <p>Enter your email and we'll send you a link to reset your password.</p>
+        <h2 className={styles.title}>Forgot password?</h2>
+        <p className={styles.subtitle}>Enter your email and we'll send you a link to reset your password.</p>
 
         <form onSubmit={handleSubmit}>
           <label className={styles.label}>
