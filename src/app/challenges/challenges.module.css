@@ -461,3 +461,35 @@
 .modalShare:hover {
   background: #e5e7eb;
 }
+.modalProgressBlock {
+  margin: 8px 0 14px;
+}
+
+.modalProgressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.modalProgressPercent {
+  font-weight: 600;
+  color: #111827;
+}
+
+.modalProgressBarOuter {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.modalProgressBarInner {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  transition: width 0.3s ease-out;
+}

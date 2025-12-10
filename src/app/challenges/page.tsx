@@ -106,7 +106,6 @@ export default function ChallengesPage() {
 
     return { joinedIds: joined, submittedIds: submitted };
   }, [joinedSubmissions]);
-
   const joinMutation = useMutation({
     mutationFn: (challengeId: number) =>
       joinChallenge(challengeId, uid as string),
@@ -117,7 +116,6 @@ export default function ChallengesPage() {
       });
     },
   });
-
   const leaveMutation = useMutation({
     mutationFn: (challengeId: number) =>
       leaveChallenge(challengeId, uid as string),
@@ -129,7 +127,6 @@ export default function ChallengesPage() {
     },
   });
 
-  // === כמות משתתפים לאתגר שנבחר במודל ===
   const {
     data: participantsCount = 0,
     isLoading: loadingParticipants,
@@ -138,7 +135,6 @@ export default function ChallengesPage() {
     enabled: !!selectedChallengeId,
     queryFn: async () => {
       if (!selectedChallengeId) return 0;
-
       const res = await fetch(
         `/api/challenges/${selectedChallengeId}/participants`
       );
@@ -181,7 +177,6 @@ export default function ChallengesPage() {
     if (typeof navigator !== "undefined") {
       const nav: any = navigator;
 
-      // נסיון עם Web Share API (בעיקר מובייל)
       if (nav.share) {
         nav
           .share({
@@ -195,7 +190,6 @@ export default function ChallengesPage() {
         return;
       }
 
-      // נסיון עם clipboard
       if (nav.clipboard && nav.clipboard.writeText) {
         nav.clipboard
           .writeText(url)
@@ -209,7 +203,6 @@ export default function ChallengesPage() {
       }
     }
 
-    // fallback אחרון
     window.prompt("Copy this link:", url);
   }
 
@@ -223,6 +216,22 @@ export default function ChallengesPage() {
     modalStart && modalEnd
       ? `${formatDate(modalStart)} – ${formatDate(modalEnd)}`
       : "";
+
+  const modalProgress =
+    modalStart && modalEnd
+      ? (() => {
+          const now = new Date().getTime();
+          const start = modalStart.getTime();
+          const end = modalEnd.getTime();
+
+          if (now <= start) return 0;
+          if (now >= end) return 100;
+
+          const total = end - start;
+          const done = now - start;
+          return Math.round((done / total) * 100);
+        })()
+      : null;
 
   return (
     <>
@@ -332,7 +341,23 @@ export default function ChallengesPage() {
               <p className={styles.modalDates}>{modalDates}</p>
             )}
 
-            {/* כמות משתתפים */}
+            {modalProgress !== null && (
+              <div className={styles.modalProgressBlock}>
+                <div className={styles.modalProgressHeader}>
+                  <span>Challenge progress</span>
+                  <span className={styles.modalProgressPercent}>
+                    {modalProgress}%
+                  </span>
+                </div>
+                <div className={styles.modalProgressBarOuter}>
+                  <div
+                    className={styles.modalProgressBarInner}
+                    style={{ width: `${modalProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             <p className={styles.modalParticipants}>
               {loadingParticipants
                 ? "Loading participants…"
