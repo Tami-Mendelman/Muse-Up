@@ -1,3 +1,6 @@
+import { getBaseUrl } from "../lib/baseUrl";
+import { getUserByUid } from "./userService";
+const base = getBaseUrl(); 
 type ServiceResponse = any;
 async function parseErrorResponse(
   res: Response,
@@ -116,4 +119,39 @@ export async function submitChallengeImage(
     await parseErrorResponse(res, "Failed to save submission");
   }
   return await res.json();
+}
+export async function getChallengeParticipantsUsers(challengeId: number) {
+  const res = await fetch(
+    `${base}/api/challenges/${challengeId}/participants`
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to load participants");
+  }
+
+  const data = await res.json();
+
+  const rawParticipants = Array.isArray(data.participants)
+    ? data.participants
+    : [];
+
+  const uids: string[] = Array.from(
+    new Set(
+      rawParticipants
+        .map((p: any) => p.user_uid)
+        .filter((x: any) => typeof x === "string" && x.trim().length > 0)
+    )
+  );
+
+  const users = await Promise.all(
+    uids.map(async (u) => {
+      try {
+        return await getUserByUid(u);
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  return users.filter((u): u is any => u !== null);
 }

@@ -15,6 +15,7 @@ import {
   joinChallenge,
   leaveChallenge,
   submitChallengeImage,
+  getChallengeParticipantsUsers,
 } from "../../services/challengeSubmissionsService";
 import { getUserByUid } from "../../services/userService";
 
@@ -128,50 +129,16 @@ export default function ChallengesPage() {
     },
   });
 
-  // === שליפת רשימת המשתתפים (Users) לאתגר שנבחר ===
   const {
     data: participantUsers = [],
     isLoading: loadingParticipants,
   } = useQuery({
     queryKey: ["challengeParticipantsUsers", selectedChallengeId],
     enabled: !!selectedChallengeId,
-    queryFn: async () => {
-      if (!selectedChallengeId) return [];
-
-      const res = await fetch(
-        `/api/challenges/${selectedChallengeId}/participants`
-      );
-      if (!res.ok) {
-        throw new Error("Failed to load participants");
-      }
-      const data = await res.json();
-
-      const rawParticipants = Array.isArray(data.participants)
-        ? data.participants
-        : [];
-
-      const uids: string[] = Array.from(
-        new Set(
-          rawParticipants
-            .map((p: any) => p.user_uid)
-            .filter(
-              (x: any) => typeof x === "string" && x.trim().length > 0
-            )
-        )
-      );
-
-      const users = await Promise.all(
-        uids.map(async (u) => {
-          try {
-            return await getUserByUid(u);
-          } catch {
-            return null;
-          }
-        })
-      );
-
-      return users.filter((u): u is any => u !== null);
-    },
+    queryFn: () =>
+      selectedChallengeId
+        ? getChallengeParticipantsUsers(selectedChallengeId)
+        : Promise.resolve([]),
   });
 
   const filtered = filterByTabAndSearch(challenges, tab, search);
@@ -231,7 +198,7 @@ export default function ChallengesPage() {
       }
     }
 
-    // fallback אחרון
+
     window.prompt("Copy this link:", url);
   }
 
@@ -413,42 +380,42 @@ export default function ChallengesPage() {
               )}
             </div>
 
-        {showParticipants &&
-  !loadingParticipants &&
-  participantUsers.length > 0 && (
-    <ul className={styles.participantsList}>
-      {participantUsers.map((u: any) => {
-        const displayName =
-          u.username || u.name || u.firebase_uid;
-        const isCurrentUser = uid && u.firebase_uid === uid;
+            {showParticipants &&
+              !loadingParticipants &&
+              participantUsers.length > 0 && (
+                <ul className={styles.participantsList}>
+                  {participantUsers.map((u: any) => {
+                    const displayName =
+                      u.username || u.name || u.firebase_uid;
+                    const isCurrentUser =
+                      uid && u.firebase_uid === uid;
 
-        return (
-          <li
-            key={u.firebase_uid}
-            className={styles.participantItem}
-          >
-            {u.profil_url && (
-              <img
-                src={u.profil_url}
-                alt={displayName}
-                className={styles.participantAvatar}
-              />
-            )}
-            <span className={styles.participantName}>
-              {displayName}
-            </span>
+                    return (
+                      <li
+                        key={u.firebase_uid}
+                        className={styles.participantItem}
+                      >
+                        {u.profil_url && (
+                          <img
+                            src={u.profil_url}
+                            alt={displayName}
+                            className={styles.participantAvatar}
+                          />
+                        )}
+                        <span className={styles.participantName}>
+                          {displayName}
+                        </span>
 
-            {isCurrentUser && (
-              <span className={styles.participantYouTag}>
-                You
-              </span>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  )}
-
+                        {isCurrentUser && (
+                          <span className={styles.participantYouTag}>
+                            You
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
 
             {selectedChallenge.description && (
               <p className={styles.modalDescription}>
