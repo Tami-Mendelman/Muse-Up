@@ -425,3 +425,132 @@
   background: #1d4ed8;
   transform: translateY(-1px);
 }
+.modalParticipants {
+  font-size: 13px;
+  color: #111827;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.modalParticipants {
+  font-size: 14px;
+  color: #111827;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.modalActions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.modalShare {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #111827;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modalShare:hover {
+  background: #e5e7eb;
+}
+.modalProgressBlock {
+  margin: 8px 0 14px;
+}
+
+.modalProgressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.modalProgressPercent {
+  font-weight: 600;
+  color: #111827;
+}
+
+.modalProgressBarOuter {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.modalProgressBarInner {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  transition: width 0.3s ease-out;
+}
+.modalParticipantsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 6px;
+  gap: 8px;
+}
+
+.modalParticipantsLabel {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.participantsToggle {
+  font-size: 13px;
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.participantsToggle:hover {
+  background: #eff6ff;
+}
+
+.participantsList {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.participantItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.participantAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.participantName {
+  font-weight: 500;
+}
+.participantYouTag {
+  margin-inline-start: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+}

@@ -15,6 +15,7 @@ import {
   joinChallenge,
   leaveChallenge,
   submitChallengeImage,
+  getChallengeParticipantsUsers,
 } from "../../services/challengeSubmissionsService";
 import { getUserByUid } from "../../services/userService";
 
@@ -57,9 +58,13 @@ export default function ChallengesPage() {
   const [joinLoadingId, setJoinLoadingId] = useState<number | null>(null);
   const [selectedChallenge, setSelectedChallenge] =
     useState<Challenge | null>(null);
+  const [showParticipants, setShowParticipants] = useState(false);
+
+  const selectedChallengeId = selectedChallenge?.id ?? null;
 
   const queryClient = useQueryClient();
   const { uid, ready: uidReady } = useFirebaseUid();
+
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser", uid],
     queryFn: () => getUserByUid(uid as string),
@@ -77,11 +82,7 @@ export default function ChallengesPage() {
     queryFn: getChallenges,
   });
 
-  const {
-    data: joinedSubmissions = [],
-    isLoading: loadingJoined,
-    error: joinedError,
-  } = useQuery<ChallengeSubmission[]>({
+  const { data: joinedSubmissions = [] } = useQuery<ChallengeSubmission[]>({
     queryKey: ["joinedChallenges", uid],
     queryFn: () => getUserJoinedChallenges(uid as string),
     enabled: uidReady && !!uid,
@@ -128,6 +129,18 @@ export default function ChallengesPage() {
     },
   });
 
+  const {
+    data: participantUsers = [],
+    isLoading: loadingParticipants,
+  } = useQuery({
+    queryKey: ["challengeParticipantsUsers", selectedChallengeId],
+    enabled: !!selectedChallengeId,
+    queryFn: () =>
+      selectedChallengeId
+        ? getChallengeParticipantsUsers(selectedChallengeId)
+        : Promise.resolve([]),
+  });
+
   const filtered = filterByTabAndSearch(challenges, tab, search);
 
   function handleToggleJoin(challengeId: number) {
@@ -149,6 +162,46 @@ export default function ChallengesPage() {
     });
   }
 
+  function handleShare(challenge: Challenge | null) {
+    if (!challenge) return;
+    if (typeof window === "undefined") return;
+
+    const url = `${window.location.origin}/challenges?challengeId=${challenge.id}`;
+    const text = `Join the "${challenge.title}" art challenge on MuseUp!`;
+
+    if (typeof navigator !== "undefined") {
+      const nav: any = navigator;
+
+      if (nav.share) {
+        nav
+          .share({
+            title: challenge.title,
+            text,
+            url,
+          })
+          .catch((err: any) => {
+            console.error("Share failed", err);
+          });
+        return;
+      }
+
+      if (nav.clipboard && nav.clipboard.writeText) {
+        nav.clipboard
+          .writeText(url)
+          .then(() => {
+            alert("Link copied to clipboard");
+          })
+          .catch(() => {
+            window.prompt("Copy this link:", url);
+          });
+        return;
+      }
+    }
+
+
+    window.prompt("Copy this link:", url);
+  }
+
   const modalStart = selectedChallenge?.start_date
     ? new Date(selectedChallenge.start_date)
     : null;
@@ -159,6 +212,27 @@ export default function ChallengesPage() {
     modalStart && modalEnd
       ? `${formatDate(modalStart)} – ${formatDate(modalEnd)}`
       : "";
+
+  const modalProgress =
+    modalStart && modalEnd
+      ? (() => {
+          const now = new Date().getTime();
+          const start = modalStart.getTime();
+          const end = modalEnd.getTime();
+
+          if (now <= start) return 0;
+          if (now >= end) return 100;
+
+          const total = end - start;
+          const done = now - start;
+          return Math.round((done / total) * 100);
+        })()
+      : null;
+
+  function closeModal() {
+    setSelectedChallenge(null);
+    setShowParticipants(false);
+  }
 
   return (
     <>
@@ -234,7 +308,10 @@ export default function ChallengesPage() {
                 loading={joinLoadingId === ch.id}
                 onToggle={() => handleToggleJoin(ch.id)}
                 userUid={uid ?? null}
-                onOpen={() => setSelectedChallenge(ch)}
+                onOpen={() => {
+                  setSelectedChallenge(ch);
+                  setShowParticipants(false);
+                }}
               />
             ))}
           </div>
@@ -242,10 +319,7 @@ export default function ChallengesPage() {
       </div>
 
       {selectedChallenge && (
-        <div
-          className={styles.modalOverlay}
-          onClick={() => setSelectedChallenge(null)}
-        >
+        <div className={styles.modalOverlay} onClick={closeModal}>
           <div
             className={styles.modal}
             onClick={(e) => {
@@ -260,17 +334,95 @@ export default function ChallengesPage() {
               />
             )}
 
-            <h2 className={styles.modalTitle}>{selectedChallenge.title}</h2>
+            <h2 className={styles.modalTitle}>
+              {selectedChallenge.title}
+            </h2>
 
             {modalDates && (
               <p className={styles.modalDates}>{modalDates}</p>
             )}
+
+            {modalProgress !== null && (
+              <div className={styles.modalProgressBlock}>
+                <div className={styles.modalProgressHeader}>
+                  <span>Challenge progress</span>
+                  <span className={styles.modalProgressPercent}>
+                    {modalProgress}%
+                  </span>
+                </div>
+                <div className={styles.modalProgressBarOuter}>
+                  <div
+                    className={styles.modalProgressBarInner}
+                    style={{ width: `${modalProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <div className={styles.modalParticipantsRow}>
+              <span className={styles.modalParticipantsLabel}>
+                {loadingParticipants
+                  ? "Loading participants…"
+                  : participantUsers.length === 0
+                  ? "No participants yet"
+                  : `${participantUsers.length} participants`}
+              </span>
+
+              {!loadingParticipants && participantUsers.length > 0 && (
+                <button
+                  type="button"
+                  className={styles.participantsToggle}
+                  onClick={() =>
+                    setShowParticipants((prev) => !prev)
+                  }
+                >
+                  {showParticipants ? "Hide list" : "Show list"}
+                </button>
+              )}
+            </div>
+
+            {showParticipants &&
+              !loadingParticipants &&
+              participantUsers.length > 0 && (
+                <ul className={styles.participantsList}>
+                  {participantUsers.map((u: any) => {
+                    const displayName =
+                      u.username || u.name || u.firebase_uid;
+                    const isCurrentUser =
+                      uid && u.firebase_uid === uid;
+
+                    return (
+                      <li
+                        key={u.firebase_uid}
+                        className={styles.participantItem}
+                      >
+                        {u.profil_url && (
+                          <img
+                            src={u.profil_url}
+                            alt={displayName}
+                            className={styles.participantAvatar}
+                          />
+                        )}
+                        <span className={styles.participantName}>
+                          {displayName}
+                        </span>
+
+                        {isCurrentUser && (
+                          <span className={styles.participantYouTag}>
+                            You
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
 
             {selectedChallenge.description && (
               <p className={styles.modalDescription}>
                 {selectedChallenge.description}
               </p>
             )}
+
             {selectedChallenge.winners_published &&
               selectedChallenge.winners &&
               selectedChallenge.winners.length > 0 && (
@@ -304,7 +456,9 @@ export default function ChallengesPage() {
                                   className={styles.modalWinnerAvatar}
                                 />
                               )}
-                              <span className={styles.modalWinnerUser}>
+                              <span
+                                className={styles.modalWinnerUser}
+                              >
                                 {displayName}
                               </span>
                             </div>
@@ -315,12 +469,22 @@ export default function ChallengesPage() {
                 </div>
               )}
 
-            <button
-              className={styles.modalClose}
-              onClick={() => setSelectedChallenge(null)}
-            >
-              Close
-            </button>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalShare}
+                type="button"
+                onClick={() => handleShare(selectedChallenge)}
+              >
+                Share challenge
+              </button>
+
+              <button
+                className={styles.modalClose}
+                onClick={closeModal}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
