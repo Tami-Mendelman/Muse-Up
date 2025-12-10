@@ -545,3 +545,12 @@
 .participantName {
   font-weight: 500;
 }
+.participantYouTag {
+  margin-inline-start: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+}

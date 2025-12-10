@@ -391,8 +391,6 @@ export default function ChallengesPage() {
                 </div>
               </div>
             )}
-
-            {/* כותרת + כפתור לפתיחת רשימת משתתפים */}
             <div className={styles.modalParticipantsRow}>
               <span className={styles.modalParticipantsLabel}>
                 {loadingParticipants
@@ -415,34 +413,42 @@ export default function ChallengesPage() {
               )}
             </div>
 
-            {showParticipants &&
-              !loadingParticipants &&
-              participantUsers.length > 0 && (
-                <ul className={styles.participantsList}>
-                  {participantUsers.map((u: any) => {
-                    const displayName =
-                      u.username || u.name || u.firebase_uid;
+        {showParticipants &&
+  !loadingParticipants &&
+  participantUsers.length > 0 && (
+    <ul className={styles.participantsList}>
+      {participantUsers.map((u: any) => {
+        const displayName =
+          u.username || u.name || u.firebase_uid;
+        const isCurrentUser = uid && u.firebase_uid === uid;
 
-                    return (
-                      <li
-                        key={u.firebase_uid}
-                        className={styles.participantItem}
-                      >
-                        {u.profil_url && (
-                          <img
-                            src={u.profil_url}
-                            alt={displayName}
-                            className={styles.participantAvatar}
-                          />
-                        )}
-                        <span className={styles.participantName}>
-                          {displayName}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+        return (
+          <li
+            key={u.firebase_uid}
+            className={styles.participantItem}
+          >
+            {u.profil_url && (
+              <img
+                src={u.profil_url}
+                alt={displayName}
+                className={styles.participantAvatar}
+              />
+            )}
+            <span className={styles.participantName}>
+              {displayName}
+            </span>
+
+            {isCurrentUser && (
+              <span className={styles.participantYouTag}>
+                You
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  )}
+
 
             {selectedChallenge.description && (
               <p className={styles.modalDescription}>
