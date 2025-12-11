@@ -52,11 +52,11 @@ body {
   opacity: 0.85;
 }
 
-.btn-outline {
+/* .btn-outline {
   background: transparent;
   border: 1px solid #d0d3db;
   color: #38bdf8;
-}
+} */
 
 .auth-page {
   min-height: 100vh;

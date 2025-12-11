@@ -42,6 +42,8 @@ export default function AdminChallengesPage() {
     start_date: "",
     end_date: "",
   });
+  const [formError, setFormError] = useState<string | null>(null);
+
   const [selectedChallenge, setSelectedChallenge] =
     useState<Challenge | null>(null);
   const [isWinnersOpen, setIsWinnersOpen] = useState(false);
@@ -74,6 +76,7 @@ export default function AdminChallengesPage() {
       });
       setImagePreview(null);
       setImageError(null);
+      setFormError(null);
       setIsFormOpen(false);
     },
   });
@@ -120,6 +123,7 @@ export default function AdminChallengesPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    setFormError(null);
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -141,7 +145,7 @@ export default function AdminChallengesPage() {
       }));
     } catch (err: any) {
       console.error(err);
-      setImageError(err?.message || "שגיאה בהעלאת התמונה");
+      setImageError(err?.message || "Error uploading image");
       setImagePreview(null);
       setForm((prev) => ({ ...prev, picture_url: "" }));
     } finally {
@@ -152,10 +156,29 @@ export default function AdminChallengesPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const start = form.start_date ? new Date(form.start_date) : null;
+    const end = form.end_date ? new Date(form.end_date) : null;
+
     if (!form.title || !form.start_date || !form.end_date) {
-      alert("חובה למלא לפחות שם אתגר, תאריך התחלה ותאריך סיום");
+      setFormError("You must fill in the challenge name, start date, and end date.");
       return;
     }
+
+    if (start && start < today) {
+      setFormError("The start date cannot be earlier than today.");
+      return;
+    }
+
+    if (start && end && end < start) {
+      setFormError("The end date must be greater than or equal to the start date.");
+      return;
+    }
+
+    setFormError(null);
     createMutation.mutate(form);
   };
 
@@ -212,6 +235,8 @@ export default function AdminChallengesPage() {
     );
   };
 
+  const todayIso = new Date().toISOString().split("T")[0];
+
   return (
     <div className={styles.page}>
       <div className={styles.headerRow}>
@@ -224,7 +249,10 @@ export default function AdminChallengesPage() {
         <button
           type="button"
           className={styles.primaryButton}
-          onClick={() => setIsFormOpen((prev) => !prev)}
+          onClick={() => {
+            setIsFormOpen((prev) => !prev);
+            setFormError(null);
+          }}
         >
           {isFormOpen ? "Close create form" : "Create new challenge"}
         </button>
@@ -310,6 +338,7 @@ export default function AdminChallengesPage() {
                 value={form.start_date}
                 onChange={handleChange}
                 className={styles.input}
+                min={todayIso}
               />
             </label>
             <label className={styles.label}>
@@ -320,14 +349,25 @@ export default function AdminChallengesPage() {
                 value={form.end_date}
                 onChange={handleChange}
                 className={styles.input}
+                min={form.start_date || todayIso}
               />
             </label>
           </div>
+
+          {formError && (
+            <div className={styles.errorBoxCustom}>
+              {formError}
+            </div>
+          )}
+
           <div className={styles.formActions}>
             <button
               type="button"
               className={styles.secondaryButton}
-              onClick={() => setIsFormOpen(false)}
+              onClick={() => {
+                setIsFormOpen(false);
+                setFormError(null);
+              }}
               disabled={createMutation.isPending}
             >
               Cancel
@@ -358,7 +398,8 @@ export default function AdminChallengesPage() {
         <div className={styles.list}>
           {challenges.length === 0 && (
             <div className={styles.emptyState}>
-              You haven't created any challenges yet. Click &quot;Create new challenge&quot; to get started.
+              You haven't created any challenges yet. Click &quot;Create new
+              challenge&quot; to get started.
             </div>
           )}
           {challenges.map((ch) => (
@@ -509,7 +550,8 @@ function WinnersModal({
               Manage winners – {challenge.title}
             </h2>
             <p className={styles.modalSubtitle}>
-              Select 1st, 2nd and 3rd place from the submissions for this challenge.
+              Select 1st, 2nd and 3rd place from the submissions for this
+              challenge.
             </p>
           </div>
           <button
@@ -522,7 +564,9 @@ function WinnersModal({
           </button>
         </div>
 
-        {isLoading && <div className={styles.loading}>Loading submissions…</div>}
+        {isLoading && (
+          <div className={styles.loading}>Loading submissions…</div>
+        )}
 
         {error && (
           <div className={styles.errorBox}>

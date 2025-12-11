@@ -224,12 +224,9 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 className={styles.input}
                 required
               />
+              
+              <button type="button" onClick={() => setShowPassword((s) => !s)} className={styles.iconButton}>
 
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className={styles.iconButton}
-              >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>

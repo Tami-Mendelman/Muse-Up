@@ -20,10 +20,9 @@ async function getHomeData(): Promise<{
 }> {
   await dbConnect();
 
-  // --- 1) מביאים את המשתמשים המובילים ---
   const rawUsers = await User.find()
     .sort({ followers_count: -1 })
-    .limit(8)
+    .limit(50)
     .lean();
 
   const users: UserCard[] = rawUsers.map((u: any) => ({
@@ -35,41 +34,38 @@ async function getHomeData(): Promise<{
     firebase_uid: u.firebase_uid,
   }));
 
-
-  // מזהי Mongo ו־Firebase
   const mongoIds = users.map((u) => String(u._id));
-  const firebaseIds = users
-    .map((u) => String(u.firebase_uid))
-    .filter(Boolean);
+  const firebaseIds = users.map((u) => String(u.firebase_uid)).filter(Boolean);
 
-  // --- 2) מביאים את הפוסטים של המשתמשים האלה ---
   const posts = await Post.find({
     user_id: { $in: [...mongoIds, ...firebaseIds] },
   })
     .sort({ created_at: -1 })
     .lean();
 
-  // --- 3) התאמה בין פוסט -> משתמש ---
   const artworkByUserId: Record<string, string> = {};
 
   for (const post of posts) {
     const pid = String(post.user_id);
     if (!pid || !post.image_url) continue;
 
-    // מוצאים את המשתמש המתאים
     const matchingUser = users.find(
       (u) => String(u._id) === pid || String(u.firebase_uid) === pid
     );
 
     if (matchingUser) {
-      const key = String(matchingUser._id); // תמיד מציגים לפי mongoId
+      const key = String(matchingUser._id);
       if (!artworkByUserId[key]) {
         artworkByUserId[key] = post.image_url;
       }
     }
   }
 
-  return { users, artworkByUserId };
+  const filteredUsers = users
+    .filter((u) => artworkByUserId[String(u._id)])
+    .slice(0, 8);
+
+  return { users: filteredUsers, artworkByUserId };
 }
 
 export default async function HomePage() {
@@ -80,7 +76,7 @@ export default async function HomePage() {
       <section className={styles.left}>
         <header className={styles.header}>
           <div className={styles.logoArea}>
-            <img src="../media/logo1.png" alt="MuseUp Logo" className={styles.logoImg} />
+            <img src="/media/logo1.png" alt="MuseUp Logo" className={styles.logoImg} />
           </div>
 
           <div className={styles.centerTitle}>
@@ -97,36 +93,30 @@ export default async function HomePage() {
           </div>
         </header>
 
-        {/* --- Artists cards --- */}
         <section className={styles.grid}>
           {users.map((u) => {
             const followers = Number(u.followers_count ?? 0).toLocaleString();
             const likes = Number(u.likes_received ?? 0).toLocaleString();
-            const userKey = String(u._id);
-            const artworkSrc = artworkByUserId[userKey] || "";
-            const avatarSrc = u.profil_url || "";
+            const artworkSrc = artworkByUserId[String(u._id)];
+            const avatarSrc = u.profil_url;
 
             return (
               <article key={u._id} className={styles.card}>
                 <div className={styles.artPreview}>
-                  {artworkSrc && (
-                    <img
-                      src={artworkSrc}
-                      alt={`${u.name || u.username} artwork`}
-                      className={styles.artImage}
-                    />
-                  )}
+                  <img
+                    src={artworkSrc}
+                    alt={`${u.name || u.username} artwork`}
+                    className={styles.artImage}
+                  />
                 </div>
 
                 <div className={styles.artistCircle}>
                   <div className={styles.artistCircleInner}>
-                    {avatarSrc && (
-                      <img
-                        src={avatarSrc}
-                        alt={`${u.username} avatar`}
-                        className={styles.avatar}
-                      />
-                    )}
+                    <img
+                      src={avatarSrc}
+                      alt={`${u.username} avatar`}
+                      className={styles.avatar}
+                    />
                   </div>
                 </div>
 
