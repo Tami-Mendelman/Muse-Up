@@ -26,10 +26,19 @@ export default function AboutPage() {
     <div className={styles.panel}>
       <div className={styles.layout}>
         
-        {/* LEFT SIDE */}
         <section className={styles.left}>
           <header className={`${styles.hero} ${styles.reveal}`} style={{ ["--d" as any]: "0ms" }}>
-            <h1>who we are</h1>
+<div className={styles.titleRow}>
+  <Image
+    src="/media/logo1.png"
+    alt="MuseUp logo"
+    width={55}
+    height={55}
+    className={styles.logo}
+  />
+  <h1>who we are</h1>
+</div>
+
             <p>
               MuseUP is an international community for artists and art lovers.
               Our vision is to connect inspiration, creativity and real people.
@@ -102,13 +111,8 @@ export default function AboutPage() {
             </ul>
           </section>
         </section>
-
         <div className={styles.divider} aria-hidden />
-
-        {/* RIGHT SIDE */}
         <aside className={styles.right}>
-          
-          {/* CHANGED BUTTON → now using global design system */}
           <button
             className={`btn btn-primary ${styles.reveal}`}
             style={{ ["--d" as any]: "0ms" }}

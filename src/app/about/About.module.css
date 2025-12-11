@@ -7,6 +7,19 @@
   --rev-dur: 1.4s;
   --rev-gap: .35s;
 }
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px; /* רווח בין הלוגו לטקסט */
+  margin-bottom: 12px;
+}
+
+.logo {
+  width: 65px;
+  height: 65px;
+    transform: translateX(-140px);
+}
 
 .panel{
   max-width: 1100px;

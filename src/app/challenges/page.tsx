@@ -339,22 +339,7 @@ export default function ChallengesPage() {
               <p className={styles.modalDates}>{modalDates}</p>
             )}
 
-            {modalProgress !== null && (
-              <div className={styles.modalProgressBlock}>
-                <div className={styles.modalProgressHeader}>
-                  <span>Challenge progress</span>
-                  <span className={styles.modalProgressPercent}>
-                    {modalProgress}%
-                  </span>
-                </div>
-                <div className={styles.modalProgressBarOuter}>
-                  <div
-                    className={styles.modalProgressBarInner}
-                    style={{ width: `${modalProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
+
             <div className={styles.modalParticipantsRow}>
               <span className={styles.modalParticipantsLabel}>
                 {loadingParticipants
