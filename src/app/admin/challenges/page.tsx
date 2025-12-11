@@ -150,15 +150,26 @@ export default function AdminChallengesPage() {
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!form.title || !form.start_date || !form.end_date) {
-      alert("חובה למלא לפחות שם אתגר, תאריך התחלה ותאריך סיום");
-      return;
-    }
-    createMutation.mutate(form);
-  };
-
+const handleSubmit = (e: FormEvent) => {
+  e.preventDefault();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = form.start_date ? new Date(form.start_date) : null;
+  const end = form.end_date ? new Date(form.end_date) : null;
+  if (!form.title || !form.start_date || !form.end_date) {
+    alert("חובה למלא שם אתגר, תאריך התחלה ותאריך סיום");
+    return;
+  }
+  if (start && start < today) {
+    alert("תאריך ההתחלה לא יכול להיות קטן מהיום הנוכחי");
+    return;
+  }
+  if (start && end && end < start) {
+    alert("תאריך הסיום חייב להיות גדול או שווה לתאריך ההתחלה");
+    return;
+  }
+  createMutation.mutate(form);
+};
   const openWinnersModal = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
     setWinners([]);
@@ -304,23 +315,27 @@ export default function AdminChallengesPage() {
           <div className={styles.formRowGrid}>
             <label className={styles.label}>
               Start date
-              <input
-                type="date"
-                name="start_date"
-                value={form.start_date}
-                onChange={handleChange}
-                className={styles.input}
-              />
+           <input
+  type="date"
+  name="start_date"
+  value={form.start_date}
+  onChange={handleChange}
+  className={styles.input}
+  min={new Date().toISOString().split("T")[0]}
+/>
+
             </label>
             <label className={styles.label}>
               End date
-              <input
-                type="date"
-                name="end_date"
-                value={form.end_date}
-                onChange={handleChange}
-                className={styles.input}
-              />
+           <input
+  type="date"
+  name="end_date"
+  value={form.end_date}
+  onChange={handleChange}
+  className={styles.input}
+  min={form.start_date || new Date().toISOString().split("T")[0]}
+/>
+
             </label>
           </div>
           <div className={styles.formActions}>
