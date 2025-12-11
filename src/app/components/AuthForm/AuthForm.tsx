@@ -225,7 +225,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 required
               />
 
-              <button type="button" onClick={() => setShowPassword((s) => !s)} className="btn-icon">
+              <button type="button" onClick={() => setShowPassword((s) => !s)} className={styles.iconButton}>
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -249,7 +249,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
           {/* PRIMARY BUTTON */}
           <button
             type="submit"
-            className="btn btn-primary"
+            className={styles.primaryBtn}
             disabled={passwordErrors.length > 0 || !email || !password}
           >
             {mode === "login" ? "Log in" : "Create Account"}
@@ -261,7 +261,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         </div>
 
         {/* GOOGLE BUTTON */}
-        <button onClick={() => handleGoogle(mode)} className="btn btn-outline">
+        <button onClick={() => handleGoogle(mode)} className={styles.googleBtn}>
           <img
             className={styles.googleIcon}
             src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
