@@ -1,4 +1,5 @@
 "use client";
+import { IoShareSocialOutline } from "react-icons/io5";
 import {
   useEffect,
   useState,
@@ -457,7 +458,7 @@ export default function ChallengesPage() {
                 type="button"
                 onClick={() => handleShare(selectedChallenge)}
               >
-                Share challenge
+              <IoShareSocialOutline />
               </button>
 
               <button
