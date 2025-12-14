@@ -10,12 +10,20 @@ export function useSocket() {
 
   useEffect(() => {
     if (!socketInstance) {
-      socketInstance = io("http://localhost:4000", {
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+
+      if (!socketUrl) {
+        throw new Error("NEXT_PUBLIC_SOCKET_URL is missing");
+      }
+
+      socketInstance = io(socketUrl, {
         transports: ["websocket"],
         reconnection: true,
         reconnectionAttempts: 10,
         reconnectionDelay: 500,
+        withCredentials: true,
       });
+
       socketInstance.on("connect", () => {
         console.log("CLIENT: connected to socket", socketInstance?.id);
       });
@@ -31,7 +39,7 @@ export function useSocket() {
 
     setSocket(socketInstance);
 
-    return () => {};
+    return () => { };
   }, []);
 
   return socket;
