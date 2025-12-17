@@ -3,6 +3,7 @@
 import {
   useState,
   useRef,
+  useEffect,
   type FormEvent,
 } from "react";
 import styles from "./PostModal.module.css";
@@ -20,7 +21,6 @@ import AiArtCritiqueButton from "../../components/AiArtCritiqueButton";
 type Props = {
   onClose: () => void;
   postId: string;
-  /** פוסט מעודכן אחרי לייק/אנלייק – יעודכן ברשימות בחוץ */
   onPostUpdate?: (updatedPost: any) => void;
 };
 
@@ -50,7 +50,10 @@ export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
   const [saved, setSaved] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
 
+  const bodyRef = useRef<HTMLParagraphElement | null>(null);
   const commentsRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const emojiRef = useRef<HTMLDivElement | null>(null);
@@ -66,84 +69,43 @@ export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
     onCloseShare: () => setShowShare(false),
   });
 
-  /* -------------------------------------------------------
-     INITIALIZE LIKE STATE (פעם ראשונה שהפוסט נטען)
-  -------------------------------------------------------- */
+  /* INIT LIKE STATE */
   if (post && uid && liked === null && likes === null) {
-    const initialLiked = post.liked_by?.includes(uid) ?? false;
-    setLiked(initialLiked);
+    setLiked(post.liked_by?.includes(uid) ?? false);
     setLikes(post.likes_count ?? 0);
   }
 
-  /* ADD COMMENT */
+  /* CHECK REAL OVERFLOW */
+  useEffect(() => {
+    if (!bodyRef.current || expanded) return;
+    const el = bodyRef.current;
+    setIsOverflowing(el.scrollHeight > el.clientHeight);
+  }, [post?.body, expanded]);
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!uid || !commentText.trim()) return;
-
     addCommentMutation.mutate(
       { userId: uid, body: commentText },
-      {
-        onSuccess: () => setCommentText(""),
-      }
+      { onSuccess: () => setCommentText("") }
     );
   }
 
-  /* LIKE */
   function handleLike() {
     if (!uid || !post || liked === null || likes === null) return;
-
     const newLiked = !liked;
-
-    // עדכון מיידי ב־UI
     setLiked(newLiked);
     setLikes((prev) => (prev ?? 0) + (newLiked ? 1 : -1));
-
-    const action = newLiked ? "like" : "unlike";
-
-    toggleLikeMutation.mutate(
-      { action },
-      {
-        onSuccess: (updatedPostFromServer: any) => {
-          // אם השרת החזיר likes_count מעודכן – נעדכן ממנו
-          if (typeof updatedPostFromServer?.likes_count === "number") {
-            setLikes(updatedPostFromServer.likes_count);
-          }
-
-          // אם השרת החזיר liked_by – נעדכן לפי זה
-          if (Array.isArray(updatedPostFromServer?.liked_by) && uid) {
-            setLiked(updatedPostFromServer.liked_by.includes(uid));
-          }
-
-          // נעדכן גם את הרשימות החיצוניות (Landing / Posts)
-          if (onPostUpdate) {
-            onPostUpdate(updatedPostFromServer);
-          }
-        },
-        onError: () => {
-          // החזרה למצב הקודם במקרה של שגיאה
-          setLiked(!newLiked);
-          setLikes((prev) => (prev ?? 0) + (newLiked ? -1 : 1));
-        },
-      }
-    );
+    toggleLikeMutation.mutate({ action: newLiked ? "like" : "unlike" });
   }
 
-  /* SAVE / UNSAVE */
   function handleSave() {
     if (!uid || !post?.id) return;
-
     const newSaved = !saved;
     setSaved(newSaved);
-
-    toggleSaveMutation.mutate(
-      { userId: uid, save: newSaved },
-      {
-        onError: () => setSaved(!newSaved),
-      }
-    );
+    toggleSaveMutation.mutate({ userId: uid, save: newSaved });
   }
 
-  /* SHARE ACTIONS */
   function copyShareLink() {
     if (!post?.id) return;
     navigator.clipboard.writeText(
@@ -173,121 +135,66 @@ export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
   return (
     <div className={styles.bg}>
       <div className={styles.box}>
-        {/* CLOSE BUTTON */}
-        <button className={`btn-icon ${styles.close}`} onClick={onClose}>
-          ✕
-        </button>
+        <button className={`btn-icon ${styles.close}`} onClick={onClose}>✕</button>
 
-{uid === post?.user_id && post?.image_url && (
-  <div className={styles.aiTopRight}>
-    <AiArtCritiqueButton image_url={post.image_url} />
-  </div>
-)}
-
-
+        {uid === post?.user_id && post?.image_url && (
+          <div className={styles.aiTopRight}>
+            <AiArtCritiqueButton image_url={post.image_url} />
+          </div>
+        )}
 
         <div className={styles.inner}>
-          {/* LEFT SIDE */}
           <div className={styles.left}>
+
             <h2 className={styles.title}>
               {loadingPost ? "Loading…" : post?.title}
             </h2>
-            <p className={styles.body}>
-              {loadingPost ? "Loading…" : post?.body}
-            </p>
 
-            {/* ICON ACTIONS */}
-            <div className={styles.icons}>
-              {/* LIKE BUTTON */}
-              <button
-                className={`${styles.iconBtn} ${liked ? styles.active : ""}`}
-                onClick={handleLike}
-              >
-                {liked ? "❤️" : "♡"}
-              </button>
-
-              {/* SAVE BUTTON */}
-              <button
-                className={`${styles.iconBtn} ${saved ? styles.saved : ""}`}
-                onClick={handleSave}
-              >
-                {saved ? "✓" : "＋"}
-              </button>
-
-              {/* SHARE */}
-              <button
-                className={`btn-icon ${styles.iconBtn}`}
-                onClick={() => setShowShare((v) => !v)}
-              >
-                <Share2 size={22} />
-              </button>
-            </div>
-
-            {/* SHARE MENU */}
-            {showShare && (
-              <div ref={shareRef} className={styles.shareMenu}>
-                <button className="btn btn-outline" onClick={copyShareLink}>
-                  <Copy size={18} /> Copy link
-                </button>
-
-                <button className="btn btn-outline" onClick={shareWhatsApp}>
-                  <MessageCircle size={18} /> WhatsApp
-                </button>
-
-                <button className="btn btn-outline" onClick={shareEmail}>
-                  <Mail size={18} /> Email
-                </button>
-
-                {navigator.share && (
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => {
-                      navigator.share({
-                        title: post?.title,
-                        text: post?.body,
-                        url: `${window.location.origin}/landing?postId=${post?.id}`,
-                      });
-                      setShowShare(false);
-                    }}
-                  >
-                    <Send size={18} /> Share (device)
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* META */}
             <div className={styles.meta}>
               <span>{post?.author?.followers_count ?? 0} followers</span>
               <span className={styles.sep}>|</span>
               <span>{likes ?? 0} likes</span>
               <span className={styles.sep}>|</span>
-
               <div className={styles.authorBox}>
                 <img
                   src={post?.author?.avatar_url || DEFAULT_AVATAR}
                   className={styles.authorAvatar}
                 />
-                <span className={styles.authorName}>{post?.author?.name}</span>
+                <span>{post?.author?.name}</span>
               </div>
             </div>
 
-            {/* COMMENTS */}
-            <div ref={commentsRef} className={styles.comments}>
-              {loadingComments ? (
-                <p className={styles.muted}>Loading comments…</p>
-              ) : comments.length === 0 ? (
-                <p className={styles.muted}>No comments yet.</p>
-              ) : (
-                comments.map((c: Comment) => (
-                  <div key={c.id} className={styles.comment}>
-                    {c.body}
-                  </div>
-                ))
-              )}
+            <div
+              className={`${styles.postBodyWrapper} ${
+                expanded ? styles.expanded : ""
+              }`}
+            >
+              <p
+                ref={bodyRef}
+                className={`${styles.body} ${!expanded ? styles.clamped : ""}`}
+              >
+                {post?.body}
+              </p>
             </div>
 
-            {/* ADD COMMENT */}
+            {isOverflowing && (
+              <button
+                className={styles.readMore}
+                onClick={() => setExpanded(v => !v)}
+              >
+                {expanded ? "Read less" : "Read more"}
+              </button>
+            )}
+
+            <div ref={commentsRef} className={styles.comments}>
+              {loadingComments
+                ? <p className={styles.muted}>Loading comments…</p>
+                : comments.map((c: Comment) => (
+                    <div key={c.id} className={styles.comment}>{c.body}</div>
+                  ))
+              }
+            </div>
+
             <form className={styles.inputRow} onSubmit={handleSubmit}>
               <input
                 ref={inputRef}
@@ -296,11 +203,10 @@ export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
               />
-
               <button
                 type="button"
                 className={`btn-icon ${styles.emoji}`}
-                onClick={() => setShowEmojiPicker((v) => !v)}
+                onClick={() => setShowEmojiPicker(v => !v)}
               >
                 😊
               </button>
@@ -310,10 +216,10 @@ export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
               <div ref={emojiRef} className={styles.emojiPicker}>
                 {EMOJIS.map((x) => (
                   <button
-                    type="button"
                     key={x}
+                    type="button"
                     className="btn-icon"
-                    onClick={() => setCommentText((t) => t + x)}
+                    onClick={() => setCommentText(t => t + x)}
                   >
                     {x}
                   </button>
@@ -322,12 +228,9 @@ export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
             )}
           </div>
 
-          {/* RIGHT SIDE */}
           <div className={styles.right}>
-            {post?.image_url ? (
+            {post?.image_url && (
               <img src={post.image_url} className={styles.image} />
-            ) : (
-              <div className={styles.noImage}>No image</div>
             )}
           </div>
         </div>

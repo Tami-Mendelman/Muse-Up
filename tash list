@@ -1,0 +1,133 @@
+[1mdiff --git a/src/app/HomePage.module.css b/src/app/HomePage.module.css[m
+[1mindex 571a220..8e9502f 100644[m
+[1m--- a/src/app/HomePage.module.css[m
+[1m+++ b/src/app/HomePage.module.css[m
+[36m@@ -58,46 +58,35 @@[m
+   margin-top: 1rem;[m
+ }[m
+ [m
+[31m-.linkList {[m
+[32m+[m[32m.navButtons {[m
+   display: flex;[m
+[31m-  flex-direction: column;[m
+[31m-  gap: 0.6rem;[m
+[31m-  align-items: flex-end;[m
+[32m+[m[32m  align-items: center;[m
+[32m+[m[32m  gap: 1rem;[m
+[32m+[m[32m  margin-right: clamp(1rem, 3vw, 4rem);[m
+ }[m
+ [m
+[31m-.linkItem {[m
+[32m+[m[32m.navBtn {[m
+[32m+[m[32m  background: white;[m
+[32m+[m[32m  padding: 0.7rem 1.6rem;[m
+[32m+[m[32m  border-radius: 1.4rem;[m
+   font-size: 1rem;[m
+   font-weight: 500;[m
+   color: #12315b;[m
+   text-decoration: none;[m
+[31m-  position: relative;[m
+[31m-  padding-bottom: 0.3rem;[m
+[31m-  overflow: hidden;[m
+[31m-  direction: rtl;[m
+[31m-  text-align: left;[m
+[31m-  display: inline-block;[m
+[31m-  width: max-content;[m
+[31m-}[m
+[31m-[m
+[31m-.linkItem::after {[m
+[31m-  content: "";[m
+[31m-  position: absolute;[m
+[31m-  left: 0;[m
+[31m-  bottom: 0;[m
+[31m-  height: 2px;[m
+[31m-  width: 100%;[m
+[31m-  background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #1dd1a1);[m
+[31m-  transform: translateX(-100%);[m
+[31m-  transition: transform 0.35s ease;[m
+[32m+[m[32m  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);[m
+[32m+[m[32m  transition: all 0.2s ease;[m
+ }[m
+ [m
+[31m-.linkItem:hover::after {[m
+[31m-  transform: translateX(0);[m
+[32m+[m[32m.navBtn:hover {[m
+[32m+[m[32m  transform: translateY(-3px);[m
+[32m+[m[32m  background: #f3f8ff;[m
+[32m+[m[32m  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);[m
+ }[m
+ [m
+ .grid {[m
+[31m-  column-count: 1;[m
+[31m-  column-gap: 1.5rem;[m
+[32m+[m[32m  display: grid;[m
+[32m+[m[32m  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));[m
+[32m+[m[32m  gap: 1.5rem;[m
+   width: 100%;[m
+   margin-top: 2.5rem;[m
+ }[m
+[1mdiff --git a/src/app/create/create.module.css b/src/app/create/create.module.css[m
+[1mindex 18c4834..f4fea4d 100644[m
+[1m--- a/src/app/create/create.module.css[m
+[1m+++ b/src/app/create/create.module.css[m
+[36m@@ -237,6 +237,7 @@[m
+   border: none;[m
+   border-radius: 999px;[m
+   padding: 7px 16px;[m
+[32m+[m[32m  font-family: var(--font-main);[m
+   font-size: 13px;[m
+   font-weight: 600;[m
+   background: linear-gradient(135deg, #0ea5e9, #2563eb);[m
+[36m@@ -248,6 +249,7 @@[m
+ [m
+ .aiHelperButtonMain {[m
+   padding: 10px 26px;[m
+[32m+[m[32m  font-family: var(--font-main);[m
+   font-size: 15px;[m
+   box-shadow: 0 8px 22px rgba(37, 99, 235, 0.38);[m
+ }[m
+[36m@@ -264,6 +266,7 @@[m
+ }[m
+ [m
+ .aiHelperError {[m
+[32m+[m[32m  font-family: var(--font-main);[m
+   font-size: 13px;[m
+   color: #b91c1c;[m
+ }[m
+[36m@@ -291,13 +294,15 @@[m
+ }[m
+ [m
+ .aiHelperBlockTitle {[m
+[32m+[m[32m  font-family: var(--font-main);[m
+   font-size: 14px;[m
+   font-weight: 600;[m
+   color: #0f172a;[m
+ }[m
+ [m
+ .aiHelperText {[m
+[32m+[m[32m  font-family: var(--font-main);[m
+   font-size: 13px;[m
+   color: #1f2933;[m
+   white-space: pre-wrap;[m
+[31m-}[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
+[1mdiff --git a/src/app/page.tsx b/src/app/page.tsx[m
+[1mindex 9c412d3..170f279 100644[m
+[1m--- a/src/app/page.tsx[m
+[1m+++ b/src/app/page.tsx[m
+[36m@@ -89,10 +89,10 @@[m [mexport default async function HomePage() {[m
+           </div>[m
+ [m
+           <div className={styles.rightMenu}>[m
+[31m-            <nav className={styles.linkList}>[m
+[31m-              <Link href="/register" className={styles.linkItem}>Sign Up</Link>[m
+[31m-              <Link href="/login" className={styles.linkItem}>Login</Link>[m
+[31m-              <Link href="/about" className={styles.linkItem}>About</Link>[m
+[32m+[m[32m            <nav className={styles.navButtons}>[m
+[32m+[m[32m              <Link href="/register" className={styles.navBtn}>Sign Up</Link>[m
+[32m+[m[32m              <Link href="/login" className={styles.navBtn}>Login</Link>[m
+[32m+[m[32m              <Link href="/about" className={styles.navBtn}>About</Link>[m
+             </nav>[m
+           </div>[m
+         </header>[m
