@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { dbConnect } from "../../lib/mongoose";
 import PostModel from "../../models/Post";
 import User from "../../models/User";
