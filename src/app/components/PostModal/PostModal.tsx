@@ -69,13 +69,11 @@ export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
     onCloseShare: () => setShowShare(false),
   });
 
-  /* INIT LIKE STATE */
   if (post && uid && liked === null && likes === null) {
     setLiked(post.liked_by?.includes(uid) ?? false);
     setLikes(post.likes_count ?? 0);
   }
 
-  /* CHECK REAL OVERFLOW */
   useEffect(() => {
     if (!bodyRef.current || expanded) return;
     const el = bodyRef.current;
@@ -145,10 +143,63 @@ export default function PostModal({ onClose, postId, onPostUpdate }: Props) {
 
         <div className={styles.inner}>
           <div className={styles.left}>
-
             <h2 className={styles.title}>
               {loadingPost ? "Loading…" : post?.title}
             </h2>
+
+            <div className={styles.icons}>
+              <button
+                type="button"
+                className={`${styles.iconBtn} ${liked ? styles.active : ""}`}
+                onClick={handleLike}
+              >
+                {liked ? "❤️" : "♡"}
+              </button>
+
+              <button
+                type="button"
+                className={`${styles.iconBtn} ${saved ? styles.saved : ""}`}
+                onClick={handleSave}
+              >
+                {saved ? "✓" : "＋"}
+              </button>
+
+              <button
+                type="button"
+                className={styles.iconBtn}
+                onClick={() => setShowShare(v => !v)}
+              >
+                <Share2 size={22} />
+              </button>
+            </div>
+
+            {showShare && (
+              <div ref={shareRef} className={styles.shareMenu}>
+                <button onClick={copyShareLink}>
+                  <Copy size={16} /> Copy link
+                </button>
+                <button onClick={shareWhatsApp}>
+                  <MessageCircle size={16} /> WhatsApp
+                </button>
+                <button onClick={shareEmail}>
+                  <Mail size={16} /> Email
+                </button>
+                {navigator.share && (
+                  <button
+                    onClick={() => {
+                      navigator.share({
+                        title: post?.title,
+                        text: post?.body,
+                        url: `${window.location.origin}/landing?postId=${post?.id}`,
+                      });
+                      setShowShare(false);
+                    }}
+                  >
+                    <Send size={16} /> Share
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className={styles.meta}>
               <span>{post?.author?.followers_count ?? 0} followers</span>
